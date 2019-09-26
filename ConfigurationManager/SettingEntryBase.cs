@@ -15,7 +15,7 @@ namespace ConfigurationManager
         public object[] AcceptableValues { get; protected set; }
         public KeyValuePair<object, object> AcceptableValueRange { get; protected set; }
         public bool? ShowRangeAsPercent { get; protected set; }
-	    public CustomSettingDrawAttribute CustomDrawer { get; private set; }
+	    public Action<BaseUnityPlugin> CustomDrawer { get; private set; }
 
 		/// <summary>
 		///     Show this setting in the settings screen at all? If false, don't show.
@@ -95,7 +95,9 @@ namespace ConfigurationManager
                 ShowRangeAsPercent = accRange.ShowAsPercentage;
             }
 
-			CustomDrawer = attribs.OfType<CustomSettingDrawAttribute>().FirstOrDefault();
+            var customSettingDrawAttribute = attribs.OfType<CustomSettingDrawAttribute>().FirstOrDefault();
+            if (customSettingDrawAttribute != null) CustomDrawer = customSettingDrawAttribute.Run;
+            else CustomDrawer = attribs.OfType<Action<BaseUnityPlugin>>().FirstOrDefault();
 
             bool HasStringValue(string val)
             {
