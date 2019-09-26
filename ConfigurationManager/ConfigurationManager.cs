@@ -72,9 +72,9 @@ namespace ConfigurationManager
                                       "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
         }
 
-		/// <summary>
-		/// Is the config manager main window displayed on screen
-		/// </summary>
+        /// <summary>
+        /// Is the config manager main window displayed on screen
+        /// </summary>
         public bool DisplayingWindow
         {
             get => _displayingWindow;

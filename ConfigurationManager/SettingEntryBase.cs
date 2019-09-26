@@ -15,12 +15,12 @@ namespace ConfigurationManager
         public object[] AcceptableValues { get; protected set; }
         public KeyValuePair<object, object> AcceptableValueRange { get; protected set; }
         public bool? ShowRangeAsPercent { get; protected set; }
-	    public Action<BaseUnityPlugin> CustomDrawer { get; private set; }
+        public Action<SettingEntryBase> CustomDrawer { get; private set; }
 
-		/// <summary>
-		///     Show this setting in the settings screen at all? If false, don't show.
-		/// </summary>
-		public bool? Browsable { get; protected set; }
+        /// <summary>
+        ///     Show this setting in the settings screen at all? If false, don't show.
+        /// </summary>
+        public bool? Browsable { get; protected set; }
 
         /// <summary>
         ///     Category the setting is under. Null to be directly under the plugin.
@@ -42,10 +42,10 @@ namespace ConfigurationManager
         /// </summary>
         public virtual string DispName { get; protected internal set; }
 
-	    /// <summary>
-	    ///     Plugin this setting belongs to
-	    /// </summary>
-	    public BepInPlugin PluginInfo { get; protected internal set; }
+        /// <summary>
+        ///     Plugin this setting belongs to
+        /// </summary>
+        public BepInPlugin PluginInfo { get; protected internal set; }
 
         /// <summary>
         ///     Only allow showing of the value. False whenever possible by default.
@@ -76,9 +76,9 @@ namespace ConfigurationManager
 
         protected void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)
         {
-			PluginInstance = pluginInstance;
+            PluginInstance = pluginInstance;
             PluginInfo = pluginInstance?.Info.Metadata;
-            
+
             if (attribs == null || attribs.Length == 0) return;
 
             DispName = attribs.OfType<DisplayNameAttribute>().FirstOrDefault()?.DisplayName;
@@ -96,8 +96,8 @@ namespace ConfigurationManager
             }
 
             var customSettingDrawAttribute = attribs.OfType<CustomSettingDrawAttribute>().FirstOrDefault();
-            if (customSettingDrawAttribute != null) CustomDrawer = customSettingDrawAttribute.Run;
-            else CustomDrawer = attribs.OfType<Action<BaseUnityPlugin>>().FirstOrDefault();
+            if (customSettingDrawAttribute != null) CustomDrawer = x => customSettingDrawAttribute.Run(x.PluginInstance);
+            else CustomDrawer = attribs.OfType<Action<SettingEntryBase>>().FirstOrDefault();
 
             bool HasStringValue(string val)
             {
@@ -108,7 +108,7 @@ namespace ConfigurationManager
             else ReadOnly = attribs.OfType<ReadOnlyAttribute>().FirstOrDefault()?.IsReadOnly;
 
             if (HasStringValue("Browsable")) Browsable = true;
-            else if(HasStringValue("Unbrowsable") || HasStringValue("Hidden")) Browsable = false;
+            else if (HasStringValue("Unbrowsable") || HasStringValue("Hidden")) Browsable = false;
             else Browsable = attribs.OfType<BrowsableAttribute>().FirstOrDefault()?.Browsable;
 
             if (HasStringValue("Advanced")) IsAdvanced = true;
