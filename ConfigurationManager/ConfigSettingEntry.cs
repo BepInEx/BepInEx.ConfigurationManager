@@ -52,7 +52,7 @@ namespace ConfigurationManager
 					var maxProp = t.GetProperty(nameof(AcceptableValueRange<bool>.MaxValue), BindingFlags.Instance | BindingFlags.Public);
 					if (maxProp == null) throw new ArgumentNullException(nameof(maxProp));
 					AcceptableValueRange = new KeyValuePair<object, object>(minProp.GetValue(values, null), maxProp.GetValue(values, null));
-					ShowRangeAsPercent = AcceptableValueRange.Key.Equals(0) && AcceptableValueRange.Value.Equals(100) ||
+					ShowRangeAsPercent = (AcceptableValueRange.Key.Equals(0) || AcceptableValueRange.Key.Equals(1)) && AcceptableValueRange.Value.Equals(100) ||
 										 AcceptableValueRange.Key.Equals(0f) && AcceptableValueRange.Value.Equals(1f);
 				}
 			}
