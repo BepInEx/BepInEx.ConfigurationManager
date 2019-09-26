@@ -13,11 +13,22 @@ using BepInEx.Configuration;
 
 namespace ConfigurationManager
 {
+    /// <summary>
+    /// An easy way to let user configure how a plugin behaves without the need to make your own GUI. The user can change any of the settings you expose, even keyboard shortcuts.
+    /// https://github.com/ManlyMarco/BepInEx.ConfigurationManager
+    /// </summary>
     [BepInPlugin(GUID, "Configuration Manager", Version)]
     [Browsable(false)]
     public class ConfigurationManager : BaseUnityPlugin
     {
+        /// <summary>
+        /// GUID of this plugin
+        /// </summary>
         public const string GUID = "com.bepis.bepinex.configurationmanager";
+
+        /// <summary>
+        /// Version constant
+        /// </summary>
         public const string Version = "13.0";
 
         private static readonly GUIContent _keyboardShortcutsCategoryName = new GUIContent("Keyboard shortcuts",
@@ -25,14 +36,18 @@ namespace ConfigurationManager
             "The shortcut will only fire when you press \n" +
             "the main key while all modifiers are already pressed.");
 
-        internal static new ManualLogSource Logger;
+        internal new static ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;
 
         private const string SearchBoxName = "searchBox";
         private const int WindowId = -68;
         private bool _focusSearchBox;
 
+        /// <summary>
+        /// Event fired every time the manager window is shown or hidden.
+        /// </summary>
         public event EventHandler<ValueChangedEventArgs<bool>> DisplayingWindowChanged;
+
         public bool OverrideHotkey;
 
         private bool _displayingWindow;
@@ -59,6 +74,7 @@ namespace ConfigurationManager
         private bool _showDebug;
         private string _searchString = string.Empty;
 
+        /// <inheritdoc />
         public ConfigurationManager()
         {
             Logger = base.Logger;
@@ -182,7 +198,7 @@ namespace ConfigurationManager
             RightColumnWidth = (int)SettingWindowRect.width - LeftColumnWidth - 115;
         }
 
-        protected void OnGUI()
+        private void OnGUI()
         {
             if (DisplayingWindow)
             {
@@ -314,9 +330,12 @@ namespace ConfigurationManager
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// String currently entered into the search box
+        /// </summary>
         public string SearchString
         {
-            get { return _searchString; }
+            get => _searchString;
             private set
             {
                 if (string.IsNullOrEmpty(_searchString))

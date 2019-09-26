@@ -65,7 +65,7 @@ namespace ConfigurationManager
             return _entry.BoxedValue;
         }
 
-        public override void Set(object newVal)
+        protected override void SetValue(object newVal)
         {
             _entry.BoxedValue = newVal;
         }

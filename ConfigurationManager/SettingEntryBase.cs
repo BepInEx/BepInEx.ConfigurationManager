@@ -10,68 +10,111 @@ using BepInEx.Configuration;
 
 namespace ConfigurationManager
 {
+    /// <summary>
+    /// Class representing all data about a setting collected by ConfigurationManager.
+    /// </summary>
     public abstract class SettingEntryBase
     {
+        /// <summary>
+        /// List of values this setting can take
+        /// </summary>
         public object[] AcceptableValues { get; protected set; }
+
+        /// <summary>
+        /// Range of the values this setting can take
+        /// </summary>
         public KeyValuePair<object, object> AcceptableValueRange { get; protected set; }
+
+        /// <summary>
+        /// Should the setting be shown as a percentage (only applies to value range settings)
+        /// </summary>
         public bool? ShowRangeAsPercent { get; protected set; }
+
+        /// <summary>
+        /// Custom setting draw action
+        /// </summary>
         public Action<SettingEntryBase> CustomDrawer { get; private set; }
 
         /// <summary>
-        ///     Show this setting in the settings screen at all? If false, don't show.
+        /// Show this setting in the settings screen at all? If false, don't show.
         /// </summary>
         public bool? Browsable { get; protected set; }
 
         /// <summary>
-        ///     Category the setting is under. Null to be directly under the plugin.
+        /// Category the setting is under. Null to be directly under the plugin.
         /// </summary>
         public string Category { get; protected set; }
 
         /// <summary>
-        ///     If set, a "Default" button will be shown next to the setting to allow resetting to default.
+        /// If set, a "Default" button will be shown next to the setting to allow resetting to default.
         /// </summary>
         public object DefaultValue { get; protected set; }
 
         /// <summary>
-        ///     Optional description shown when hovering over the setting
+        /// Optional description shown when hovering over the setting
         /// </summary>
         public string Description { get; protected internal set; }
 
         /// <summary>
-        ///     Name of the setting
+        /// Name of the setting
         /// </summary>
         public virtual string DispName { get; protected internal set; }
 
         /// <summary>
-        ///     Plugin this setting belongs to
+        /// Plugin this setting belongs to
         /// </summary>
         public BepInPlugin PluginInfo { get; protected internal set; }
 
         /// <summary>
-        ///     Only allow showing of the value. False whenever possible by default.
+        /// Only allow showing of the value. False whenever possible by default.
         /// </summary>
         public bool? ReadOnly { get; protected set; }
 
         /// <summary>
-        ///     Type of the variable
+        /// Type of the variable
         /// </summary>
         public abstract Type SettingType { get; }
 
+        /// <summary>
+        /// Instance of the plugin that owns this setting
+        /// </summary>
         public BaseUnityPlugin PluginInstance { get; private set; }
 
         /// <summary>
-        ///     Instance of the <see cref="ConfigWrapper{T}"/> that holds this setting. 
-        ///     Null if setting is not in a ConfigWrapper.
+        /// Instance of the <see cref="ConfigWrapper{T}"/> that holds this setting. 
+        /// Null if setting is not in a ConfigWrapper.
         /// </summary>
         public object Wrapper { get; internal set; }
 
+        /// <summary>
+        /// Is this setting advanced
+        /// </summary>
         public bool? IsAdvanced { get; internal set; }
 
+        /// <summary>
+        /// Get the value of this setting
+        /// </summary>
         public abstract object Get();
-        public abstract void Set(object newVal);
 
+        /// <summary>
+        /// Set the value of this setting
+        /// </summary>
+        public void Set(object newVal)
+        {
+            if (ReadOnly != true)
+                SetValue(newVal);
+        }
+
+        protected abstract void SetValue(object newVal);
+
+        /// <summary>
+        /// Custom converter from setting type to string for the textbox
+        /// </summary>
         public Func<object, string> ObjToStr { get; internal set; }
 
+        /// <summary>
+        /// Custom converter from string to setting type for the textbox
+        /// </summary>
         public Func<string, object> StrToObj { get; internal set; }
 
         protected void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)

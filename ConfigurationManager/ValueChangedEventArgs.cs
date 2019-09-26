@@ -5,6 +5,9 @@ using System;
 
 namespace ConfigurationManager
 {
+    /// <summary>
+    /// Arguments representing a change in value
+    /// </summary>
     public sealed class ValueChangedEventArgs<TValue> : EventArgs
     {
         public ValueChangedEventArgs(TValue newValue)

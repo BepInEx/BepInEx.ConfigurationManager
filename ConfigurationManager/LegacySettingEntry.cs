@@ -29,7 +29,7 @@ namespace ConfigurationManager
 
         public override object Get() => Property.GetValue(Instance, null);
 
-        public override void Set(object newVal) => Property.SetValue(Instance, newVal, null);
+        protected override void SetValue(object newVal) => Property.SetValue(Instance, newVal, null);
 
         public static LegacySettingEntry FromConfigWrapper(object instance, PropertyInfo settingProp,
             BepInPlugin pluginInfo, BaseUnityPlugin pluginInstance)
@@ -40,7 +40,7 @@ namespace ConfigurationManager
 
                 if (wrapper == null)
                 {
-                    ConfigurationManager.Logger.Log(LogLevel.Debug, $"Skipping ConfigWrapper entry because it's null : {instance} | {settingProp?.Name} | {pluginInfo?.Name}");
+                    ConfigurationManager.Logger.Log(LogLevel.Debug, $"Skipping ConfigWrapper entry because it's null : {instance} | {settingProp.Name} | {pluginInfo?.Name}");
                     return null;
                 }
 
@@ -84,7 +84,7 @@ namespace ConfigurationManager
                 }
 
                 var objToStr = wrapper.GetType().GetField("_objToStr",
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(wrapper); ;
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(wrapper);
                 if (objToStr != null)
                 {
                     var inv = objToStr.GetType().GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public);
