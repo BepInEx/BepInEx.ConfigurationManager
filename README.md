@@ -11,12 +11,12 @@ The configuration manager can be accessed in-game by pressing the hotkey (by def
 - Place the .dll inside your BepInEx\Plugins folder.
 - Start the game and press F1.
 
-Note: The .xml file is useful when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE.
+Note: The .xml file is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
 
 ## How to make my mod compatible?
 ConfigurationManager will automatically display all settings from your plugin's `Config`. All metadata (e.g. description, value range) will be used by ConfigurationManager to display the settings to the user.
 
-In most cases there is no need to do anything special, just make sure to add as much metadata as possible (doing so will help all users, even if they use the config files directly). Always add descriptive section and key names, descriptions, and acceptable value lists or ranges (wherever applicable).
+In most cases you don't have to reference ConfiguraitonManager.dll or do anything special with your settings. Simply make sure to add as much metadata as possible (doing so will help all users, even if they use the config files directly). Always add descriptive section and key names, descriptions, and acceptable value lists or ranges (wherever applicable).
 
 ### How to make my setting into a slider?
 Specify `AcceptableValueRange` when creating your setting. If the range is 0f - 1f or 0 - 100 the slider will be shown as %.
@@ -39,11 +39,15 @@ public enum MyEnum
 ```
 
 ### How to make a custom editor for my setting?
-If you are using a setting type that is not supported by ConfigurationManager, you can add a drawer for it by using `ConfigurationManager.RegisterCustomSettingDrawer(Type, Action<SettingEntryBase>)`. The Action will be executed inside OnGUI, use GUILayout to draw your setting as shown in the example below.
+If you are using a setting type that is not supported by ConfigurationManager, you can add a drawer Action for it. The Action will be executed inside OnGUI, use GUILayout to draw your setting as shown in the example below.
+
+To use a custom seting drawer for an individual setting, add the `Action<SettingEntryBase>` as a tag when creating your setting.
 ```c#
 void Start()
 {
-    ConfigurationManager.RegisterCustomSettingDrawer(typeof(MyType), CustomDrawer);
+    // Add the drawer as a tag to this setting. 
+    // WARNING: Make sure that the type of the delegate is Action<SettingEntryBase> or it might not work!
+    Config.AddSetting("Section", "Key", new ConfigDescription("Desc", null, new Action<SettingEntryBase>(CustomDrawer)));
 }
 
 static void CustomDrawer(SettingEntryBase entry)
@@ -52,14 +56,13 @@ static void CustomDrawer(SettingEntryBase entry)
     GUILayout.Label(entry.Get(), GUILayout.ExpandWidth(true));
 }
 ```
+You can specify a drawer for all settings of a setting type. Do this by using `ConfigurationManager.RegisterCustomSettingDrawer(Type, Action<SettingEntryBase>)`.
 
-You can also use a custom seting drawer for each individual setting. To do this, add the `Action<SettingEntryBase>` as a tag when creating your setting.
+**Warning:** This requires you to reference ConfiguraitonManager.dll in your project and is not recommended unless you are sure all users will have it installed.
 ```c#
 void Start()
 {
-    // Add the drawer as a tag to this setting. 
-    // WARNING: Make sure that the type of the delegate is Action<SettingEntryBase> or it might not work!
-    Config.AddSetting("Section", "Key", new ConfigDescription("Desc", null, new Action<SettingEntryBase>(CustomDrawer)));
+    ConfigurationManager.RegisterCustomSettingDrawer(typeof(MyType), CustomDrawer);
 }
 
 static void CustomDrawer(SettingEntryBase entry)
