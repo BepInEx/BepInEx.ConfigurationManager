@@ -249,6 +249,9 @@ namespace ConfigurationManager
             _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, false, true);
             GUILayout.BeginVertical();
             {
+                if(string.IsNullOrEmpty(SearchString))
+                    GUILayout.Label("Tip: Left-click on the setting names on the left to see their descriptions.");
+
                 foreach (var plugin in _filteredSetings)
                     DrawSinglePlugin(plugin);
 
