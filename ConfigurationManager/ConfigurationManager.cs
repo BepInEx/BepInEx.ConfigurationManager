@@ -61,6 +61,9 @@ namespace ConfigurationManager
         private Rect _screenRect;
         private Vector2 _settingWindowScrollPos;
 
+        private CursorLockMode _previousCursorLockState;
+        private bool _previousCursorVisible;
+
         internal static Texture2D TooltipBg { get; private set; }
         internal static Texture2D WindowBackground { get; private set; }
 
@@ -87,7 +90,7 @@ namespace ConfigurationManager
                 new ConfigDescription("The shortcut used to toggle the config manager window on and off.\n" +
                                       "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
         }
-
+        
         /// <summary>
         /// Is the config manager main window displayed on screen
         /// </summary>
@@ -100,7 +103,7 @@ namespace ConfigurationManager
                 _displayingWindow = value;
 
                 SettingFieldDrawer.ClearCache();
-
+                
                 if (_displayingWindow)
                 {
                     CalculateWindowRect();
@@ -108,6 +111,17 @@ namespace ConfigurationManager
                     BuildSettingList();
 
                     _focusSearchBox = true;
+
+                    _previousCursorLockState = Cursor.lockState;
+                    _previousCursorVisible = Cursor.visible;
+                }
+                else
+                {
+                    if (!_previousCursorVisible || _previousCursorLockState != CursorLockMode.None)
+                    {
+                        Cursor.lockState = _previousCursorLockState;
+                        Cursor.visible = _previousCursorVisible;
+                    }
                 }
 
                 DisplayingWindowChanged?.Invoke(this, new ValueChangedEventArgs<bool>(value));
@@ -202,6 +216,9 @@ namespace ConfigurationManager
         {
             if (DisplayingWindow)
             {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+
                 if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
                     !SettingWindowRect.Contains(Input.mousePosition))
                     DisplayingWindow = false;
@@ -456,11 +473,26 @@ namespace ConfigurationManager
 
         private void Update()
         {
+            if (DisplayingWindow)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+
             if (OverrideHotkey) return;
 
             if (_keybind.Value.IsDown())
             {
                 DisplayingWindow = !DisplayingWindow;
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (DisplayingWindow)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
         }
     }
