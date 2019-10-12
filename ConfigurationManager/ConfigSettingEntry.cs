@@ -16,8 +16,6 @@ namespace ConfigurationManager
         {
             _entry = entry;
 
-            SetFromAttributes(entry.Description?.Tags, owner);
-
             DispName = entry.Definition.Key;
             Category = entry.Definition.Section;
             Description = entry.Description?.Description;
@@ -34,6 +32,8 @@ namespace ConfigurationManager
                 GetAcceptableValues(values);
 
             DefaultValue = entry.DefaultValue;
+
+            SetFromAttributes(entry.Description?.Tags, owner);
         }
 
         private void GetAcceptableValues(AcceptableValueBase values)
