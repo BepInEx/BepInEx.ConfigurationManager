@@ -31,6 +31,12 @@ namespace ConfigurationManager
 
         protected override void SetValue(object newVal) => Property.SetValue(Instance, newVal, null);
 
+        /// <summary>
+        /// Instance of the object that holds this setting. 
+        /// Null if setting is not in a ConfigWrapper.
+        /// </summary>
+        public object Wrapper { get; internal set; }
+
         public static LegacySettingEntry FromConfigWrapper(object instance, PropertyInfo settingProp,
             BepInPlugin pluginInfo, BaseUnityPlugin pluginInstance)
         {

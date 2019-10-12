@@ -10,11 +10,11 @@ namespace ConfigurationManager
 {
     internal sealed class ConfigSettingEntry : SettingEntryBase
     {
-        private readonly ConfigEntryBase _entry;
+        public ConfigEntryBase Entry { get; }
 
         public ConfigSettingEntry(ConfigEntryBase entry, BaseUnityPlugin owner)
         {
-            _entry = entry;
+            Entry = entry;
 
             DispName = entry.Definition.Key;
             Category = entry.Definition.Section;
@@ -58,16 +58,16 @@ namespace ConfigurationManager
             }
         }
 
-        public override Type SettingType => _entry.SettingType;
+        public override Type SettingType => Entry.SettingType;
 
         public override object Get()
         {
-            return _entry.BoxedValue;
+            return Entry.BoxedValue;
         }
 
         protected override void SetValue(object newVal)
         {
-            _entry.BoxedValue = newVal;
+            Entry.BoxedValue = newVal;
         }
     }
 }

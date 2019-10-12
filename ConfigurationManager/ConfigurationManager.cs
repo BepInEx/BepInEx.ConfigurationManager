@@ -447,11 +447,11 @@ namespace ConfigurationManager
                 if (DrawDefaultButton())
                     setting.Set(setting.DefaultValue);
             }
-            else if (setting.Wrapper != null)
+            else if (setting is LegacySettingEntry legacySetting && legacySetting.Wrapper != null)
             {
-                var method = setting.Wrapper.GetType().GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public);
+                var method = legacySetting.Wrapper.GetType().GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public);
                 if (method != null && DrawDefaultButton())
-                    method.Invoke(setting.Wrapper, null);
+                    method.Invoke(legacySetting.Wrapper, null);
             }
             else if (setting.SettingType.IsClass)
             {

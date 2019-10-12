@@ -50,7 +50,7 @@ namespace ConfigurationManager
         public void DrawSettingValue(SettingEntryBase setting)
         {
             if (setting.CustomDrawer != null)
-                setting.CustomDrawer(setting);
+                setting.CustomDrawer(setting is ConfigSettingEntry newSetting ? newSetting.Entry : null);
             else if (setting.ShowRangeAsPercent != null && setting.AcceptableValueRange.Key != null)
                 DrawRangeField(setting);
             else if (setting.AcceptableValues != null)

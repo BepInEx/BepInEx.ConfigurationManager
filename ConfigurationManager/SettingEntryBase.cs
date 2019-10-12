@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using BepInEx.Configuration;
 
 namespace ConfigurationManager
 {
@@ -34,7 +33,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Custom setting draw action
         /// </summary>
-        public Action<SettingEntryBase> CustomDrawer { get; private set; }
+        public Action<BepInEx.Configuration.ConfigEntryBase> CustomDrawer { get; private set; }
 
         /// <summary>
         /// Show this setting in the settings screen at all? If false, don't show.
@@ -85,12 +84,6 @@ namespace ConfigurationManager
         /// Instance of the plugin that owns this setting
         /// </summary>
         public BaseUnityPlugin PluginInstance { get; private set; }
-
-        /// <summary>
-        /// Instance of the <see cref="ConfigWrapper{T}"/> that holds this setting. 
-        /// Null if setting is not in a ConfigWrapper.
-        /// </summary>
-        public object Wrapper { get; internal set; }
 
         /// <summary>
         /// Is this setting advanced
@@ -173,12 +166,12 @@ namespace ConfigurationManager
                         ShowRangeAsPercent = oldAcceptableValRange.ShowAsPercentage;
                         break;
                     case CustomSettingDrawAttribute oldCustomDraw:
-                        CustomDrawer = x => oldCustomDraw.Run(x.PluginInstance);
+                        CustomDrawer = _ => oldCustomDraw.Run(PluginInstance);
                         break;
 
                     // Obsolete attributes from early bepin5 -----------------------
                     case Action<SettingEntryBase> newCustomDraw:
-                        CustomDrawer = newCustomDraw;
+                        CustomDrawer = _ => newCustomDraw(this);
                         break;
                     case string str:
                         switch (str)
