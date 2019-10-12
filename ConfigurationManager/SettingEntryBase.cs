@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using BepInEx.Configuration;
 
 namespace ConfigurationManager
@@ -51,6 +52,11 @@ namespace ConfigurationManager
         public object DefaultValue { get; protected set; }
 
         /// <summary>
+        /// Force the "Reset" button to not be displayed, even if a valid DefaultValue is available. 
+        /// </summary>
+        public bool HideDefaultButton { get; private set; }
+
+        /// <summary>
         /// Optional description shown when hovering over the setting
         /// </summary>
         public string Description { get; protected internal set; }
@@ -92,6 +98,11 @@ namespace ConfigurationManager
         public bool? IsAdvanced { get; internal set; }
 
         /// <summary>
+        /// Order of the setting on the settings list relative to other settings in a category. 0 by default, lower is higher on the list.
+        /// </summary>
+        public int Order { get; private set; }
+
+        /// <summary>
         /// Get the value of this setting
         /// </summary>
         public abstract object Get();
@@ -117,6 +128,8 @@ namespace ConfigurationManager
         /// </summary>
         public Func<string, object> StrToObj { get; internal set; }
 
+        private static readonly PropertyInfo[] _myProperties = typeof(SettingEntryBase).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
         protected void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)
         {
             PluginInstance = pluginInstance;
@@ -124,38 +137,82 @@ namespace ConfigurationManager
 
             if (attribs == null || attribs.Length == 0) return;
 
-            DispName = attribs.OfType<DisplayNameAttribute>().FirstOrDefault()?.DisplayName;
-            Category = attribs.OfType<CategoryAttribute>().FirstOrDefault()?.Category;
-            Description = attribs.OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
-            DefaultValue = attribs.OfType<DefaultValueAttribute>().FirstOrDefault()?.Value;
-
-            var acc = attribs.OfType<AcceptableValueBaseAttribute>().FirstOrDefault();
-            if (acc is AcceptableValueListAttribute accList)
-                AcceptableValues = accList.GetAcceptableValues(pluginInstance);
-            else if (acc is AcceptableValueRangeAttribute accRange)
+            foreach (var attrib in attribs)
             {
-                AcceptableValueRange = new KeyValuePair<object, object>(accRange.MinValue, accRange.MaxValue);
-                ShowRangeAsPercent = accRange.ShowAsPercentage;
+                switch (attrib)
+                {
+                    case null: break;
+
+                    // Obsolete attributes from bepin4 -----------------------
+                    case DisplayNameAttribute da:
+                        DispName = da.DisplayName;
+                        break;
+                    case CategoryAttribute ca:
+                        Category = ca.Category;
+                        break;
+                    case DescriptionAttribute de:
+                        Description = de.Description;
+                        break;
+                    case DefaultValueAttribute def:
+                        DefaultValue = def.Value;
+                        break;
+                    case ReadOnlyAttribute ro:
+                        ReadOnly = ro.IsReadOnly;
+                        break;
+                    case BrowsableAttribute bro:
+                        Browsable = bro.Browsable;
+                        break;
+                    case AdvancedAttribute adv:
+                        IsAdvanced = adv.IsAdvanced;
+                        break;
+                    case AcceptableValueListAttribute oldAcceptableValList:
+                        AcceptableValues = oldAcceptableValList.GetAcceptableValues(pluginInstance);
+                        break;
+                    case AcceptableValueRangeAttribute oldAcceptableValRange:
+                        AcceptableValueRange = new KeyValuePair<object, object>(oldAcceptableValRange.MinValue, oldAcceptableValRange.MaxValue);
+                        ShowRangeAsPercent = oldAcceptableValRange.ShowAsPercentage;
+                        break;
+                    case CustomSettingDrawAttribute oldCustomDraw:
+                        CustomDrawer = x => oldCustomDraw.Run(x.PluginInstance);
+                        break;
+
+                    // Obsolete attributes from early bepin5 -----------------------
+                    case Action<SettingEntryBase> newCustomDraw:
+                        CustomDrawer = newCustomDraw;
+                        break;
+                    case string str:
+                        switch (str)
+                        {
+                            case "ReadOnly": ReadOnly = true; break;
+                            case "Browsable": Browsable = true; break;
+                            case "Unbrowsable": case "Hidden": Browsable = false; break;
+                            case "Advanced": IsAdvanced = true; break;
+                        }
+                        break;
+
+                    // Copy attributes from a specially formatted object, currently recommended
+                    default:
+                        var attrType = attrib.GetType();
+                        if (attrType.Name == "ConfigurationManagerAttributes")
+                        {
+                            var otherFields = attrType.GetFields(BindingFlags.Instance | BindingFlags.Public);
+                            foreach (var propertyPair in _myProperties.Join(otherFields, my => my.Name, other => other.Name, (my, other) => new { my, other }))
+                            {
+                                try
+                                {
+                                    var val = propertyPair.other.GetValue(attrib);
+                                    propertyPair.my.SetValue(this, val, null);
+                                }
+                                catch (Exception ex)
+                                {
+                                    ConfigurationManager.Logger.LogWarning($"Failed to copy value {propertyPair.my.Name} from provided tag object {attrType.FullName} - " + ex.Message);
+                                }
+                            }
+                            break;
+                        }
+                        return;
+                }
             }
-
-            var customSettingDrawAttribute = attribs.OfType<CustomSettingDrawAttribute>().FirstOrDefault();
-            if (customSettingDrawAttribute != null) CustomDrawer = x => customSettingDrawAttribute.Run(x.PluginInstance);
-            else CustomDrawer = attribs.OfType<Action<SettingEntryBase>>().FirstOrDefault();
-
-            bool HasStringValue(string val)
-            {
-                return attribs.OfType<string>().Contains(val, StringComparer.OrdinalIgnoreCase);
-            }
-
-            if (HasStringValue("ReadOnly")) ReadOnly = true;
-            else ReadOnly = attribs.OfType<ReadOnlyAttribute>().FirstOrDefault()?.IsReadOnly;
-
-            if (HasStringValue("Browsable")) Browsable = true;
-            else if (HasStringValue("Unbrowsable") || HasStringValue("Hidden")) Browsable = false;
-            else Browsable = attribs.OfType<BrowsableAttribute>().FirstOrDefault()?.Browsable;
-
-            if (HasStringValue("Advanced")) IsAdvanced = true;
-            else IsAdvanced = attribs.OfType<AdvancedAttribute>().FirstOrDefault()?.IsAdvanced;
         }
     }
 }

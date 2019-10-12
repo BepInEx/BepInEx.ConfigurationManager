@@ -389,7 +389,7 @@ namespace ConfigurationManager
                     if (!string.IsNullOrEmpty(category.Key))
                         SettingFieldDrawer.DrawCenteredLabel(category.First().category);
 
-                    foreach (var setting in category.OrderBy(x => x.plugin.DispName))
+                    foreach (var setting in category.OrderBy(x=>x.plugin.Order).ThenBy(x => x.plugin.DispName))
                     {
                         DrawSingleSetting(setting.plugin);
                         GUILayout.Space(2);
@@ -434,12 +434,14 @@ namespace ConfigurationManager
 
         private static void DrawDefaultButton(SettingEntryBase setting)
         {
+            if(setting.HideDefaultButton) return;
+
             bool DrawDefaultButton()
             {
                 GUILayout.Space(5);
                 return GUILayout.Button("Reset", GUILayout.ExpandWidth(false));
             }
-
+            
             if (setting.DefaultValue != null)
             {
                 if (DrawDefaultButton())
