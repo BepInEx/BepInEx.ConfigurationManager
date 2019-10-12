@@ -36,7 +36,7 @@ namespace ConfigurationManager
             "The shortcut will only fire when you press \n" +
             "the main key while all modifiers are already pressed.");
 
-        internal new static ManualLogSource Logger;
+        internal static new ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;
 
         private const string SearchBoxName = "searchBox";
@@ -210,7 +210,8 @@ namespace ConfigurationManager
 
                 GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
 
-                Input.ResetInputAxes();
+                if (!_fieldDrawer.SettingKeyboardShortcut)
+                    Input.ResetInputAxes();
             }
         }
 
@@ -249,7 +250,7 @@ namespace ConfigurationManager
             _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, false, true);
             GUILayout.BeginVertical();
             {
-                if(string.IsNullOrEmpty(SearchString))
+                if (string.IsNullOrEmpty(SearchString))
                     GUILayout.Label("Tip: Left-click on the setting names on the left to see their descriptions.");
 
                 foreach (var plugin in _filteredSetings)

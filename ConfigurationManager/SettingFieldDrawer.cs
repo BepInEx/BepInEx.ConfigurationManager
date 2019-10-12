@@ -15,7 +15,7 @@ namespace ConfigurationManager
 {
     internal class SettingFieldDrawer
     {
-        private static readonly IEnumerable<KeyCode> _keysToCheck = BepInEx.Configuration.KeyboardShortcut.AllKeyCodes.Except(new[] { KeyCode.Mouse0 }).ToArray();
+        private static readonly IEnumerable<KeyCode> _keysToCheck = BepInEx.Configuration.KeyboardShortcut.AllKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
 
         public Dictionary<Type, Action<SettingEntryBase>> SettingDrawHandlers { get; }
 
@@ -25,6 +25,7 @@ namespace ConfigurationManager
         private readonly ConfigurationManager _instance;
 
         private SettingEntryBase _currentKeyboardShortcutToSet;
+        public bool SettingKeyboardShortcut => _currentKeyboardShortcutToSet != null;
 
         public SettingFieldDrawer(ConfigurationManager instance)
         {
@@ -238,7 +239,7 @@ namespace ConfigurationManager
                 return false;
             }
         }
-
+        
         private void DrawKeyboardShortcut(SettingEntryBase setting)
         {
             var value = setting.Get();
@@ -250,6 +251,7 @@ namespace ConfigurationManager
                 GUIUtility.keyboardControl = -1;
 
                 foreach (var key in _keysToCheck)
+                {
                     if (Input.GetKeyUp(key))
                     {
                         if (isOldType) setting.Set(new KeyboardShortcut(key, _keysToCheck.Where(Input.GetKey).ToArray()));
@@ -257,6 +259,7 @@ namespace ConfigurationManager
                         _currentKeyboardShortcutToSet = null;
                         break;
                     }
+                }
 
                 if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
