@@ -51,7 +51,7 @@ namespace ConfigurationManager
         {
             if (setting.CustomDrawer != null)
                 setting.CustomDrawer(setting);
-            else if (setting.ShowRangeAsPercent != null)
+            else if (setting.ShowRangeAsPercent != null && setting.AcceptableValueRange.Key != null)
                 DrawRangeField(setting);
             else if (setting.AcceptableValues != null)
                 DrawListField(setting);
