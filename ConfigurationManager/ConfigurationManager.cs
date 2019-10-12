@@ -99,7 +99,7 @@ namespace ConfigurationManager
                 if (_displayingWindow == value) return;
                 _displayingWindow = value;
 
-                _fieldDrawer.ClearCache();
+                SettingFieldDrawer.ClearCache();
 
                 if (_displayingWindow)
                 {
@@ -123,10 +123,10 @@ namespace ConfigurationManager
             if (settingType == null) throw new ArgumentNullException(nameof(settingType));
             if (onGuiDrawer == null) throw new ArgumentNullException(nameof(onGuiDrawer));
 
-            if (_fieldDrawer.SettingDrawHandlers.ContainsKey(settingType))
+            if (SettingFieldDrawer.SettingDrawHandlers.ContainsKey(settingType))
                 Logger.LogWarning("Tried to add a setting drawer for type " + settingType.FullName + " while one already exists.");
             else
-                _fieldDrawer.SettingDrawHandlers[settingType] = onGuiDrawer;
+                SettingFieldDrawer.SettingDrawHandlers[settingType] = onGuiDrawer;
         }
 
         private void BuildSettingList()
@@ -210,7 +210,7 @@ namespace ConfigurationManager
 
                 GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
 
-                if (!_fieldDrawer.SettingKeyboardShortcut)
+                if (!SettingFieldDrawer.SettingKeyboardShortcut)
                     Input.ResetInputAxes();
             }
         }

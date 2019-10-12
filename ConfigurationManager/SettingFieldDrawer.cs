@@ -17,19 +17,18 @@ namespace ConfigurationManager
     {
         private static readonly IEnumerable<KeyCode> _keysToCheck = BepInEx.Configuration.KeyboardShortcut.AllKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
 
-        public Dictionary<Type, Action<SettingEntryBase>> SettingDrawHandlers { get; }
+        public static Dictionary<Type, Action<SettingEntryBase>> SettingDrawHandlers { get; }
 
-        private readonly Dictionary<SettingEntryBase, ComboBox> _comboBoxCache = new Dictionary<SettingEntryBase, ComboBox>();
-        private readonly Dictionary<SettingEntryBase, ColorCacheEntry> _colorCache = new Dictionary<SettingEntryBase, ColorCacheEntry>();
+        private static readonly Dictionary<SettingEntryBase, ComboBox> _comboBoxCache = new Dictionary<SettingEntryBase, ComboBox>();
+        private static readonly Dictionary<SettingEntryBase, ColorCacheEntry> _colorCache = new Dictionary<SettingEntryBase, ColorCacheEntry>();
 
         private readonly ConfigurationManager _instance;
 
-        private SettingEntryBase _currentKeyboardShortcutToSet;
-        public bool SettingKeyboardShortcut => _currentKeyboardShortcutToSet != null;
+        private static SettingEntryBase _currentKeyboardShortcutToSet;
+        public static bool SettingKeyboardShortcut => _currentKeyboardShortcutToSet != null;
 
-        public SettingFieldDrawer(ConfigurationManager instance)
+        static SettingFieldDrawer()
         {
-            _instance = instance;
             SettingDrawHandlers = new Dictionary<Type, Action<SettingEntryBase>>
             {
                 {typeof(bool), DrawBoolField},
@@ -41,6 +40,11 @@ namespace ConfigurationManager
                 {typeof(Vector4), DrawVector4 },
                 {typeof(Quaternion), DrawQuaternion },
             };
+        }
+
+        public SettingFieldDrawer(ConfigurationManager instance)
+        {
+            _instance = instance;
         }
 
         public void DrawSettingValue(SettingEntryBase setting)
@@ -57,7 +61,7 @@ namespace ConfigurationManager
                 DrawFieldBasedOnValueType(setting);
         }
 
-        public void ClearCache()
+        public static void ClearCache()
         {
             _comboBoxCache.Clear();
 
@@ -123,7 +127,7 @@ namespace ConfigurationManager
                 setting.Set(result);
         }
 
-        private void DrawComboboxField(SettingEntryBase setting, IList list, float windowYmax)
+        private static void DrawComboboxField(SettingEntryBase setting, IList list, float windowYmax)
         {
             var buttonText = ObjectToGuiContent(setting.Get());
             var dispRect = GUILayoutUtility.GetRect(buttonText, GUI.skin.button, GUILayout.ExpandWidth(true));
@@ -240,7 +244,7 @@ namespace ConfigurationManager
             }
         }
         
-        private void DrawKeyboardShortcut(SettingEntryBase setting)
+        private static void DrawKeyboardShortcut(SettingEntryBase setting)
         {
             var value = setting.Get();
             var isOldType = value is KeyboardShortcut;
@@ -326,7 +330,7 @@ namespace ConfigurationManager
             return x;
         }
 
-        private void DrawColor(SettingEntryBase obj)
+        private static void DrawColor(SettingEntryBase obj)
         {
             var setting = (Color)obj.Get();
 
