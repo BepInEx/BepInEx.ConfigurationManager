@@ -5,6 +5,8 @@ using BepInEx;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -77,6 +79,54 @@ namespace ConfigurationManager.Utilities
                     tex.SetPixel(x, y, color);
 
             tex.Apply(false);
+        }
+
+        public static void OpenLog()
+        {
+            bool TryOpen(string path)
+            {
+                if (!File.Exists(path)) return false;
+                try
+                {
+                    Process.Start(path);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            // Generated in most versions unless disabled
+            if (TryOpen(Path.Combine(Application.dataPath, "output_log.txt"))) return;
+
+            // Available since 2018.3
+            var prop = typeof(Application).GetProperty("consoleLogPath", BindingFlags.Static | BindingFlags.Public);
+            if (prop != null)
+            {
+                var path = prop.GetValue(null, null) as string;
+                if (TryOpen(path)) return;
+            }
+
+            if (Directory.Exists(Application.persistentDataPath))
+            {
+                var file = Directory.GetFiles(Application.persistentDataPath, "output_log.txt", SearchOption.AllDirectories).FirstOrDefault();
+                if (TryOpen(file)) return;
+            }
+
+            // Fall back to more aggresive brute search
+            var rootDir = Directory.GetParent(Application.dataPath);
+            if (rootDir.Exists)
+            {
+                // BepInEx 5.x log file
+                var result = rootDir.GetFiles("LogOutput.log", SearchOption.AllDirectories).FirstOrDefault();
+                if (result == null)
+                    result = rootDir.GetFiles("output_log.txt", SearchOption.AllDirectories).FirstOrDefault();
+
+                if (result != null && TryOpen(result.FullName)) return;
+            }
+
+            throw new FileNotFoundException("No log files were found");
         }
     }
 }

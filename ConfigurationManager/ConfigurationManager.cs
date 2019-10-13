@@ -329,6 +329,12 @@ namespace ConfigurationManager
                     _showDebug = newVal;
                     BuildSettingList();
                 }
+
+                if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
+                {
+                    try { Utilities.Utils.OpenLog(); }
+                    catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
+                }
             }
             GUILayout.EndHorizontal();
 
