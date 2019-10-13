@@ -60,35 +60,38 @@ private void Update()
 ```
 
 ## Overriding default Configuration Manager behavior
-You can override most of the properties of a setting shown inside the configuration manager window by passing a specially formatted instance of a class as a tag of your setting. You simply have to place the code of this class anywhere in your code, it will work as long as its name remains unchanged. Here's an example of overriding order of settings and marking one of the settings as advanced (not shown by default):
+You can override most of the properties of a setting shown inside the configuration manager window by passing an instance of a specially named class as a tag of your setting. You simply have to place the code of this class anywhere in your code, it will work as long as its name remains unchanged. Here's an example of overriding order of settings and marking one of the settings as advanced:
 ```c#
-// Place the class with only properties that you need anywhere in your code.
+// Place the class anywhere in your code, you can remove parts of it that you won't use
 internal sealed class ConfigurationManagerAttributes
 {
-    public bool IsAdvanced;
-    public int Order;
+    public bool? IsAdvanced;
+    public int? Order;
 }
 
 // When creating settings, add an instance of this class as a tag. Don't forget to set the overriden values.
-Config.AddSetting("X", "1", false, new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true, Order = 3 }));
-Config.AddSetting("X", "2", false, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 1 }));
-Config.AddSetting("X", "3", false, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 2 }));
+// Override IsAdvanced and Order
+Config.AddSetting("X", "1", 1, new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true, Order = 3 }));
+// Override only Order, IsAdvanced stays as the default value assigned by ConfigManager
+Config.AddSetting("X", "2", 2, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 1 }));
+Config.AddSetting("X", "3", 3, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 2 }));
 ```
-Here's a full template of this special class with all available fields to override. Name of this class, as well as names, types and access modifiers of its fields cannot be changed.
+Here's a full template of this special class with all available fields to override. Name of this class, as well as names, types and access modifiers of its fields cannot be changed. You can copy it to a new .cs file and add it to your project.
 ```c#
 /// <summary>
 /// Special class that controls how a setting is displayed inside ConfigurationManager.
-/// To use, place this class anywhere in your code, remove unnecessary fields, and pass instances of it as tags.
+/// To use, make a new instance, assign any fields that you want to override, and pass it as a setting tag.
 /// 
-/// WARNING: Remove all fields that you will not use to allow ConfigurationManager to populate them.
-/// If a field exists in this class, it will override any values generated for this field by ConfigurationManager.
+/// If a field is null (default), it will be ignored and won't change how the setting is displayed.
+/// If a field is non-null (you assigned a value to it), it will override default behavior.
+/// You can optionally remove fields that you won't use from this class.
 /// </summary>
 internal sealed class ConfigurationManagerAttributes
 {
     /// <summary>
     /// Should the setting be shown as a percentage (only use with value range settings).
     /// </summary>
-    public bool ShowRangeAsPercent;
+    public bool? ShowRangeAsPercent;
 
     /// <summary>
     /// Custom setting editor (OnGUI code that replaces the default editor provided by ConfigurationManager).
@@ -99,7 +102,7 @@ internal sealed class ConfigurationManagerAttributes
     /// <summary>
     /// Show this setting in the settings screen at all? If false, don't show.
     /// </summary>
-    public bool Browsable;
+    public bool? Browsable;
 
     /// <summary>
     /// Category the setting is under. Null to be directly under the plugin.
@@ -114,7 +117,7 @@ internal sealed class ConfigurationManagerAttributes
     /// <summary>
     /// Force the "Reset" button to not be displayed, even if a valid DefaultValue is available. 
     /// </summary>
-    public bool HideDefaultButton;
+    public bool? HideDefaultButton;
 
     /// <summary>
     /// Optional description shown when hovering over the setting.
@@ -131,17 +134,17 @@ internal sealed class ConfigurationManagerAttributes
     /// Order of the setting on the settings list relative to other settings in a category.
     /// 0 by default, lower is higher on the list.
     /// </summary>
-    public int Order;
+    public int? Order;
 
     /// <summary>
     /// Only show the value, don't allow editing it.
     /// </summary>
-    public bool ReadOnly;
+    public bool? ReadOnly;
 
     /// <summary>
     /// Don't show the setting by default, user has to turn on showing advanced settings or search for it.
     /// </summary>
-    public bool IsAdvanced;
+    public bool? IsAdvanced;
 
     /// <summary>
     /// Custom converter from setting type to string for the textbox.
@@ -169,7 +172,8 @@ internal sealed class ConfigurationManagerAttributes
 void Start()
 {
     // Add the drawer as a tag to this setting.
-    Config.AddSetting("Section", "Key", new ConfigDescription("Desc", null, new ConfigurationManagerAttributes{ CustomDrawer = MyDrawer });
+    Config.AddSetting("Section", "Key", "Some value" 
+        new ConfigDescription("Desc", null, new ConfigurationManagerAttributes{ CustomDrawer = MyDrawer });
 }
 
 static void MyDrawer(BepInEx.Configuration.ConfigEntryBase entry)
@@ -181,7 +185,7 @@ static void MyDrawer(BepInEx.Configuration.ConfigEntryBase entry)
 #### Add a custom editor globally
 You can specify a drawer for all settings of a setting type. Do this by using `ConfigurationManager.RegisterCustomSettingDrawer(Type, Action<SettingEntryBase>)`.
 
-**Warning:** This requires you to reference ConfiguraitonManager.dll in your project and is not recommended unless you are sure all users will have it installed. It's usually better to use the above method instead.
+**Warning:** This requires you to reference ConfiguraitonManager.dll in your project and is not recommended unless you are sure all users will have it installed. It's usually better to use the above method to add the custom drawer to each setting individually instead.
 ```c#
 void Start()
 {
@@ -189,5 +193,7 @@ void Start()
 }
 
 static void CustomDrawer(SettingEntryBase entry)
-...
+{
+    GUILayout.Label((MyType)entry.Get(), GUILayout.ExpandWidth(true));
+}
 ```

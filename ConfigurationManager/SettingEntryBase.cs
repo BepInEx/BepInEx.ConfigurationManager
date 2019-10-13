@@ -194,7 +194,8 @@ namespace ConfigurationManager
                                 try
                                 {
                                     var val = propertyPair.other.GetValue(attrib);
-                                    propertyPair.my.SetValue(this, val, null);
+                                    if (val != null)
+                                        propertyPair.my.SetValue(this, val, null);
                                 }
                                 catch (Exception ex)
                                 {
