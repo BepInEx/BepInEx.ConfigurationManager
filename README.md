@@ -92,7 +92,7 @@ internal sealed class ConfigurationManagerAttributes
 
     /// <summary>
     /// Custom setting editor (OnGUI code that replaces the default editor provided by ConfigurationManager).
-    /// See below for an explanation.
+    /// See below for a deeper explanation. Using a custom drawer will cause many of the other fields to do nothing.
     /// </summary>
     public Action<BepInEx.Configuration.ConfigEntryBase> CustomDrawer;
 
@@ -139,17 +139,17 @@ internal sealed class ConfigurationManagerAttributes
     public bool ReadOnly;
 
     /// <summary>
-    /// Is this setting advanced
+    /// Don't show the setting by default, user has to turn on showing advanced settings or search for it.
     /// </summary>
     public bool IsAdvanced;
 
     /// <summary>
-    /// Custom converter from setting type to string for the textbox
+    /// Custom converter from setting type to string for the textbox.
     /// </summary>
     public Func<object, string> ObjToStr;
 
     /// <summary>
-    /// Custom converter from string to setting type for the textbox
+    /// Custom converter from string to setting type for the textbox.
     /// </summary>
     public Func<string, object> StrToObj;
 }
