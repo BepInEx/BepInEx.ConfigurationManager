@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
@@ -90,7 +91,7 @@ namespace ConfigurationManager
                 new ConfigDescription("The shortcut used to toggle the config manager window on and off.\n" +
                                       "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
         }
-        
+
         /// <summary>
         /// Is the config manager main window displayed on screen
         /// </summary>
@@ -103,7 +104,7 @@ namespace ConfigurationManager
                 _displayingWindow = value;
 
                 SettingFieldDrawer.ClearCache();
-                
+
                 if (_displayingWindow)
                 {
                     CalculateWindowRect();
@@ -389,7 +390,7 @@ namespace ConfigurationManager
                     if (!string.IsNullOrEmpty(category.Key))
                         SettingFieldDrawer.DrawCenteredLabel(category.First().category);
 
-                    foreach (var setting in category.OrderBy(x=>x.plugin.Order).ThenBy(x => x.plugin.DispName))
+                    foreach (var setting in category.OrderBy(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
                     {
                         DrawSingleSetting(setting.plugin);
                         GUILayout.Space(2);
@@ -434,14 +435,14 @@ namespace ConfigurationManager
 
         private static void DrawDefaultButton(SettingEntryBase setting)
         {
-            if(setting.HideDefaultButton) return;
+            if (setting.HideDefaultButton) return;
 
             bool DrawDefaultButton()
             {
                 GUILayout.Space(5);
                 return GUILayout.Button("Reset", GUILayout.ExpandWidth(false));
             }
-            
+
             if (setting.DefaultValue != null)
             {
                 if (DrawDefaultButton())
@@ -471,6 +472,11 @@ namespace ConfigurationManager
             windowBackground.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f, 1));
             windowBackground.Apply();
             WindowBackground = windowBackground;
+
+            // Check if user has permissions to write config files to disk
+            try { Config.Save(); }
+            catch (IOException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Failed to write to config directory, expect issues!\nError message:" + ex.Message); }
+            catch (UnauthorizedAccessException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Permission denied to write to config directory, expect issues!\nError message:" + ex.Message); }
         }
 
         private void Update()
