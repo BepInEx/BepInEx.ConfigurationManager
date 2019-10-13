@@ -60,18 +60,19 @@ private void Update()
 ```
 
 ## Overriding default Configuration Manager behavior
-You can override most of the properties of a setting shown inside the configuration manager window by passing an instance of a specially named class as a tag of your setting. You simply have to place the code of this class anywhere in your code, it will work as long as its name remains unchanged. Here's an example of overriding order of settings and marking one of the settings as advanced:
+You can change how a setting is shown inside the configuration manager window by passing an instance of a special class as a tag of the setting. The special class code can be downloaded [here](ConfigurationManagerAttributes.cs). Simply download the .cs file and drag it into your project.
+- You do not have to reference ConfigurationManager.dll for this to work.
+- The class will work as long as name of the class and declarations of its fields remain unchanged. 
+- Avoid making the class public to prevent conflicts with other plugins. If you want to share it between your plugins either give each a copy, or move it to your custom namespace.
+- If the ConfigurationManager plugin is not installed in the game, this class will be safely ignored and your plugin will work as normal.
+
+Here's an example of overriding order of settings and marking one of the settings as advanced:
 ```c#
-// When creating settings, add an instance of this class as a tag. Don't forget to set the overriden values.
 // Override IsAdvanced and Order
 Config.AddSetting("X", "1", 1, new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true, Order = 3 }));
 // Override only Order, IsAdvanced stays as the default value assigned by ConfigManager
 Config.AddSetting("X", "2", 2, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 1 }));
 Config.AddSetting("X", "3", 3, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 2 }));
-```
-Here's a full template of this special class with all available fields to override. Name of this class, as well as names, types and access modifiers of its fields cannot be changed. You can copy it to a new .cs file and add it to your project.
-```c#
-
 ```
 
 ### How to make a custom editor for my setting?
@@ -79,12 +80,6 @@ If you are using a setting type that is not supported by ConfigurationManager, y
 
 To use a custom seting drawer for an individual setting, use the `CustomDrawer` field in the attribute class. See above for more info on the attribute class.
 ```c#
-// Add the attribute override class
-internal sealed class ConfigurationManagerAttributes
-{
-    public Action<BepInEx.Configuration.ConfigEntryBase> CustomDrawer;
-}
-
 void Start()
 {
     // Add the drawer as a tag to this setting.
