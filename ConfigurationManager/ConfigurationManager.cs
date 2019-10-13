@@ -30,7 +30,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Version constant
         /// </summary>
-        public const string Version = "13.0";
+        public const string Version = "14.0";
 
         private static readonly GUIContent _keyboardShortcutsCategoryName = new GUIContent("Keyboard shortcuts",
             "The first key is the main key, while the rest are modifiers.\n" +
