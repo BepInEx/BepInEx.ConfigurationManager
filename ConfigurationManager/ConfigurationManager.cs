@@ -390,7 +390,7 @@ namespace ConfigurationManager
                     if (!string.IsNullOrEmpty(category.Key))
                         SettingFieldDrawer.DrawCenteredLabel(category.First().category);
 
-                    foreach (var setting in category.OrderBy(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
+                    foreach (var setting in category.OrderByDescending(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
                     {
                         DrawSingleSetting(setting.plugin);
                         GUILayout.Space(2);

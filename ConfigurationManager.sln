@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.28307.757
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationManager", "ConfigurationManager\ConfigurationManager.csproj", "{22EDD399-1CC6-47C8-B8B8-A95FF2999901}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{F28F879D-0FA8-488C-A696-BDCCD27099B9}"
+	ProjectSection(SolutionItems) = preProject
+		ConfigurationManagerAttributes.cs = ConfigurationManagerAttributes.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
