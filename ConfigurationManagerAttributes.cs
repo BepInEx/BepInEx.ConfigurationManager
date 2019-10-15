@@ -1,6 +1,9 @@
 ﻿/// <summary>
-/// Special class that controls how a setting is displayed inside ConfigurationManager.
-/// To use, make a new instance, assign any fields that you want to override, and pass it as a setting tag.
+/// Class that specifies how a setting should be displayed inside the ConfigurationManager settings window.
+/// 
+/// Usage:
+/// This class template has to be copied inside the plugin's project and referenced by its code directly.
+/// make a new instance, assign any fields that you want to override, and pass it as a tag for your setting.
 /// 
 /// If a field is null (default), it will be ignored and won't change how the setting is displayed.
 /// If a field is non-null (you assigned a value to it), it will override default behavior.
