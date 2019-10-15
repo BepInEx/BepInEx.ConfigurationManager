@@ -387,13 +387,15 @@ namespace ConfigurationManager
                 else
                     SettingFieldDrawer.DrawCenteredLabel($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}");
 
-                foreach (var category in plugin
+                var categories = plugin
                     .Select(x => new { plugin = x, category = GetCategory(x) })
                     .GroupBy(x => x.category.text)
                     .OrderBy(x => string.Equals(x.Key, _keyboardShortcutsCategoryName.text, StringComparison.Ordinal))
-                    .ThenBy(x => x.Key))
+                    .ThenBy(x => x.Key).ToList();
+
+                foreach (var category in categories)
                 {
-                    if (!string.IsNullOrEmpty(category.Key))
+                    if (!string.IsNullOrEmpty(category.Key) && categories.Count > 1)
                         SettingFieldDrawer.DrawCenteredLabel(category.First().category);
 
                     foreach (var setting in category.OrderByDescending(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
