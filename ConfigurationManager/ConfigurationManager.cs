@@ -382,19 +382,26 @@ namespace ConfigurationManager
         {
             GUILayout.BeginVertical(GUI.skin.box);
             {
-                if (_showDebug)
-                    SettingFieldDrawer.DrawCenteredLabel(new GUIContent($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", "GUID: " + plugin.Key.GUID));
-                else
-                    SettingFieldDrawer.DrawCenteredLabel($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}");
-
                 var seb = plugin.Select(x => x).First();
-                var showSetting = seb.ShowSetting;
-                var newShowSetting = GUILayout.Toggle(showSetting, "Show");
-                if(showSetting != newShowSetting)
+                bool buttonPressed;
+                if (_showDebug)
+                    buttonPressed = SettingFieldDrawer.DrawCollapseableButton(new GUIContent($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", "GUID: " + plugin.Key.GUID), seb.IsCollapsed);
+                else
+                    buttonPressed = SettingFieldDrawer.DrawCollapseableButton($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", seb.IsCollapsed);
+
+                if(buttonPressed)
                 {
-                    seb.ShowSetting = newShowSetting;
+                    if(seb.IsCollapsed == true)
+                    {
+                        seb.IsCollapsed = false;
+                    }
+                    else
+                    {
+                        seb.IsCollapsed = true;
+                    }
                 }
-                if (seb.ShowSetting)
+                if (!string.IsNullOrEmpty(_searchString)
+                    || !seb.IsCollapsed)
                 {
                     var categories = plugin
                     .Select(x => new { plugin = x, category = GetCategory(x) })

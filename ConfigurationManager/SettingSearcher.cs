@@ -67,7 +67,7 @@ namespace ConfigurationManager
                     enabledSetting.DispName = "!Allow plugin to run on every frame";
                     enabledSetting.Description = "Disabling this will disable some or all of the plugin's functionality.\nHooks and event-based functionality will not be disabled.\nThis setting will be lost after game restart.";
                     enabledSetting.IsAdvanced = true;
-                    enabledSetting.ShowSetting = true;
+                    enabledSetting.IsCollapsed = true;
                     detected.Add(enabledSetting);
                 }
 
