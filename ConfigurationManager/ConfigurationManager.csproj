@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigSettingEntry.cs" />
+    <Compile Include="Extension\StringExtensionMethods.cs" />
     <Compile Include="Interface\AcceptableValueBaseAttribute.cs" />
     <Compile Include="Interface\AcceptableValueListAttribute.cs" />
     <Compile Include="Interface\AcceptableValueRangeAttribute.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF EXIST $(SolutionDir)PostBuild.bat CALL "$(SolutionDir)PostBuild.bat" $(TargetPath) KK

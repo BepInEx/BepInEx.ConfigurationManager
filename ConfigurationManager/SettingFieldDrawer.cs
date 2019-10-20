@@ -2,6 +2,7 @@
 // Copyright 2018 GNU General Public License v3.0
 
 using BepInEx;
+using ConfigurationManager.Extension;
 using ConfigurationManager.Utilities;
 using System;
 using System.Collections;
@@ -207,7 +208,7 @@ namespace ConfigurationManager
             }
             else
             {
-                var strVal = value.ToString();
+                var strVal = value.ToString().AppendZeroIfFloat(setting.SettingType);
                 var strResult = GUILayout.TextField(strVal, GUILayout.Width(50));
                 if (strResult != strVal)
                 {
@@ -216,14 +217,14 @@ namespace ConfigurationManager
                     setting.Set(Convert.ChangeType(clampedResultVal, setting.SettingType));
                 }
             }
-        }
+        }        
 
         private void DrawUnknownField(SettingEntryBase setting, int rightColumnWidth)
         {
             // Try to use user-supplied converters
             if (setting.ObjToStr != null && setting.StrToObj != null)
             {
-                var text = setting.ObjToStr(setting.Get());
+                var text = setting.ObjToStr(setting.Get()).AppendZeroIfFloat(setting.SettingType);
                 var result = GUILayout.TextField(text, GUILayout.MaxWidth(rightColumnWidth));
                 if (result != text)
                     setting.Set(setting.StrToObj(result));
@@ -231,7 +232,7 @@ namespace ConfigurationManager
             }
 
             // Fall back to slow/less reliable method
-            var value = setting.Get()?.ToString() ?? "NULL";
+            var value = setting.Get()?.ToString().AppendZeroIfFloat(setting.SettingType) ?? "NULL";
             if (CanCovert(value, setting.SettingType))
             {
                 var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
