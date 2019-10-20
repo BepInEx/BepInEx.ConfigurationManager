@@ -382,24 +382,39 @@ namespace ConfigurationManager
 
         private void DrawSinglePlugin(IGrouping<BepInPlugin, SettingEntryBase> plugin)
         {
-            GUILayout.BeginVertical(GUI.skin.box);
-            {
-                if (_showDebug)
-                    SettingFieldDrawer.DrawCenteredLabel(new GUIContent($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", "GUID: " + plugin.Key.GUID));
-                else
-                    SettingFieldDrawer.DrawCenteredLabel($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}");
+            GUILayout.BeginVertical(GUI.skin.box);            
+            var seb = plugin.Select(x => x).First();
+            bool buttonPressed;
+            if (_showDebug)
+                buttonPressed = SettingFieldDrawer.DrawCollapseableButton(new GUIContent($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", "GUID: " + plugin.Key.GUID), seb.IsCollapsed);
+            else
+                buttonPressed = SettingFieldDrawer.DrawCollapseableButton($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", seb.IsCollapsed);
 
+            if (buttonPressed)
+            {
+                if (seb.IsCollapsed == true)
+                {
+                    seb.IsCollapsed = false;
+                }
+                else
+                {
+                    seb.IsCollapsed = true;
+                }
+            }
+            if (!string.IsNullOrEmpty(SearchString)
+                || !seb.IsCollapsed)
+            {
                 var categories = plugin
-                    .Select(x => new { plugin = x, category = GetCategory(x) })
-                    .GroupBy(x => x.category.text)
-                    .OrderBy(x => string.Equals(x.Key, _keyboardShortcutsCategoryName.text, StringComparison.Ordinal))
-                    .ThenBy(x => x.Key).ToList();
+                .Select(x => new { plugin = x, category = GetCategory(x) })
+                .GroupBy(x => x.category.text)
+                .OrderBy(x => string.Equals(x.Key, _keyboardShortcutsCategoryName.text, StringComparison.Ordinal))
+                .ThenBy(x => x.Key).ToList();
 
                 foreach (var category in categories)
                 {
-                    if(!string.IsNullOrEmpty(category.Key))
+                    if (!string.IsNullOrEmpty(category.Key))
                     {
-                        if(!(_hideSingleSection.Value && categories.Count == 1))
+                        if (!(_hideSingleSection.Value && categories.Count == 1))
                             SettingFieldDrawer.DrawCenteredLabel(category.First().category);
                     }
 
@@ -409,6 +424,7 @@ namespace ConfigurationManager
                         GUILayout.Space(2);
                     }
                 }
+                
             }
             GUILayout.EndVertical();
         }
