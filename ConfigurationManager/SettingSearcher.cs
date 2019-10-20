@@ -21,7 +21,7 @@ namespace ConfigurationManager
 
         private static readonly Type _bepin4BaseSettingType = Type.GetType("BepInEx4.ConfigWrapper`1, BepInEx.BepIn4Patcher, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", false);
 
-        public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug)
+        public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug, bool isCollapsed)
         {
             modsWithoutSettings = new List<string>();
 
@@ -67,7 +67,6 @@ namespace ConfigurationManager
                     enabledSetting.DispName = "!Allow plugin to run on every frame";
                     enabledSetting.Description = "Disabling this will disable some or all of the plugin's functionality.\nHooks and event-based functionality will not be disabled.\nThis setting will be lost after game restart.";
                     enabledSetting.IsAdvanced = true;
-                    enabledSetting.IsCollapsed = true;
                     detected.Add(enabledSetting);
                 }
 
@@ -77,6 +76,7 @@ namespace ConfigurationManager
                     if (isAdvancedPlugin)
                         detected.ForEach(entry => entry.IsAdvanced = true);
 
+                    detected.ForEach(entry => entry.IsCollapsed = isCollapsed);
                     results = results.Concat(detected);
                 }
             }
