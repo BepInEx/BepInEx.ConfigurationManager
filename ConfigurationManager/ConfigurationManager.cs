@@ -377,7 +377,7 @@ namespace ConfigurationManager
                 BuildFilteredSettingList();
             }
         }
-
+        
         private void DrawSinglePlugin(IGrouping<BepInPlugin, SettingEntryBase> plugin)
         {
             GUILayout.BeginVertical(GUI.skin.box);
@@ -387,23 +387,33 @@ namespace ConfigurationManager
                 else
                     SettingFieldDrawer.DrawCenteredLabel($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}");
 
-                var categories = plugin
+                var seb = plugin.Select(x => x).First();
+                var showSetting = seb.ShowSetting;
+                var newShowSetting = GUILayout.Toggle(showSetting, "Show");
+                if(showSetting != newShowSetting)
+                {
+                    seb.ShowSetting = newShowSetting;
+                }
+                if (seb.ShowSetting)
+                {
+                    var categories = plugin
                     .Select(x => new { plugin = x, category = GetCategory(x) })
                     .GroupBy(x => x.category.text)
                     .OrderBy(x => string.Equals(x.Key, _keyboardShortcutsCategoryName.text, StringComparison.Ordinal))
                     .ThenBy(x => x.Key).ToList();
 
-                foreach (var category in categories)
-                {
-                    if (!string.IsNullOrEmpty(category.Key) && categories.Count > 1)
-                        SettingFieldDrawer.DrawCenteredLabel(category.First().category);
-
-                    foreach (var setting in category.OrderByDescending(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
+                    foreach (var category in categories)
                     {
-                        DrawSingleSetting(setting.plugin);
-                        GUILayout.Space(2);
+                        if (!string.IsNullOrEmpty(category.Key) && categories.Count > 1)
+                            SettingFieldDrawer.DrawCenteredLabel(category.First().category);
+
+                        foreach (var setting in category.OrderByDescending(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
+                        {
+                            DrawSingleSetting(setting.plugin);
+                            GUILayout.Space(2);
+                        }
                     }
-                }
+                }                
             }
             GUILayout.EndVertical();
         }

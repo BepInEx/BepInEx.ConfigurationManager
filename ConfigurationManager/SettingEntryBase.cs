@@ -15,6 +15,8 @@ namespace ConfigurationManager
     /// </summary>
     public abstract class SettingEntryBase
     {
+        public bool ShowSetting { get; internal set; }
+
         /// <summary>
         /// List of values this setting can take
         /// </summary>
