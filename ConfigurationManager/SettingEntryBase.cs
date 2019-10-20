@@ -15,6 +15,9 @@ namespace ConfigurationManager
     /// </summary>
     public abstract class SettingEntryBase
     {
+        /// <summary>
+        /// Bool to allow collapseable UI for plugins
+        /// </summary>
         public bool IsCollapsed { get; internal set; }
 
         /// <summary>
