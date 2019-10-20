@@ -96,22 +96,14 @@ namespace ConfigurationManager
             {
                 plusMinus = " [+]";
             }
-            var x = GUILayout.Button(text + plusMinus, GUILayout.ExpandWidth(true));
+            var buttonPressed = GUILayout.Button(text + plusMinus, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
-            return x;
+            return buttonPressed;
         }
 
         public static bool DrawCollapseableButton(GUIContent content, bool isCollapsed, params GUILayoutOption[] options)
         {
-            GUILayout.BeginHorizontal(options);
-            string plusMinus = " [-]";
-            if (isCollapsed)
-            {
-                plusMinus = " [+]";
-            }
-            var x = GUILayout.Button(content + plusMinus, GUILayout.ExpandWidth(true));
-            GUILayout.EndHorizontal();
-            return x;
+            return DrawCollapseableButton(content.ToString(), isCollapsed, options);
         }
 
         public static bool DrawCurrentDropdown()
