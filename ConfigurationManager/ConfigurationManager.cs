@@ -307,16 +307,14 @@ namespace ConfigurationManager
             {
                 foreach (var plugin in _filteredSetings)
                 {
-                    var seb = plugin.Select(x => x).First();
-                    seb.IsCollapsed = false;
+                    plugin.Select(x => x).First().IsCollapsed = false;
                 }
             }
             if (collapseAll)
             {
                 foreach (var plugin in _filteredSetings)
                 {
-                    var seb = plugin.Select(x => x).First();
-                    seb.IsCollapsed = true;
+                    plugin.Select(x => x).First().IsCollapsed = true;
                 }
             }
         }
