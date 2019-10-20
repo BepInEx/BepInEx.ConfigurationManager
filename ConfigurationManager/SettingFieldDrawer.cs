@@ -103,7 +103,10 @@ namespace ConfigurationManager
 
         public static bool DrawCollapseableButton(GUIContent content, bool isCollapsed, params GUILayoutOption[] options)
         {
-            return DrawCollapseableButton(content.ToString(), isCollapsed, options);
+            GUILayout.BeginHorizontal(options);
+            var buttonPressed = GUILayout.Button(content, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            return buttonPressed;
         }
 
         public static bool DrawCurrentDropdown()
