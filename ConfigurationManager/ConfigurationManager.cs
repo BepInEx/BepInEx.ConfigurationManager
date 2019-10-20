@@ -273,6 +273,8 @@ namespace ConfigurationManager
                 if (string.IsNullOrEmpty(SearchString))
                     GUILayout.Label("Tip: You can left-click setting names on the left to see their descriptions.");
 
+                DrawExpandCollapseAll();
+
                 foreach (var plugin in _filteredSetings)
                     DrawSinglePlugin(plugin);
 
@@ -292,6 +294,31 @@ namespace ConfigurationManager
 
             if (!SettingFieldDrawer.DrawCurrentDropdown())
                 DrawTooltip(SettingWindowRect);
+        }
+
+        private void DrawExpandCollapseAll()
+        {
+            GUILayout.BeginHorizontal();
+            var expandAll = GUILayout.Button("Expand All", GUILayout.Width(100f));
+            var collapseAll = GUILayout.Button("Collapse All", GUILayout.Width(100f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (expandAll)
+            {
+                foreach (var plugin in _filteredSetings)
+                {
+                    var seb = plugin.Select(x => x).First();
+                    seb.IsCollapsed = false;
+                }
+            }
+            if (collapseAll)
+            {
+                foreach (var plugin in _filteredSetings)
+                {
+                    var seb = plugin.Select(x => x).First();
+                    seb.IsCollapsed = true;
+                }
+            }
         }
 
         private void DrawWindowHeader()
