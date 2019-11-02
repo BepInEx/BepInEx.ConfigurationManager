@@ -13,6 +13,12 @@ The configuration manager can be accessed in-game by pressing the hotkey (by def
 
 Note: The .xml file is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
 
+## How to compile
+1. Clone/download the repo
+2. Run `Paket-Restore.bat` to restore dependencies
+   * On linux you need to [add paket to bash](https://fsprojects.github.io/Paket/installation.html#Installation-on-Linux) and use the [restore command](https://fsprojects.github.io/Paket/paket-restore.html)
+3. Compile using your preferred IDE
+
 ## How to make my mod compatible?
 ConfigurationManager will automatically display all settings from your plugin's `Config`. All metadata (e.g. description, value range) will be used by ConfigurationManager to display the settings to the user.
 
