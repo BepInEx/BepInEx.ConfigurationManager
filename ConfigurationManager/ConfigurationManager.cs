@@ -179,23 +179,28 @@ namespace ConfigurationManager
                     results = results.Where(x => x.IsAdvanced == true || IsKeyboardShortcut(x));
             }
 
+            const string shortcutsCatName = "Keyboard shortcuts";
             string GetCategory(SettingEntryBase eb)
             {
                 // Legacy behavior
-                if (eb.SettingType == typeof(BepInEx.KeyboardShortcut)) return "Keyboard shortcuts";
+                if (eb.SettingType == typeof(BepInEx.KeyboardShortcut)) return shortcutsCatName;
                 return eb.Category;
             }
 
-            _filteredSetings = results.GroupBy(x => x.PluginInfo).Select(pluginSettings =>
-            {
-                var categories = pluginSettings
-                    .GroupBy(GetCategory)
-                    .OrderBy(x => string.Equals(x.Key, "Keyboard shortcuts", StringComparison.Ordinal))
-                    .ThenBy(x => x.Key)
-                    .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
+            _filteredSetings = results
+                .GroupBy(x => x.PluginInfo)
+                .Select(pluginSettings =>
+                {
+                    var categories = pluginSettings
+                        .GroupBy(GetCategory)
+                        .OrderBy(x => string.Equals(x.Key, shortcutsCatName, StringComparison.Ordinal))
+                        .ThenBy(x => x.Key)
+                        .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
 
-                return new PluginSettingsData { Info = pluginSettings.Key, Categories = categories.ToList() };
-            }).ToList();
+                    return new PluginSettingsData { Info = pluginSettings.Key, Categories = categories.ToList() };
+                })
+                .OrderBy(x => x.Info.Name)
+                .ToList();
         }
 
         private sealed class PluginSettingsData
@@ -436,8 +441,8 @@ namespace ConfigurationManager
         {
             GUILayout.BeginVertical(GUI.skin.box);
 
-            var categoryHeader = _showDebug ? 
-                new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", "GUID: " + plugin.Info.GUID) : 
+            var categoryHeader = _showDebug ?
+                new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", "GUID: " + plugin.Info.GUID) :
                 new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}");
 
             if (SettingFieldDrawer.DrawCollapseableButton(categoryHeader, plugin.Collapsed))
