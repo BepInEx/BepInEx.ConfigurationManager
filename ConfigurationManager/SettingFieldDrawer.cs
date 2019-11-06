@@ -89,7 +89,7 @@ namespace ConfigurationManager
                     alignment = TextAnchor.UpperCenter,
                     wordWrap = true,
                     stretchWidth = true,
-                    fontSize = 15
+                    fontSize = 14
                 };
             }
             
@@ -106,7 +106,7 @@ namespace ConfigurationManager
                     alignment = TextAnchor.UpperCenter,
                     wordWrap = true,
                     stretchWidth = true,
-                    fontSize = 17
+                    fontSize = 15
                 };
             }
 
