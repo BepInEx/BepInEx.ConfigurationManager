@@ -214,6 +214,8 @@ namespace ConfigurationManager
                 public string Name;
                 public List<SettingEntryBase> Settings;
             }
+
+            public int Height { get; set; }
         }
 
         private static bool IsKeyboardShortcut(SettingEntryBase x)
@@ -307,15 +309,53 @@ namespace ConfigurationManager
             DrawWindowHeader();
 
             _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, false, true);
+
+            var scrollPosition = _settingWindowScrollPos.y;
+            var scrollHeight = SettingWindowRect.height;
+
             GUILayout.BeginVertical();
             {
+
                 if (string.IsNullOrEmpty(SearchString))
                     GUILayout.Label("Tip: You can left-click setting names on the left to see their descriptions.");
 
                 DrawExpandCollapseAll();
 
+                var currentHeight = 0;
                 foreach (var plugin in _filteredSetings)
-                    DrawSinglePlugin(plugin);
+                {
+                    var visible = plugin.Height == 0 || currentHeight + plugin.Height >= scrollPosition && currentHeight <= scrollPosition + scrollHeight;
+
+                    if (visible)
+                    {
+                        try
+                        {
+                            DrawSinglePlugin(plugin);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
+                            Logger.LogDebug(ex);
+                        }
+
+                        if (plugin.Height == 0 && Event.current.type == EventType.Repaint)
+                            plugin.Height = (int)GUILayoutUtility.GetLastRect().height;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            GUILayout.Space(plugin.Height);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
+                            Logger.LogDebug(ex);
+                        }
+                    }
+
+                    currentHeight += plugin.Height;
+                }
 
                 if (_showDebug)
                 {
