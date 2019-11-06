@@ -12,6 +12,7 @@ using BepInEx.Logging;
 using UnityEngine;
 using BepInEx.Configuration;
 
+#pragma warning disable 618
 namespace ConfigurationManager
 {
     /// <summary>
@@ -31,12 +32,6 @@ namespace ConfigurationManager
         /// Version constant
         /// </summary>
         public const string Version = "15.0";
-
-        //todo use?
-        private static readonly string KeyboarShortcutExplanation =
-            "The first key is the main key, while the rest are modifiers.\n" +
-            "The shortcut will only fire when you press \n" +
-            "the main key while all modifiers are already pressed.";
 
         internal static new ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;

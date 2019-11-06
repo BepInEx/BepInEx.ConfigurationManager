@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
+#pragma warning disable 618
 namespace ConfigurationManager
 {
     /// <summary>
@@ -53,7 +54,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Force the "Reset" button to not be displayed, even if a valid DefaultValue is available. 
         /// </summary>
-        public bool HideDefaultButton { get; private set; }
+        public bool HideDefaultButton { get; protected set; }
 
         /// <summary>
         /// Optional description shown when hovering over the setting
@@ -93,7 +94,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Order of the setting on the settings list relative to other settings in a category. 0 by default, lower is higher on the list.
         /// </summary>
-        public int Order { get; private set; }
+        public int Order { get; protected set; }
 
         /// <summary>
         /// Get the value of this setting

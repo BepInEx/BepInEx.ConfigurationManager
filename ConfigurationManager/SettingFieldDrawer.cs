@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Linq;
 using UnityEngine;
 
+#pragma warning disable 618
 namespace ConfigurationManager
 {
     internal class SettingFieldDrawer

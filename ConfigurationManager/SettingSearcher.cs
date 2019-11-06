@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
+#pragma warning disable 618
 namespace ConfigurationManager
 {
     internal static class SettingSearcher
