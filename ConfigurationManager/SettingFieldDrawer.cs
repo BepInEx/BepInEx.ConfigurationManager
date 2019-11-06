@@ -88,6 +88,27 @@ namespace ConfigurationManager
             GUILayout.EndHorizontal();
         }
 
+        public static bool DrawCollapseableButton(string text, bool isCollapsed, params GUILayoutOption[] options)
+        {
+            GUILayout.BeginHorizontal(options);
+            string plusMinus = " [-]";
+            if (isCollapsed)
+            {
+                plusMinus = " [+]";
+            }
+            var buttonPressed = GUILayout.Button(text + plusMinus, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            return buttonPressed;
+        }
+
+        public static bool DrawCollapseableButton(GUIContent content, bool isCollapsed, params GUILayoutOption[] options)
+        {
+            GUILayout.BeginHorizontal(options);
+            var buttonPressed = GUILayout.Button(content, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            return buttonPressed;
+        }
+
         public static bool DrawCurrentDropdown()
         {
             if (ComboBox.CurrentDropdownDrawer != null)
