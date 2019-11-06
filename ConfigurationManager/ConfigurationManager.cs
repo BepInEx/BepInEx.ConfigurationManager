@@ -326,10 +326,9 @@ namespace ConfigurationManager
                         {
                             DrawSinglePlugin(plugin);
                         }
-                        catch (ArgumentException ex)
+                        catch (ArgumentException)
                         {
                             // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
-                            Logger.LogDebug(ex);
                         }
 
                         if (plugin.Height == 0 && Event.current.type == EventType.Repaint)
@@ -341,10 +340,9 @@ namespace ConfigurationManager
                         {
                             GUILayout.Space(plugin.Height);
                         }
-                        catch (ArgumentException ex)
+                        catch (ArgumentException)
                         {
                             // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
-                            Logger.LogDebug(ex);
                         }
                     }
 
