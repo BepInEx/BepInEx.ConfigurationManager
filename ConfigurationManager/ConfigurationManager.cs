@@ -30,7 +30,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Version constant
         /// </summary>
-        public const string Version = "14.1";
+        public const string Version = "15.0";
 
         //todo use?
         private static readonly string KeyboarShortcutExplanation =
