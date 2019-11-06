@@ -169,9 +169,9 @@ namespace ConfigurationManager
         {
             IEnumerable<SettingEntryBase> results = _allSettings;
 
-            if (!string.IsNullOrEmpty(_searchString))
+            if (!string.IsNullOrEmpty(SearchString))
             {
-                results = results.Where(x => ContainsSearchString(x, _searchString));
+                results = results.Where(x => ContainsSearchString(x, SearchString));
             }
             else
             {
@@ -462,8 +462,8 @@ namespace ConfigurationManager
             get => _searchString;
             private set
             {
-                if (string.IsNullOrEmpty(_searchString))
-                    _searchString = string.Empty;
+                if (value == null)
+                    value = string.Empty;
 
                 if (_searchString == value)
                     return;
