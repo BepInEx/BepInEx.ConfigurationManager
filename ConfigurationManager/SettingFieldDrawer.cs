@@ -79,34 +79,39 @@ namespace ConfigurationManager
             GUILayout.EndHorizontal();
         }
 
-        public static void DrawCenteredLabel(GUIContent content, params GUILayoutOption[] options)
+        private static GUIStyle _categoryHeaderSkin;
+        public static void DrawCategoryHeader(string text)
         {
-            GUILayout.BeginHorizontal(options);
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(content);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-        }
-
-        public static bool DrawCollapseableButton(string text, bool isCollapsed, params GUILayoutOption[] options)
-        {
-            GUILayout.BeginHorizontal(options);
-            string plusMinus = " [-]";
-            if (isCollapsed)
+            if (_categoryHeaderSkin == null)
             {
-                plusMinus = " [+]";
+                _categoryHeaderSkin = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.UpperCenter,
+                    wordWrap = true,
+                    stretchWidth = true,
+                    fontSize = 15
+                };
             }
-            var buttonPressed = GUILayout.Button(text + plusMinus, GUILayout.ExpandWidth(true));
-            GUILayout.EndHorizontal();
-            return buttonPressed;
+            
+            GUILayout.Label(text, _categoryHeaderSkin);
         }
 
-        public static bool DrawCollapseableButton(GUIContent content, bool isCollapsed, params GUILayoutOption[] options)
+        private static GUIStyle _pluginHeaderSkin;
+        public static bool DrawPluginHeader(GUIContent content, bool isCollapsed)
         {
-            GUILayout.BeginHorizontal(options);
-            var buttonPressed = GUILayout.Button(content, GUILayout.ExpandWidth(true));
-            GUILayout.EndHorizontal();
-            return buttonPressed;
+            if (_pluginHeaderSkin == null)
+            {
+                _pluginHeaderSkin = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.UpperCenter,
+                    wordWrap = true,
+                    stretchWidth = true,
+                    fontSize = 17
+                };
+            }
+
+            if (isCollapsed) content.text += "\n...";
+            return GUILayout.Button(content, _pluginHeaderSkin, GUILayout.ExpandWidth(true));
         }
 
         public static bool DrawCurrentDropdown()

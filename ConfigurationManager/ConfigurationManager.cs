@@ -50,6 +50,9 @@ namespace ConfigurationManager
         /// </summary>
         public event EventHandler<ValueChangedEventArgs<bool>> DisplayingWindowChanged;
 
+        /// <summary>
+        /// Disable the hotkey check used by config manager. If enabled you have to set DisplayingWindow to show the manager.
+        /// </summary>
         public bool OverrideHotkey;
 
         private bool _displayingWindow;
@@ -62,6 +65,7 @@ namespace ConfigurationManager
         internal Rect SettingWindowRect { get; private set; }
         private Rect _screenRect;
         private Vector2 _settingWindowScrollPos;
+        private int _tipsHeight;
 
         private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
@@ -187,6 +191,8 @@ namespace ConfigurationManager
                 return eb.Category;
             }
 
+            var settingsAreCollapsed = _pluginConfigCollapsedDefault.Value;
+
             _filteredSetings = results
                 .GroupBy(x => x.PluginInfo)
                 .Select(pluginSettings =>
@@ -197,25 +203,10 @@ namespace ConfigurationManager
                         .ThenBy(x => x.Key)
                         .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
 
-                    return new PluginSettingsData { Info = pluginSettings.Key, Categories = categories.ToList() };
+                    return new PluginSettingsData { Info = pluginSettings.Key, Categories = categories.ToList(), Collapsed = settingsAreCollapsed };
                 })
                 .OrderBy(x => x.Info.Name)
                 .ToList();
-        }
-
-        private sealed class PluginSettingsData
-        {
-            public BepInPlugin Info;
-            public List<PluginSettingsGroupData> Categories;
-            public bool Collapsed;
-
-            public sealed class PluginSettingsGroupData
-            {
-                public string Name;
-                public List<SettingEntryBase> Settings;
-            }
-
-            public int Height { get; set; }
         }
 
         private static bool IsKeyboardShortcut(SettingEntryBase x)
@@ -315,13 +306,16 @@ namespace ConfigurationManager
 
             GUILayout.BeginVertical();
             {
-
                 if (string.IsNullOrEmpty(SearchString))
-                    GUILayout.Label("Tip: You can left-click setting names on the left to see their descriptions.");
+                {
+                    DrawTips();
 
-                DrawExpandCollapseAll();
+                    if (_tipsHeight == 0 && Event.current.type == EventType.Repaint)
+                        _tipsHeight = (int)GUILayoutUtility.GetLastRect().height;
+                }
 
-                var currentHeight = 0;
+                var currentHeight = _tipsHeight;
+
                 foreach (var plugin in _filteredSetings)
                 {
                     var visible = plugin.Height == 0 || currentHeight + plugin.Height >= scrollPosition && currentHeight <= scrollPosition + scrollHeight;
@@ -375,19 +369,22 @@ namespace ConfigurationManager
                 DrawTooltip(SettingWindowRect);
         }
 
-        private void DrawExpandCollapseAll()
+        private void DrawTips()
         {
             GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Tip: Click plugin names to expand. Click setting and group names to see their descriptions.");
 
-            if (GUILayout.Button("Expand All", GUILayout.Width(100f)))
-                foreach (var plugin in _filteredSetings)
-                    plugin.Collapsed = false;
+                GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("Collapse All", GUILayout.Width(100f)))
-                foreach (var plugin in _filteredSetings)
-                    plugin.Collapsed = true;
-
-            GUILayout.FlexibleSpace();
+                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand" : "Collapse", GUILayout.ExpandWidth(false)))
+                {
+                    var newValue = !_pluginConfigCollapsedDefault.Value;
+                    _pluginConfigCollapsedDefault.Value = newValue;
+                    foreach (var plugin in _filteredSetings)
+                        plugin.Collapsed = newValue;
+                }
+            }
             GUILayout.EndHorizontal();
         }
 
@@ -485,17 +482,19 @@ namespace ConfigurationManager
                 new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", "GUID: " + plugin.Info.GUID) :
                 new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}");
 
-            if (SettingFieldDrawer.DrawCollapseableButton(categoryHeader, plugin.Collapsed))
+            var isSearching = !string.IsNullOrEmpty(SearchString);
+
+            if (SettingFieldDrawer.DrawPluginHeader(categoryHeader, plugin.Collapsed && !isSearching) && !isSearching)
                 plugin.Collapsed = !plugin.Collapsed;
 
-            if (!string.IsNullOrEmpty(SearchString) || !plugin.Collapsed)
+            if (isSearching || !plugin.Collapsed)
             {
                 foreach (var category in plugin.Categories)
                 {
                     if (!string.IsNullOrEmpty(category.Name))
                     {
                         if (plugin.Categories.Count > 1 || !_hideSingleSection.Value)
-                            SettingFieldDrawer.DrawCenteredLabel(category.Name);
+                            SettingFieldDrawer.DrawCategoryHeader(category.Name);
                     }
 
                     foreach (var setting in category.Settings)
@@ -603,6 +602,31 @@ namespace ConfigurationManager
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
+        }
+
+        private sealed class PluginSettingsData
+        {
+            public BepInPlugin Info;
+            public List<PluginSettingsGroupData> Categories;
+            private bool _collapsed;
+
+            public bool Collapsed
+            {
+                get => _collapsed;
+                set
+                {
+                    _collapsed = value;
+                    Height = 0;
+                }
+            }
+
+            public sealed class PluginSettingsGroupData
+            {
+                public string Name;
+                public List<SettingEntryBase> Settings;
+            }
+
+            public int Height { get; set; }
         }
     }
 }
