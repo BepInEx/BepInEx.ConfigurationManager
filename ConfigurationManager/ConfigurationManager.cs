@@ -32,10 +32,11 @@ namespace ConfigurationManager
         /// </summary>
         public const string Version = "14.1";
 
-        private static readonly GUIContent _keyboardShortcutsCategoryName = new GUIContent("Keyboard shortcuts",
+        //todo use?
+        private static readonly string KeyboarShortcutExplanation =
             "The first key is the main key, while the rest are modifiers.\n" +
             "The shortcut will only fire when you press \n" +
-            "the main key while all modifiers are already pressed.");
+            "the main key while all modifiers are already pressed.";
 
         internal static new ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;
@@ -56,7 +57,7 @@ namespace ConfigurationManager
         private string _modsWithoutSettings;
 
         private List<SettingEntryBase> _allSettings;
-        private List<IGrouping<BepInPlugin, SettingEntryBase>> _filteredSetings;
+        private List<PluginSettingsData> _filteredSetings;
 
         internal Rect SettingWindowRect { get; private set; }
         private Rect _screenRect;
@@ -178,7 +179,36 @@ namespace ConfigurationManager
                     results = results.Where(x => x.IsAdvanced == true || IsKeyboardShortcut(x));
             }
 
-            _filteredSetings = results.GroupBy(x => x.PluginInfo).OrderBy(x => x.Key.Name).ToList();
+            string GetCategory(SettingEntryBase eb)
+            {
+                // Legacy behavior
+                if (eb.SettingType == typeof(BepInEx.KeyboardShortcut)) return "Keyboard shortcuts";
+                return eb.Category;
+            }
+
+            _filteredSetings = results.GroupBy(x => x.PluginInfo).Select(pluginSettings =>
+            {
+                var categories = pluginSettings
+                    .GroupBy(GetCategory)
+                    .OrderBy(x => string.Equals(x.Key, "Keyboard shortcuts", StringComparison.Ordinal))
+                    .ThenBy(x => x.Key)
+                    .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
+
+                return new PluginSettingsData { Info = pluginSettings.Key, Categories = categories.ToList() };
+            }).ToList();
+        }
+
+        private sealed class PluginSettingsData
+        {
+            public BepInPlugin Info;
+            public List<PluginSettingsGroupData> Categories;
+            public bool Collapsed;
+
+            public sealed class PluginSettingsGroupData
+            {
+                public string Name;
+                public List<SettingEntryBase> Settings;
+            }
         }
 
         private static bool IsKeyboardShortcut(SettingEntryBase x)
@@ -303,24 +333,17 @@ namespace ConfigurationManager
         private void DrawExpandCollapseAll()
         {
             GUILayout.BeginHorizontal();
-            var expandAll = GUILayout.Button("Expand All", GUILayout.Width(100f));
-            var collapseAll = GUILayout.Button("Collapse All", GUILayout.Width(100f));
+
+            if (GUILayout.Button("Expand All", GUILayout.Width(100f)))
+                foreach (var plugin in _filteredSetings)
+                    plugin.Collapsed = false;
+
+            if (GUILayout.Button("Collapse All", GUILayout.Width(100f)))
+                foreach (var plugin in _filteredSetings)
+                    plugin.Collapsed = true;
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-            if (expandAll)
-            {
-                foreach (var plugin in _filteredSetings)
-                {
-                    plugin.Select(x => x).First().IsCollapsed = false;
-                }
-            }
-            if (collapseAll)
-            {
-                foreach (var plugin in _filteredSetings)
-                {
-                    plugin.Select(x => x).First().IsCollapsed = true;
-                }
-            }
         }
 
         private void DrawWindowHeader()
@@ -409,60 +432,36 @@ namespace ConfigurationManager
             }
         }
 
-        private void DrawSinglePlugin(IGrouping<BepInPlugin, SettingEntryBase> plugin)
+        private void DrawSinglePlugin(PluginSettingsData plugin)
         {
             GUILayout.BeginVertical(GUI.skin.box);
-            var seb = plugin.Select(x => x).First();
-            bool buttonPressed;
-            if (_showDebug)
-                buttonPressed = SettingFieldDrawer.DrawCollapseableButton(new GUIContent($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", "GUID: " + plugin.Key.GUID), seb.IsCollapsed);
-            else
-                buttonPressed = SettingFieldDrawer.DrawCollapseableButton($"{plugin.Key.Name.TrimStart('!')} {plugin.Key.Version}", seb.IsCollapsed);
 
-            if (buttonPressed)
-            {
-                if (seb.IsCollapsed == true)
-                {
-                    seb.IsCollapsed = false;
-                }
-                else
-                {
-                    seb.IsCollapsed = true;
-                }
-            }
-            if (!string.IsNullOrEmpty(SearchString)
-                || !seb.IsCollapsed)
-            {
-                var categories = plugin
-                .Select(x => new { plugin = x, category = GetCategory(x) })
-                .GroupBy(x => x.category.text)
-                .OrderBy(x => string.Equals(x.Key, _keyboardShortcutsCategoryName.text, StringComparison.Ordinal))
-                .ThenBy(x => x.Key).ToList();
+            var categoryHeader = _showDebug ? 
+                new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", "GUID: " + plugin.Info.GUID) : 
+                new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}");
 
-                foreach (var category in categories)
+            if (SettingFieldDrawer.DrawCollapseableButton(categoryHeader, plugin.Collapsed))
+                plugin.Collapsed = !plugin.Collapsed;
+
+            if (!string.IsNullOrEmpty(SearchString) || !plugin.Collapsed)
+            {
+                foreach (var category in plugin.Categories)
                 {
-                    if (!string.IsNullOrEmpty(category.Key))
+                    if (!string.IsNullOrEmpty(category.Name))
                     {
-                        if (!(_hideSingleSection.Value && categories.Count == 1))
-                            SettingFieldDrawer.DrawCenteredLabel(category.First().category);
+                        if (plugin.Categories.Count > 1 || !_hideSingleSection.Value)
+                            SettingFieldDrawer.DrawCenteredLabel(category.Name);
                     }
 
-                    foreach (var setting in category.OrderByDescending(x => x.plugin.Order).ThenBy(x => x.plugin.DispName))
+                    foreach (var setting in category.Settings)
                     {
-                        DrawSingleSetting(setting.plugin);
+                        DrawSingleSetting(setting);
                         GUILayout.Space(2);
                     }
                 }
             }
+
             GUILayout.EndVertical();
-        }
-
-        private static GUIContent GetCategory(SettingEntryBase x)
-        {
-            // Legacy behavior
-            if (x.SettingType == typeof(BepInEx.KeyboardShortcut)) return _keyboardShortcutsCategoryName;
-
-            return new GUIContent(x.Category);
         }
 
         private void DrawSingleSetting(SettingEntryBase setting)
