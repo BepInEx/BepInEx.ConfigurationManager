@@ -58,6 +58,7 @@ namespace ConfigurationManager.Utilities
             return false;
         }
 
+        // Search for objects instead of using chainloader API to find dynamically loaded plugins
         public static BaseUnityPlugin[] FindPlugins() => Object.FindObjectsOfType<BaseUnityPlugin>();
 
         public static bool IsNumber(this object value) => value is sbyte
@@ -71,6 +72,16 @@ namespace ConfigurationManager.Utilities
                    || value is float
                    || value is double
                    || value is decimal;
+
+        public static string AppendZero(this string s)
+        {
+            return !s.Contains(".") ? s + ".0" : s;
+        }
+
+        public static string AppendZeroIfFloat(this string s, Type type)
+        {
+            return type == typeof(float) || type == typeof(double) || type == typeof(decimal) ? s.AppendZero() : s;
+        }
 
         public static void FillTexture(this Texture2D tex, Color color)
         {

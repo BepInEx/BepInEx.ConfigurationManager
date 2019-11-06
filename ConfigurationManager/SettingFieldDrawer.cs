@@ -186,7 +186,7 @@ namespace ConfigurationManager
             }
             else
             {
-                var strVal = value.ToString();
+                var strVal = value.ToString().AppendZeroIfFloat(setting.SettingType);
                 var strResult = GUILayout.TextField(strVal, GUILayout.Width(50));
                 if (strResult != strVal)
                 {
@@ -202,7 +202,7 @@ namespace ConfigurationManager
             // Try to use user-supplied converters
             if (setting.ObjToStr != null && setting.StrToObj != null)
             {
-                var text = setting.ObjToStr(setting.Get());
+                var text = setting.ObjToStr(setting.Get()).AppendZeroIfFloat(setting.SettingType);
                 var result = GUILayout.TextField(text, GUILayout.MaxWidth(rightColumnWidth));
                 if (result != text)
                     setting.Set(setting.StrToObj(result));
@@ -210,7 +210,8 @@ namespace ConfigurationManager
             }
 
             // Fall back to slow/less reliable method
-            var value = setting.Get()?.ToString() ?? "NULL";
+            var rawValue = setting.Get();
+            var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType) ;
             if (CanCovert(value, setting.SettingType))
             {
                 var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
@@ -243,7 +244,7 @@ namespace ConfigurationManager
                 return false;
             }
         }
-        
+
         private static void DrawKeyboardShortcut(SettingEntryBase setting)
         {
             var value = setting.Get();
