@@ -31,7 +31,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Version constant
         /// </summary>
-        public const string Version = "15.0";
+        public const string Version = "15.1";
 
         internal static new ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;
