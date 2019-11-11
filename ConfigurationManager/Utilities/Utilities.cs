@@ -111,6 +111,9 @@ namespace ConfigurationManager.Utilities
             // Generated in most versions unless disabled
             if (TryOpen(Path.Combine(Application.dataPath, "output_log.txt"))) return;
 
+            // Redirected by preloader to game root
+            if (TryOpen(Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? "", "output_log.txt"))) return;
+
             // Available since 2018.3
             var prop = typeof(Application).GetProperty("consoleLogPath", BindingFlags.Static | BindingFlags.Public);
             if (prop != null)
