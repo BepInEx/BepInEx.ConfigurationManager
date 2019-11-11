@@ -93,7 +93,7 @@ namespace ConfigurationManager
                     fontSize = 14
                 };
             }
-            
+
             GUILayout.Label(text, _categoryHeaderSkin);
         }
 
@@ -217,9 +217,16 @@ namespace ConfigurationManager
                 var strResult = GUILayout.TextField(strVal, GUILayout.Width(50));
                 if (strResult != strVal)
                 {
-                    var resultVal = (float)Convert.ToDouble(strResult);
-                    var clampedResultVal = Mathf.Clamp(resultVal, leftValue, rightValue);
-                    setting.Set(Convert.ChangeType(clampedResultVal, setting.SettingType));
+                    try
+                    {
+                        var resultVal = (float) Convert.ToDouble(strResult);
+                        var clampedResultVal = Mathf.Clamp(resultVal, leftValue, rightValue);
+                        setting.Set(Convert.ChangeType(clampedResultVal, setting.SettingType));
+                    }
+                    catch (FormatException)
+                    {
+                        // Ignore user typing in bad data
+                    }
                 }
             }
         }
@@ -238,7 +245,7 @@ namespace ConfigurationManager
 
             // Fall back to slow/less reliable method
             var rawValue = setting.Get();
-            var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType) ;
+            var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType);
             if (CanCovert(value, setting.SettingType))
             {
                 var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
