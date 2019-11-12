@@ -1,0 +1,24 @@
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  tags:
+    include:
+    - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/*.nuspec'
+    versioningScheme: 'off'
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    packagesToPush: '**/*.nupkg'
+    nuGetFeedType: 'internal'
+    publishVstsFeed: '72df59bb-d986-4a33-932b-238f447a9f90/8077541d-3418-4857-81be-291566ae313c'
