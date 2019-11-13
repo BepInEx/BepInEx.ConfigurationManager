@@ -7,5 +7,9 @@
     <projectUrl>https://github.com/BepInEx/BepInEx.ConfigurationManager</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Plugin configuration manager for BepInEx</description>
+    <developmentDependency>true</developmentDependency>
   </metadata>
+  <files>
+    <file src="install.ps1" target="tools" />
+  </files>
 </package>
