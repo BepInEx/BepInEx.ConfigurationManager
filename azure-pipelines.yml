@@ -11,6 +11,13 @@ pool:
 
 steps:
 
+- task: VSBuild@1
+  inputs:
+    solution: '**\*.sln'
+    vsVersion: '15.0'
+    configuration: 'Release'
+    msbuildArchitecture: 'x64'
+
 - task: NuGetToolInstaller@1
   inputs:
     versionSpec: '5.3.1'
