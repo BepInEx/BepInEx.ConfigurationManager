@@ -13,7 +13,7 @@ steps:
 - task: NuGetCommand@2
   inputs:
     command: 'pack'
-    packagesToPack: '**/*.nuspec'
+    packagesToPack: '**/*.csproj'
     versioningScheme: 'off'
 
 - task: NuGetCommand@2
