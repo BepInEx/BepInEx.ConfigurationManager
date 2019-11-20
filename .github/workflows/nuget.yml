@@ -1,0 +1,16 @@
+name: Push to nuget on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Run a one-line script
+      env:
+        url: https://pkgs.dev.azure.com/IllusionMods/Nuget/_packaging/IllusionMods/nuget/v3/index.json
+      run: echo ${env:url}
