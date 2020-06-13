@@ -1,0 +1,28 @@
+name: Push to nuget feed on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      
+    - name: Setup Nuget
+      uses: warrenbuckley/Setup-Nuget@v1
+      
+    - name: Nuget pack
+      run: nuget pack ConfigurationManager\ConfigurationManager.csproj -build -properties Configuration=Release
+      
+    - name: Nuget push
+      env:
+        NUGET_URL: https://pkgs.dev.azure.com/IllusionMods/Nuget/_packaging/IllusionMods/nuget/v3/index.json
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      run: |
+        nuget sources add -name "IllusionMods" -src ${env:NUGET_URL} -username "token" -password ${env:NUGET_TOKEN}
+        nuget push *.nupkg -apikey key -noninteractive -skipduplicate -src ${env:NUGET_URL}
