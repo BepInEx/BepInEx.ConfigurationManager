@@ -36,9 +36,12 @@ namespace ConfigurationManager
         internal static new ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;
 
-        private const string SearchBoxName = "searchBox";
+        private static readonly Color _advancedSettingColor = new Color(1f, 0.95f, 0.67f, 1f);
         private const int WindowId = -68;
+
+        private const string SearchBoxName = "searchBox";
         private bool _focusSearchBox;
+        private string _searchString = string.Empty;
 
         /// <summary>
         /// Event fired every time the manager window is shown or hidden.
@@ -78,7 +81,6 @@ namespace ConfigurationManager
         private readonly ConfigEntry<bool> _hideSingleSection;
         private readonly ConfigEntry<bool> _pluginConfigCollapsedDefault;
         private bool _showDebug;
-        private string _searchString = string.Empty;
 
         /// <inheritdoc />
         public ConfigurationManager()
@@ -399,12 +401,15 @@ namespace ConfigurationManager
                     BuildFilteredSettingList();
                 }
 
+                var origColor = GUI.color;
+                GUI.color = _advancedSettingColor;
                 newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
                 if (_showAdvanced.Value != newVal)
                 {
                     _showAdvanced.Value = newVal;
                     BuildFilteredSettingList();
                 }
+                GUI.color = origColor;
 
                 GUI.enabled = true;
 
@@ -518,8 +523,14 @@ namespace ConfigurationManager
 
         private void DrawSettingName(SettingEntryBase setting)
         {
+            var origColor = GUI.color;
+            if (setting.IsAdvanced == true)
+                GUI.color = _advancedSettingColor;
+
             GUILayout.Label(new GUIContent(setting.DispName.TrimStart('!'), setting.Description),
                 GUILayout.Width(LeftColumnWidth), GUILayout.MaxWidth(LeftColumnWidth));
+
+            GUI.color = origColor;
         }
 
         private static void DrawDefaultButton(SettingEntryBase setting)
