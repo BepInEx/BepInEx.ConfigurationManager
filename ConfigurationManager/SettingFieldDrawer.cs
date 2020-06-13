@@ -57,7 +57,12 @@ namespace ConfigurationManager
             else if (setting.AcceptableValues != null)
                 DrawListField(setting);
             else if (setting.SettingType.IsEnum)
-                DrawComboboxField(setting, Enum.GetValues(setting.SettingType), _instance.SettingWindowRect.yMax);
+            {
+                if (setting.SettingType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
+                    DrawFlagsField(setting, Enum.GetValues(setting.SettingType), _instance.RightColumnWidth);
+                else
+                    DrawComboboxField(setting, Enum.GetValues(setting.SettingType), _instance.SettingWindowRect.yMax);
+            }
             else
                 DrawFieldBasedOnValueType(setting);
         }
@@ -154,6 +159,53 @@ namespace ConfigurationManager
                 setting.Set(result);
         }
 
+        private static void DrawFlagsField(SettingEntryBase setting, IList enumValues, int maxWidth)
+        {
+            var currentValue = Convert.ToInt64(setting.Get());
+            var allValues = enumValues.Cast<Enum>().Select(x => new { name = x.ToString(), val = Convert.ToInt64(x) }).ToArray();
+
+            // Vertically stack Horizontal groups of the options to deal with the options taking more width than is available in the window
+            GUILayout.BeginVertical(GUILayout.MaxWidth(maxWidth));
+            {
+                for (var index = 0; index < allValues.Length;)
+                {
+                    GUILayout.BeginHorizontal();
+                    {
+                        var currentWidth = 0;
+                        for (; index < allValues.Length; index++)
+                        {
+                            var value = allValues[index];
+
+                            // Skip the 0 / none enum value, just uncheck everything to get 0
+                            if (value.val != 0)
+                            {
+                                // Make sure this horizontal group doesn't extend over window width, if it does then start a new horiz group below
+                                var textDimension = (int)GUI.skin.toggle.CalcSize(new GUIContent(value.name)).x;
+                                currentWidth += textDimension;
+                                if (currentWidth > maxWidth)
+                                    break;
+
+                                GUI.changed = false;
+                                var newVal = GUILayout.Toggle((currentValue & value.val) == value.val, value.name,
+                                    GUILayout.ExpandWidth(false));
+                                if (GUI.changed)
+                                {
+                                    var newValue = newVal ? currentValue | value.val : currentValue & ~value.val;
+                                    setting.Set(Enum.ToObject(setting.SettingType, newValue));
+                                }
+                            }
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+
+                GUI.changed = false;
+            }
+            GUILayout.EndVertical();
+            // Make sure the reset button is properly spaced
+            GUILayout.FlexibleSpace();
+        }
+
         private static void DrawComboboxField(SettingEntryBase setting, IList list, float windowYmax)
         {
             var buttonText = ObjectToGuiContent(setting.Get());
@@ -219,7 +271,7 @@ namespace ConfigurationManager
                 {
                     try
                     {
-                        var resultVal = (float) Convert.ToDouble(strResult);
+                        var resultVal = (float)Convert.ToDouble(strResult);
                         var clampedResultVal = Mathf.Clamp(resultVal, leftValue, rightValue);
                         setting.Set(Convert.ChangeType(clampedResultVal, setting.SettingType));
                     }
