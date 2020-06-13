@@ -164,9 +164,11 @@ namespace ConfigurationManager
         {
             IEnumerable<SettingEntryBase> results = _allSettings;
 
-            if (!string.IsNullOrEmpty(SearchString))
+            var searchStrings = SearchString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (searchStrings.Length > 0)
             {
-                results = results.Where(x => ContainsSearchString(x, SearchString));
+                results = results.Where(x => ContainsSearchString(x, searchStrings));
             }
             else
             {
@@ -209,23 +211,17 @@ namespace ConfigurationManager
             return x.SettingType == typeof(BepInEx.KeyboardShortcut) || x.SettingType == typeof(BepInEx.Configuration.KeyboardShortcut);
         }
 
-        private static bool ContainsSearchString(SettingEntryBase setting, string searchString)
+        private static bool ContainsSearchString(SettingEntryBase setting, string[] searchStrings)
         {
-            foreach (var target in new[]
-            {
-                setting.PluginInfo.Name,
-                setting.PluginInfo.GUID,
-                setting.DispName,
-                setting.Category,
-                setting.Description ,
-                setting.DefaultValue?.ToString(),
-                setting.Get()?.ToString()
-            })
-            {
-                if (target != null && target.IndexOf(searchString, StringComparison.InvariantCultureIgnoreCase) >= 0)
-                    return true;
-            }
-            return false;
+            var combinedSearchTarget = setting.PluginInfo.Name + "\n" +
+                                       setting.PluginInfo.GUID + "\n" +
+                                       setting.DispName + "\n" +
+                                       setting.Category + "\n" +
+                                       setting.Description + "\n" +
+                                       setting.DefaultValue + "\n" +
+                                       setting.Get();
+
+            return searchStrings.All(s => combinedSearchTarget.IndexOf(s, StringComparison.InvariantCultureIgnoreCase) >= 0);
         }
 
         private void CalculateWindowRect()
