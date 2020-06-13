@@ -292,23 +292,25 @@ namespace ConfigurationManager
                 var result = GUILayout.TextField(text, GUILayout.MaxWidth(rightColumnWidth));
                 if (result != text)
                     setting.Set(setting.StrToObj(result));
-                return;
-            }
-
-            // Fall back to slow/less reliable method
-            var rawValue = setting.Get();
-            var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType);
-            if (CanCovert(value, setting.SettingType))
-            {
-                var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
-                if (result != value)
-                    setting.Set(Convert.ChangeType(result, setting.SettingType));
             }
             else
             {
-                GUILayout.TextArea(value, GUILayout.MaxWidth(rightColumnWidth));
+                // Fall back to slow/less reliable method
+                var rawValue = setting.Get();
+                var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType);
+                if (CanCovert(value, setting.SettingType))
+                {
+                    var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
+                    if (result != value)
+                        setting.Set(Convert.ChangeType(result, setting.SettingType));
+                }
+                else
+                {
+                    GUILayout.TextArea(value, GUILayout.MaxWidth(rightColumnWidth));
+                }
             }
 
+            // When using MaxWidth the width will always be less than full window size, use this to fill this gap and push the Reset button to the right edge
             GUILayout.FlexibleSpace();
         }
 
