@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ConfigurationManager.Utilities
 {
-    public sealed class FieldToPropertyInfoWrapper : PropertyInfo
+    internal sealed class FieldToPropertyInfoWrapper : PropertyInfo
     {
         private readonly FieldInfo _baseInfo;
 

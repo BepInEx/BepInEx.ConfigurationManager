@@ -12,7 +12,6 @@ using BepInEx.Logging;
 using UnityEngine;
 using BepInEx.Configuration;
 
-#pragma warning disable 618
 namespace ConfigurationManager
 {
     /// <summary>
@@ -49,7 +48,7 @@ namespace ConfigurationManager
         public event EventHandler<ValueChangedEventArgs<bool>> DisplayingWindowChanged;
 
         /// <summary>
-        /// Disable the hotkey check used by config manager. If enabled you have to set DisplayingWindow to show the manager.
+        /// Disable the hotkey check used by config manager. If enabled you have to set <see cref="DisplayingWindow"/> to show the manager.
         /// </summary>
         public bool OverrideHotkey;
 
@@ -185,8 +184,10 @@ namespace ConfigurationManager
             const string shortcutsCatName = "Keyboard shortcuts";
             string GetCategory(SettingEntryBase eb)
             {
+#pragma warning disable 618 // Disable obsolete warning
                 // Legacy behavior
                 if (eb.SettingType == typeof(BepInEx.KeyboardShortcut)) return shortcutsCatName;
+#pragma warning restore 618
                 return eb.Category;
             }
 
@@ -210,7 +211,9 @@ namespace ConfigurationManager
 
         private static bool IsKeyboardShortcut(SettingEntryBase x)
         {
+#pragma warning disable 618 // Disable obsolete warning
             return x.SettingType == typeof(BepInEx.KeyboardShortcut) || x.SettingType == typeof(BepInEx.Configuration.KeyboardShortcut);
+#pragma warning restore 618
         }
 
         private static bool ContainsSearchString(SettingEntryBase setting, string[] searchStrings)

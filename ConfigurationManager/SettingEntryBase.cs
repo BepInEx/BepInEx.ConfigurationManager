@@ -8,7 +8,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
-#pragma warning disable 618
 namespace ConfigurationManager
 {
     /// <summary>
@@ -110,6 +109,9 @@ namespace ConfigurationManager
                 SetValue(newVal);
         }
 
+        /// <summary>
+        /// Implementation of <see cref="Set"/>
+        /// </summary>
         protected abstract void SetValue(object newVal);
 
         /// <summary>
@@ -124,7 +126,7 @@ namespace ConfigurationManager
 
         private static readonly PropertyInfo[] _myProperties = typeof(SettingEntryBase).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-        protected void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)
+        internal void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)
         {
             PluginInstance = pluginInstance;
             PluginInfo = pluginInstance?.Info.Metadata;
@@ -138,6 +140,7 @@ namespace ConfigurationManager
                     case null: break;
 
                     // Obsolete attributes from bepin4 -----------------------
+#pragma warning disable 618 // Disable obsolete warning
                     case DisplayNameAttribute da:
                         DispName = da.DisplayName;
                         break;
@@ -169,6 +172,7 @@ namespace ConfigurationManager
                     case CustomSettingDrawAttribute oldCustomDraw:
                         CustomDrawer = _ => oldCustomDraw.Run(PluginInstance);
                         break;
+#pragma warning restore 618
 
                     // Obsolete attributes from early bepin5 -----------------------
                     case Action<SettingEntryBase> newCustomDraw:
