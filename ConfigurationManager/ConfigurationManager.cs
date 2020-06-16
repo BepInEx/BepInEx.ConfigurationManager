@@ -526,6 +526,8 @@ namespace ConfigurationManager
 
         private void DrawSettingName(SettingEntryBase setting)
         {
+            if (setting.HideSettingName) return;
+
             var origColor = GUI.color;
             if (setting.IsAdvanced == true)
                 GUI.color = _advancedSettingColor;

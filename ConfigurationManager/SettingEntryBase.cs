@@ -56,6 +56,12 @@ namespace ConfigurationManager
         public bool HideDefaultButton { get; protected set; }
 
         /// <summary>
+        /// Force the setting name to not be displayed. Should only be used with a <see cref="CustomDrawer"/> to get more space.
+        /// Can be used together with <see cref="HideDefaultButton"/> to gain even more space.
+        /// </summary>
+        public bool HideSettingName { get; protected set; }
+
+        /// <summary>
         /// Optional description shown when hovering over the setting
         /// </summary>
         public string Description { get; protected internal set; }
