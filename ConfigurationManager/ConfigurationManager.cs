@@ -64,7 +64,7 @@ namespace ConfigurationManager
         private Vector2 _settingWindowScrollPos;
         private int _tipsHeight;
 
-        private CursorLockMode _previousCursorLockState;
+        //private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
 
         internal static Texture2D TooltipBg { get; private set; }
@@ -118,16 +118,16 @@ namespace ConfigurationManager
 
                     _focusSearchBox = true;
 
-                    _previousCursorLockState = Cursor.lockState;
-                    _previousCursorVisible = Cursor.visible;
+                    //_previousCursorLockState = Cursor.lockState;
+                    //_previousCursorVisible = Cursor.visible;
                 }
                 else
                 {
-                    if (!_previousCursorVisible || _previousCursorLockState != CursorLockMode.None)
-                    {
-                        Cursor.lockState = _previousCursorLockState;
-                        Cursor.visible = _previousCursorVisible;
-                    }
+                    //if (!_previousCursorVisible || _previousCursorLockState != CursorLockMode.None)
+                    //{
+                    //    Cursor.lockState = _previousCursorLockState;
+                    //    Cursor.visible = _previousCursorVisible;
+                    //}
                 }
 
                 DisplayingWindowChanged?.Invoke(this, new ValueChangedEventArgs<bool>(value));
@@ -247,8 +247,8 @@ namespace ConfigurationManager
         {
             if (DisplayingWindow)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                //Cursor.lockState = CursorLockMode.None;
+                //Cursor.visible = true;
 
                 if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
                     !SettingWindowRect.Contains(Input.mousePosition))
@@ -588,8 +588,8 @@ namespace ConfigurationManager
         {
             if (DisplayingWindow)
             {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                //Cursor.lockState = CursorLockMode.None;
+                //Cursor.visible = true;
             }
 
             if (OverrideHotkey) return;
@@ -600,14 +600,14 @@ namespace ConfigurationManager
             }
         }
 
-        private void LateUpdate()
-        {
-            if (DisplayingWindow)
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
-        }
+        //private void LateUpdate()
+        //{
+        //    if (DisplayingWindow)
+        //    {
+        //        Cursor.lockState = CursorLockMode.None;
+        //        Cursor.visible = true;
+        //    }
+        //}
 
         private sealed class PluginSettingsData
         {
