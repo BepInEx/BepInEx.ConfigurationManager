@@ -64,7 +64,9 @@ namespace ConfigurationManager
         private Vector2 _settingWindowScrollPos;
         private int _tipsHeight;
 
-        //private CursorLockMode _previousCursorLockState;
+        private PropertyInfo _curLockState;
+        private PropertyInfo _curVisible;
+        private int _previousCursorLockState;
         private bool _previousCursorVisible;
 
         internal static Texture2D TooltipBg { get; private set; }
@@ -118,16 +120,17 @@ namespace ConfigurationManager
 
                     _focusSearchBox = true;
 
-                    //_previousCursorLockState = Cursor.lockState;
-                    //_previousCursorVisible = Cursor.visible;
+                    // Do through reflection for unity 4 compat
+                    if (_curLockState != null)
+                    {
+                        _previousCursorLockState = (int)_curLockState.GetValue(null, null);
+                        _previousCursorVisible = (bool)_curVisible.GetValue(null, null);
+                    }
                 }
                 else
                 {
-                    //if (!_previousCursorVisible || _previousCursorLockState != CursorLockMode.None)
-                    //{
-                    //    Cursor.lockState = _previousCursorLockState;
-                    //    Cursor.visible = _previousCursorVisible;
-                    //}
+                    if (!_previousCursorVisible || _previousCursorLockState != 0) // 0 = CursorLockMode.None
+                        SetUnlockCursor(_previousCursorLockState, _previousCursorVisible);
                 }
 
                 DisplayingWindowChanged?.Invoke(this, new ValueChangedEventArgs<bool>(value));
@@ -247,8 +250,7 @@ namespace ConfigurationManager
         {
             if (DisplayingWindow)
             {
-                //Cursor.lockState = CursorLockMode.None;
-                //Cursor.visible = true;
+                SetUnlockCursor(0, true);
 
                 if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
                     !SettingWindowRect.Contains(Input.mousePosition))
@@ -578,6 +580,11 @@ namespace ConfigurationManager
             windowBackground.Apply();
             WindowBackground = windowBackground;
 
+            // Use reflection to keep compatibility with unity 4.x since it doesn't have Cursor
+            var tCursor = typeof(Cursor);
+            _curLockState = tCursor.GetProperty("lockState", BindingFlags.Static | BindingFlags.Public);
+            _curVisible = tCursor.GetProperty("visible", BindingFlags.Static | BindingFlags.Public);
+
             // Check if user has permissions to write config files to disk
             try { Config.Save(); }
             catch (IOException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Failed to write to config directory, expect issues!\nError message:" + ex.Message); }
@@ -586,28 +593,29 @@ namespace ConfigurationManager
 
         private void Update()
         {
-            if (DisplayingWindow)
-            {
-                //Cursor.lockState = CursorLockMode.None;
-                //Cursor.visible = true;
-            }
+            if (DisplayingWindow) SetUnlockCursor(0, true);
 
             if (OverrideHotkey) return;
 
-            if (_keybind.Value.IsDown())
-            {
-                DisplayingWindow = !DisplayingWindow;
-            }
+            if (_keybind.Value.IsDown()) DisplayingWindow = !DisplayingWindow;
         }
 
-        //private void LateUpdate()
-        //{
-        //    if (DisplayingWindow)
-        //    {
-        //        Cursor.lockState = CursorLockMode.None;
-        //        Cursor.visible = true;
-        //    }
-        //}
+        private void LateUpdate()
+        {
+            if (DisplayingWindow) SetUnlockCursor(0, true);
+        }
+
+        private void SetUnlockCursor(int lockState, bool cursorVisible)
+        {
+            if (_curLockState != null)
+            {
+                // Do through reflection for unity 4 compat
+                //Cursor.lockState = CursorLockMode.None;
+                //Cursor.visible = true;
+                _curLockState.SetValue(null, lockState, null);
+                _curVisible.SetValue(null, cursorVisible, null);
+            }
+        }
 
         private sealed class PluginSettingsData
         {
