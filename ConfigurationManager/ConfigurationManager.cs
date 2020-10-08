@@ -519,7 +519,7 @@ namespace ConfigurationManager
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log(LogLevel.Error, $"[ConfigManager] Failed to draw setting {setting.DispName} - {ex}");
+                    Logger.Log(LogLevel.Error, $"Failed to draw setting {setting.DispName} - {ex}");
                     GUILayout.Label("Failed to draw this field, check log for details.");
                 }
             }
