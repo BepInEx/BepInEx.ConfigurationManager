@@ -53,6 +53,7 @@ namespace ConfigurationManager
         public bool OverrideHotkey;
 
         private bool _displayingWindow;
+        private bool _obsoleteCursor;
 
         private string _modsWithoutSettings;
 
@@ -123,7 +124,7 @@ namespace ConfigurationManager
                     // Do through reflection for unity 4 compat
                     if (_curLockState != null)
                     {
-                        _previousCursorLockState = (int)_curLockState.GetValue(null, null);
+                        _previousCursorLockState = _obsoleteCursor ? Convert.ToInt32((bool)_curLockState.GetValue(null, null)) : (int)_curLockState.GetValue(null, null);
                         _previousCursorVisible = (bool)_curVisible.GetValue(null, null);
                     }
                 }
@@ -585,6 +586,14 @@ namespace ConfigurationManager
             _curLockState = tCursor.GetProperty("lockState", BindingFlags.Static | BindingFlags.Public);
             _curVisible = tCursor.GetProperty("visible", BindingFlags.Static | BindingFlags.Public);
 
+            if (_curLockState == null && _curVisible == null)
+            {
+                _obsoleteCursor = true;
+                
+                _curLockState = typeof(Screen).GetProperty("lockCursor", BindingFlags.Static | BindingFlags.Public);
+                _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
+            }
+
             // Check if user has permissions to write config files to disk
             try { Config.Save(); }
             catch (IOException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Failed to write to config directory, expect issues!\nError message:" + ex.Message); }
@@ -612,7 +621,11 @@ namespace ConfigurationManager
                 // Do through reflection for unity 4 compat
                 //Cursor.lockState = CursorLockMode.None;
                 //Cursor.visible = true;
-                _curLockState.SetValue(null, lockState, null);
+                if(_obsoleteCursor)
+                    _curLockState.SetValue(null, Convert.ToBoolean(lockState), null);
+                else
+                    _curLockState.SetValue(null, lockState, null);
+                
                 _curVisible.SetValue(null, cursorVisible, null);
             }
         }
