@@ -10,6 +10,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using UnityEngine;
+using UnityEngine.UI;
 using BepInEx.Configuration;
 
 namespace ConfigurationManager
@@ -70,6 +71,8 @@ namespace ConfigurationManager
         private int _previousCursorLockState;
         private bool _previousCursorVisible;
 
+        private GameObject _clickBlockerCanvas;
+
         internal static Texture2D TooltipBg { get; private set; }
         internal static Texture2D WindowBackground { get; private set; }
 
@@ -112,6 +115,7 @@ namespace ConfigurationManager
                 _displayingWindow = value;
 
                 SettingFieldDrawer.ClearCache();
+                BlockClicks(_displayingWindow);
 
                 if (_displayingWindow)
                 {
@@ -627,6 +631,31 @@ namespace ConfigurationManager
                     _curLockState.SetValue(null, lockState, null);
                 
                 _curVisible.SetValue(null, cursorVisible, null);
+            }
+        }
+
+        private void BlockClicks(bool value)
+        {
+            if (value)
+            {
+                _clickBlockerCanvas = new GameObject("BepInEx.ConfigurationManager Click Blocker", typeof(Canvas), typeof(GraphicRaycaster));
+                var canvas = _clickBlockerCanvas.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = Int16.MaxValue;
+                DontDestroyOnLoad(_clickBlockerCanvas);
+                var panel = new GameObject("Image", typeof(Image));
+                panel.transform.SetParent(_clickBlockerCanvas.transform);
+                var rect = panel.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0, 0);
+                rect.anchorMax = new Vector2(1, 1);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                panel.GetComponent<Image>().color = new Color(0, 0, 0, 0.3f);
+            }
+            else
+            {
+                if (_clickBlockerCanvas)
+                    Destroy(_clickBlockerCanvas);
             }
         }
 
