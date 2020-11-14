@@ -634,9 +634,9 @@ namespace ConfigurationManager
             }
         }
 
-        private void BlockClicks(bool value)
+        private void BlockClicks(bool block)
         {
-            if (value)
+            if (block)
             {
                 _clickBlockerCanvas = new GameObject("BepInEx.ConfigurationManager Click Blocker", typeof(Canvas), typeof(GraphicRaycaster));
                 var canvas = _clickBlockerCanvas.GetComponent<Canvas>();
@@ -652,10 +652,8 @@ namespace ConfigurationManager
                 rect.offsetMax = Vector2.zero;
                 panel.GetComponent<Image>().color = new Color(0, 0, 0, 0.3f);
             }
-            else
-            {
-                if (_clickBlockerCanvas)
-                    Destroy(_clickBlockerCanvas);
+            else if (_clickBlockerCanvas) {
+                Destroy(_clickBlockerCanvas);
             }
         }
 
