@@ -246,14 +246,14 @@ namespace ConfigurationManager
         private static void DrawRangeField(SettingEntryBase setting)
         {
             var value = setting.Get();
-            var converted = (float)Convert.ToDouble(value);
-            var leftValue = (float)Convert.ToDouble(setting.AcceptableValueRange.Key);
-            var rightValue = (float)Convert.ToDouble(setting.AcceptableValueRange.Value);
+            var converted = (float)Convert.ToDouble(value, CultureInfo.InvariantCulture);
+            var leftValue = (float)Convert.ToDouble(setting.AcceptableValueRange.Key, CultureInfo.InvariantCulture);
+            var rightValue = (float)Convert.ToDouble(setting.AcceptableValueRange.Value, CultureInfo.InvariantCulture);
 
             var result = GUILayout.HorizontalSlider(converted, leftValue, rightValue, GUILayout.ExpandWidth(true));
             if (Math.Abs(result - converted) > Mathf.Abs(rightValue - leftValue) / 1000)
             {
-                var newValue = Convert.ChangeType(result, setting.SettingType);
+                var newValue = Convert.ChangeType(result, setting.SettingType, CultureInfo.InvariantCulture);
                 setting.Set(newValue);
             }
 
@@ -271,9 +271,9 @@ namespace ConfigurationManager
                 {
                     try
                     {
-                        var resultVal = (float)Convert.ToDouble(strResult);
+                        var resultVal = (float)Convert.ToDouble(strResult, CultureInfo.InvariantCulture);
                         var clampedResultVal = Mathf.Clamp(resultVal, leftValue, rightValue);
-                        setting.Set(Convert.ChangeType(clampedResultVal, setting.SettingType));
+                        setting.Set(Convert.ChangeType(clampedResultVal, setting.SettingType, CultureInfo.InvariantCulture));
                     }
                     catch (FormatException)
                     {
@@ -302,7 +302,7 @@ namespace ConfigurationManager
                 {
                     var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
                     if (result != value)
-                        setting.Set(Convert.ChangeType(result, setting.SettingType));
+                        setting.Set(Convert.ChangeType(result, setting.SettingType, CultureInfo.InvariantCulture));
                 }
                 else
                 {
