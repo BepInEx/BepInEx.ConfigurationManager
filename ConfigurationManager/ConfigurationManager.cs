@@ -258,12 +258,6 @@ namespace ConfigurationManager
         {
             if (DisplayingWindow)
             {
-                if (Event.current.type == EventType.KeyUp && Event.current.keyCode == _keybind.Value.MainKey)
-                {
-                    DisplayingWindow = false;
-                    return;
-                }
-
                 SetUnlockCursor(0, true);
 
                 if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
@@ -619,10 +613,7 @@ namespace ConfigurationManager
 
             if (OverrideHotkey) return;
 
-            if (!DisplayingWindow && _keybind.Value.IsUp())
-            {
-                DisplayingWindow = true;
-            }
+            if (_keybind.Value.IsDown()) DisplayingWindow = !DisplayingWindow;
         }
 
         private void LateUpdate()
