@@ -58,8 +58,8 @@ namespace ConfigurationManager.Utilities
             return false;
         }
 
-        // Search for objects instead of using chainloader API to find dynamically loaded plugins
-        public static BaseUnityPlugin[] FindPlugins() => Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>().ToArray();
+        // Additionally search for BaseUnityPlugin to find dynamically loaded plugins
+        public static BaseUnityPlugin[] FindPlugins() => BepInEx.Bootstrap.Chainloader.Plugins.Concat(Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>()).Distinct().ToArray();
 
         public static bool IsNumber(this object value) => value is sbyte
                    || value is byte
