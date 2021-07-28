@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using UnityEngine;
+using ConfigurationManager.Resources;
 
 namespace ConfigurationManager
 {
@@ -154,7 +155,7 @@ namespace ConfigurationManager
         private static void DrawBoolField(SettingEntryBase setting)
         {
             var boolVal = (bool)setting.Get();
-            var result = GUILayout.Toggle(boolVal, boolVal ? "Enabled" : "Disabled", GUILayout.ExpandWidth(true));
+            var result = GUILayout.Toggle(boolVal, boolVal ? Strings.Enabled : Strings.Disabled, GUILayout.ExpandWidth(true));
             if (result != boolVal)
                 setting.Set(result);
         }
