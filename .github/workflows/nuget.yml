@@ -19,7 +19,7 @@ jobs:
       uses: nuget/setup-nuget@v1
       
     - name: Nuget pack
-      run: nuget pack ConfigurationManager\ConfigurationManager.csproj -build -properties Configuration=Release
+      run: dotnet restore && nuget pack ConfigurationManager\ConfigurationManager.csproj -build -properties Configuration=Release
       
     - name: Nuget push
       env:

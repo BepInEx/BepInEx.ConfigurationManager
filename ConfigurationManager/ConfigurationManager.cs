@@ -11,6 +11,8 @@ using BepInEx;
 using BepInEx.Logging;
 using UnityEngine;
 using BepInEx.Configuration;
+using System.Globalization;
+using ConfigurationManager.Resources;
 
 namespace ConfigurationManager
 {
@@ -30,7 +32,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Version constant
         /// </summary>
-        public const string Version = "16.3";
+        public const string Version = "16.3.1";
 
         internal static new ManualLogSource Logger;
         private static SettingFieldDrawer _fieldDrawer;
@@ -87,6 +89,7 @@ namespace ConfigurationManager
         /// <inheritdoc />
         public ConfigurationManager()
         {
+            Strings.Culture = CultureInfo.CurrentUICulture;
             Logger = base.Logger;
             _fieldDrawer = new SettingFieldDrawer(this);
 
@@ -266,7 +269,7 @@ namespace ConfigurationManager
 
                 GUI.Box(SettingWindowRect, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
 
-                GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
+                GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, Strings.WindowTitleText);
 
                 if (!SettingFieldDrawer.SettingKeyboardShortcut)
                     Input.ResetInputAxes();
@@ -377,11 +380,11 @@ namespace ConfigurationManager
         {
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Tip: Click plugin names to expand. Click setting and group names to see their descriptions.");
+                GUILayout.Label(Strings.TipText);
 
                 GUILayout.FlexibleSpace();
 
-                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand" : "Collapse", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? Strings.Expand : Strings.Collapse, GUILayout.ExpandWidth(false)))
                 {
                     var newValue = !_pluginConfigCollapsedDefault.Value;
                     _pluginConfigCollapsedDefault.Value = newValue;
@@ -396,18 +399,18 @@ namespace ConfigurationManager
         {
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.Label("Show: ", GUILayout.ExpandWidth(false));
+                GUILayout.Label($"{Strings.Show}: ", GUILayout.ExpandWidth(false));
 
                 GUI.enabled = SearchString == string.Empty;
 
-                var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
+                var newVal = GUILayout.Toggle(_showSettings.Value, Strings.NormalSettings);
                 if (_showSettings.Value != newVal)
                 {
                     _showSettings.Value = newVal;
                     BuildFilteredSettingList();
                 }
 
-                newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
+                newVal = GUILayout.Toggle(_showKeybinds.Value, Strings.KeyboardShortcuts);
                 if (_showKeybinds.Value != newVal)
                 {
                     _showKeybinds.Value = newVal;
@@ -416,7 +419,7 @@ namespace ConfigurationManager
 
                 var origColor = GUI.color;
                 GUI.color = _advancedSettingColor;
-                newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
+                newVal = GUILayout.Toggle(_showAdvanced.Value, Strings.AdvancedSettings);
                 if (_showAdvanced.Value != newVal)
                 {
                     _showAdvanced.Value = newVal;
@@ -426,14 +429,14 @@ namespace ConfigurationManager
 
                 GUI.enabled = true;
 
-                newVal = GUILayout.Toggle(_showDebug, "Debug mode");
+                newVal = GUILayout.Toggle(_showDebug, Strings.DebugMode);
                 if (_showDebug != newVal)
                 {
                     _showDebug = newVal;
                     BuildSettingList();
                 }
 
-                if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Strings.Log, GUILayout.ExpandWidth(false)))
                 {
                     try { Utilities.Utils.OpenLog(); }
                     catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
@@ -443,7 +446,7 @@ namespace ConfigurationManager
 
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.Label("Search settings: ", GUILayout.ExpandWidth(false));
+                GUILayout.Label($"{Strings.SearchSettings}: ", GUILayout.ExpandWidth(false));
 
                 GUI.SetNextControlName(SearchBoxName);
                 SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
@@ -455,7 +458,7 @@ namespace ConfigurationManager
                     _focusSearchBox = false;
                 }
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Strings.Clear, GUILayout.ExpandWidth(false)))
                     SearchString = string.Empty;
             }
             GUILayout.EndHorizontal();
@@ -555,7 +558,7 @@ namespace ConfigurationManager
             bool DrawDefaultButton()
             {
                 GUILayout.Space(5);
-                return GUILayout.Button("Reset", GUILayout.ExpandWidth(false));
+                return GUILayout.Button(Strings.Reset, GUILayout.ExpandWidth(false));
             }
 
             if (setting.DefaultValue != null)
@@ -596,7 +599,7 @@ namespace ConfigurationManager
             if (_curLockState == null && _curVisible == null)
             {
                 _obsoleteCursor = true;
-                
+
                 _curLockState = typeof(Screen).GetProperty("lockCursor", BindingFlags.Static | BindingFlags.Public);
                 _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
             }
@@ -628,11 +631,11 @@ namespace ConfigurationManager
                 // Do through reflection for unity 4 compat
                 //Cursor.lockState = CursorLockMode.None;
                 //Cursor.visible = true;
-                if(_obsoleteCursor)
+                if (_obsoleteCursor)
                     _curLockState.SetValue(null, Convert.ToBoolean(lockState), null);
                 else
                     _curLockState.SetValue(null, lockState, null);
-                
+
                 _curVisible.SetValue(null, cursorVisible, null);
             }
         }
