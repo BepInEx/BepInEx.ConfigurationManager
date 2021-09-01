@@ -11,6 +11,7 @@ using BepInEx;
 using BepInEx.Logging;
 using UnityEngine;
 using BepInEx.Configuration;
+using ConfigurationManager.Utilities;
 
 namespace ConfigurationManager
 {
@@ -214,7 +215,15 @@ namespace ConfigurationManager
                         .ThenBy(x => x.Key)
                         .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
 
-                    return new PluginSettingsData { Info = pluginSettings.Key, Categories = categories.ToList(), Collapsed = nonDefaultCollpasingStateByPluginName.Contains(pluginSettings.Key.Name) ? !settingsAreCollapsed : settingsAreCollapsed };
+                    var website = Utils.GetWebsite(pluginSettings.First().PluginInstance);
+
+                    return new PluginSettingsData
+                    {
+                        Info = pluginSettings.Key,
+                        Categories = categories.ToList(),
+                        Collapsed = nonDefaultCollpasingStateByPluginName.Contains(pluginSettings.Key.Name) ? !settingsAreCollapsed : settingsAreCollapsed,
+                        Website = website
+                    };
                 })
                 .OrderBy(x => x.Info.Name)
                 .ToList();
@@ -491,8 +500,24 @@ namespace ConfigurationManager
 
             var isSearching = !string.IsNullOrEmpty(SearchString);
 
-            if (SettingFieldDrawer.DrawPluginHeader(categoryHeader, plugin.Collapsed && !isSearching) && !isSearching)
-                plugin.Collapsed = !plugin.Collapsed;
+            {
+                var hasWebsite = plugin.Website != null;
+                if (hasWebsite)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(27); // Same as the URL button to keep the plugin name centered
+                }
+
+                if (SettingFieldDrawer.DrawPluginHeader(categoryHeader, plugin.Collapsed && !isSearching) && !isSearching)
+                    plugin.Collapsed = !plugin.Collapsed;
+
+                if (hasWebsite)
+                {
+                    if (GUILayout.Button(new GUIContent("URL", plugin.Website), GUI.skin.label, GUILayout.ExpandWidth(false)))
+                        Utils.OpenWebsite(plugin.Website);
+                    GUILayout.EndHorizontal();
+                }
+            }
 
             if (isSearching || !plugin.Collapsed)
             {
@@ -596,7 +621,7 @@ namespace ConfigurationManager
             if (_curLockState == null && _curVisible == null)
             {
                 _obsoleteCursor = true;
-                
+
                 _curLockState = typeof(Screen).GetProperty("lockCursor", BindingFlags.Static | BindingFlags.Public);
                 _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
             }
@@ -628,11 +653,11 @@ namespace ConfigurationManager
                 // Do through reflection for unity 4 compat
                 //Cursor.lockState = CursorLockMode.None;
                 //Cursor.visible = true;
-                if(_obsoleteCursor)
+                if (_obsoleteCursor)
                     _curLockState.SetValue(null, Convert.ToBoolean(lockState), null);
                 else
                     _curLockState.SetValue(null, lockState, null);
-                
+
                 _curVisible.SetValue(null, cursorVisible, null);
             }
         }
@@ -641,8 +666,10 @@ namespace ConfigurationManager
         {
             public BepInPlugin Info;
             public List<PluginSettingsGroupData> Categories;
-            private bool _collapsed;
+            public int Height;
+            public string Website;
 
+            private bool _collapsed;
             public bool Collapsed
             {
                 get => _collapsed;
@@ -658,8 +685,6 @@ namespace ConfigurationManager
                 public string Name;
                 public List<SettingEntryBase> Settings;
             }
-
-            public int Height { get; set; }
         }
     }
 }
