@@ -505,7 +505,7 @@ namespace ConfigurationManager
                 if (hasWebsite)
                 {
                     GUILayout.BeginHorizontal();
-                    GUILayout.Space(27); // Same as the URL button to keep the plugin name centered
+                    GUILayout.Space(29); // Same as the URL button to keep the plugin name centered
                 }
 
                 if (SettingFieldDrawer.DrawPluginHeader(categoryHeader, plugin.Collapsed && !isSearching) && !isSearching)
