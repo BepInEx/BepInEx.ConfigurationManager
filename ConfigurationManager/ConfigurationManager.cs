@@ -513,8 +513,11 @@ namespace ConfigurationManager
 
                 if (hasWebsite)
                 {
+                    var origColor = GUI.color;
+                    GUI.color = Color.gray;
                     if (GUILayout.Button(new GUIContent("URL", plugin.Website), GUI.skin.label, GUILayout.ExpandWidth(false)))
                         Utils.OpenWebsite(plugin.Website);
+                    GUI.color = origColor;
                     GUILayout.EndHorizontal();
                 }
             }
