@@ -289,7 +289,7 @@ namespace ConfigurationManager
             if (setting.ObjToStr != null && setting.StrToObj != null)
             {
                 var text = setting.ObjToStr(setting.Get()).AppendZeroIfFloat(setting.SettingType);
-                var result = GUILayout.TextField(text, GUILayout.MaxWidth(rightColumnWidth));
+                var result = GUILayout.TextField(text, GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
                 if (result != text)
                     setting.Set(setting.StrToObj(result));
             }
@@ -300,7 +300,7 @@ namespace ConfigurationManager
                 var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType);
                 if (CanCovert(value, setting.SettingType))
                 {
-                    var result = GUILayout.TextField(value, GUILayout.MaxWidth(rightColumnWidth));
+                    var result = GUILayout.TextField(value, GUILayout.Width(rightColumnWidth),  GUILayout.MaxWidth(rightColumnWidth));
                     if (result != value)
                         setting.Set(Convert.ChangeType(result, setting.SettingType, CultureInfo.InvariantCulture));
                 }
