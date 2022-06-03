@@ -144,9 +144,7 @@ namespace ConfigurationManager
                 switch (attrib)
                 {
                     case null: break;
-
-                    // Obsolete attributes from bepin4 -----------------------
-#pragma warning disable 618 // Disable obsolete warning
+                        
                     case DisplayNameAttribute da:
                         DispName = da.DisplayName;
                         break;
@@ -165,22 +163,7 @@ namespace ConfigurationManager
                     case BrowsableAttribute bro:
                         Browsable = bro.Browsable;
                         break;
-                    case AdvancedAttribute adv:
-                        IsAdvanced = adv.IsAdvanced;
-                        break;
-                    case AcceptableValueListAttribute oldAcceptableValList:
-                        AcceptableValues = oldAcceptableValList.GetAcceptableValues(pluginInstance);
-                        break;
-                    case AcceptableValueRangeAttribute oldAcceptableValRange:
-                        AcceptableValueRange = new KeyValuePair<object, object>(oldAcceptableValRange.MinValue, oldAcceptableValRange.MaxValue);
-                        ShowRangeAsPercent = oldAcceptableValRange.ShowAsPercentage;
-                        break;
-                    case CustomSettingDrawAttribute oldCustomDraw:
-                        CustomDrawer = _ => oldCustomDraw.Run(PluginInstance);
-                        break;
-#pragma warning restore 618
-
-                    // Obsolete attributes from early bepin5 -----------------------
+                        
                     case Action<SettingEntryBase> newCustomDraw:
                         CustomDrawer = _ => newCustomDraw(this);
                         break;

@@ -185,14 +185,6 @@ namespace ConfigurationManager
             }
 
             const string shortcutsCatName = "Keyboard shortcuts";
-            string GetCategory(SettingEntryBase eb)
-            {
-#pragma warning disable 618 // Disable obsolete warning
-                // Legacy behavior
-                if (eb.SettingType == typeof(BepInEx.KeyboardShortcut)) return shortcutsCatName;
-#pragma warning restore 618
-                return eb.Category;
-            }
 
             var settingsAreCollapsed = _pluginConfigCollapsedDefault.Value;
 
@@ -210,7 +202,7 @@ namespace ConfigurationManager
                 .Select(pluginSettings =>
                 {
                     var categories = pluginSettings
-                        .GroupBy(GetCategory)
+                        .GroupBy(eb => eb.Category)
                         .OrderBy(x => string.Equals(x.Key, shortcutsCatName, StringComparison.Ordinal))
                         .ThenBy(x => x.Key)
                         .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
@@ -231,9 +223,7 @@ namespace ConfigurationManager
 
         private static bool IsKeyboardShortcut(SettingEntryBase x)
         {
-#pragma warning disable 618 // Disable obsolete warning
-            return x.SettingType == typeof(BepInEx.KeyboardShortcut) || x.SettingType == typeof(BepInEx.Configuration.KeyboardShortcut);
-#pragma warning restore 618
+            return x.SettingType == typeof(KeyboardShortcut);
         }
 
         private static bool ContainsSearchString(SettingEntryBase setting, string[] searchStrings)
@@ -590,12 +580,6 @@ namespace ConfigurationManager
             {
                 if (DrawDefaultButton())
                     setting.Set(setting.DefaultValue);
-            }
-            else if (setting is LegacySettingEntry legacySetting && legacySetting.Wrapper != null)
-            {
-                var method = legacySetting.Wrapper.GetType().GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public);
-                if (method != null && DrawDefaultButton())
-                    method.Invoke(legacySetting.Wrapper, null);
             }
             else if (setting.SettingType.IsClass)
             {

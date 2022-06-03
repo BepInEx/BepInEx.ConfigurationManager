@@ -50,8 +50,6 @@ namespace ConfigurationManager
 
                 detected.AddRange(GetPluginConfig(plugin).Cast<SettingEntryBase>());
 
-                detected.AddRange(LegacySettingSearcher.GetLegacyPluginConfig(plugin).Cast<SettingEntryBase>());
-
                 detected.RemoveAll(x => x.Browsable == false);
 
                 if (!detected.Any())
@@ -60,8 +58,7 @@ namespace ConfigurationManager
                 // Allow to enable/disable plugin if it uses any update methods ------
                 if (showDebug && type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(x => _updateMethodNames.Contains(x.Name)))
                 {
-                    // todo make a different class for it and fix access modifiers?
-                    var enabledSetting = LegacySettingEntry.FromNormalProperty(plugin, type.GetProperty("enabled"), pluginInfo, plugin);
+                    var enabledSetting = new PropertySettingEntry(plugin, type.GetProperty("enabled"), plugin);
                     enabledSetting.DispName = "!Allow plugin to run on every frame";
                     enabledSetting.Description = "Disabling this will disable some or all of the plugin's functionality.\nHooks and event-based functionality will not be disabled.\nThis setting will be lost after game restart.";
                     enabledSetting.IsAdvanced = true;
@@ -69,15 +66,7 @@ namespace ConfigurationManager
                 }
 
                 if (detected.Any())
-                {
-#pragma warning disable 618 // Disable obsolete warning
-                    var isAdvancedPlugin = type.GetCustomAttributes(typeof(AdvancedAttribute), false).Cast<AdvancedAttribute>().Any(x => x.IsAdvanced);
-#pragma warning restore 618
-                    if (isAdvancedPlugin)
-                        detected.ForEach(entry => entry.IsAdvanced = true);
-
                     results = results.Concat(detected);
-                }
             }
         }
 
