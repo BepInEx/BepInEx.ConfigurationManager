@@ -52,7 +52,7 @@ namespace ConfigurationManager
 
                 detected.RemoveAll(x => x.Browsable == false);
 
-                if (!detected.Any())
+                if (detected.Count == 0)
                     modsWithoutSettings.Add(pluginInfo.Name);
 
                 // Allow to enable/disable plugin if it uses any update methods ------
@@ -65,13 +65,13 @@ namespace ConfigurationManager
                     detected.Add(enabledSetting);
                 }
 
-                if (detected.Any())
+                if (detected.Count > 0)
                     results = results.Concat(detected);
             }
         }
 
         /// <summary>
-        /// Bepinex 5 config
+        /// Get entries for all core BepInEx settings
         /// </summary>
         private static IEnumerable<SettingEntryBase> GetBepInExCoreConfig()
         {
@@ -81,17 +81,15 @@ namespace ConfigurationManager
             var coreConfig = (ConfigFile)coreConfigProp.GetValue(null, null);
             var bepinMeta = new BepInPlugin("BepInEx", "BepInEx", typeof(BepInEx.Bootstrap.Chainloader).Assembly.GetName().Version.ToString());
 
-            return coreConfig.GetConfigEntries()
-                .Select(x => new ConfigSettingEntry(x, null) { IsAdvanced = true, PluginInfo = bepinMeta })
-                .Cast<SettingEntryBase>();
+            return coreConfig.Select(kvp => (SettingEntryBase)new ConfigSettingEntry(kvp.Value, null) { IsAdvanced = true, PluginInfo = bepinMeta });
         }
 
         /// <summary>
-        /// Used by bepinex 5 plugins
+        /// Get entries for all settings of a plugin
         /// </summary>
         private static IEnumerable<ConfigSettingEntry> GetPluginConfig(BaseUnityPlugin plugin)
         {
-            return plugin.Config.GetConfigEntries().Select(x => new ConfigSettingEntry(x, plugin));
+            return plugin.Config.Select(kvp => new ConfigSettingEntry(kvp.Value, plugin));
         }
     }
 }

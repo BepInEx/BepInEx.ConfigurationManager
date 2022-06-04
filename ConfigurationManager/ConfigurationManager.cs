@@ -80,7 +80,7 @@ namespace ConfigurationManager
         private readonly ConfigEntry<bool> _showAdvanced;
         private readonly ConfigEntry<bool> _showKeybinds;
         private readonly ConfigEntry<bool> _showSettings;
-        private readonly ConfigEntry<BepInEx.Configuration.KeyboardShortcut> _keybind;
+        private readonly ConfigEntry<KeyboardShortcut> _keybind;
         private readonly ConfigEntry<bool> _hideSingleSection;
         private readonly ConfigEntry<bool> _pluginConfigCollapsedDefault;
         private bool _showDebug;
@@ -91,14 +91,14 @@ namespace ConfigurationManager
             Logger = base.Logger;
             _fieldDrawer = new SettingFieldDrawer(this);
 
-            _showAdvanced = Config.AddSetting("Filtering", "Show advanced", false);
-            _showKeybinds = Config.AddSetting("Filtering", "Show keybinds", true);
-            _showSettings = Config.AddSetting("Filtering", "Show settings", true);
-            _keybind = Config.AddSetting("General", "Show config manager", new BepInEx.Configuration.KeyboardShortcut(KeyCode.F1),
+            _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
+            _showKeybinds = Config.Bind("Filtering", "Show keybinds", true);
+            _showSettings = Config.Bind("Filtering", "Show settings", true);
+            _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1),
                 new ConfigDescription("The shortcut used to toggle the config manager window on and off.\n" +
                                       "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
-            _hideSingleSection = Config.AddSetting("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
-            _pluginConfigCollapsedDefault = Config.AddSetting("General", "Plugin collapsed default", true, new ConfigDescription("If set to true plugins will be collapsed when opening the configuration manager window"));
+            _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
+            _pluginConfigCollapsedDefault = Config.Bind("General", "Plugin collapsed default", true, new ConfigDescription("If set to true plugins will be collapsed when opening the configuration manager window"));
         }
 
         /// <summary>
@@ -154,6 +154,9 @@ namespace ConfigurationManager
                 SettingFieldDrawer.SettingDrawHandlers[settingType] = onGuiDrawer;
         }
 
+        /// <summary>
+        /// Rebuild the setting list. Use to update the config manager window if config settings were removed or added while it was open.
+        /// </summary>
         public void BuildSettingList()
         {
             SettingSearcher.CollectSettings(out var results, out var modsWithoutSettings, _showDebug);
@@ -434,7 +437,7 @@ namespace ConfigurationManager
 
                 if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
                 {
-                    try { Utilities.Utils.OpenLog(); }
+                    try { Utils.OpenLog(); }
                     catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
                 }
             }
@@ -570,7 +573,7 @@ namespace ConfigurationManager
         {
             if (setting.HideDefaultButton) return;
 
-            bool DrawDefaultButton()
+            bool DefaultButton()
             {
                 GUILayout.Space(5);
                 return GUILayout.Button("Reset", GUILayout.ExpandWidth(false));
@@ -578,12 +581,12 @@ namespace ConfigurationManager
 
             if (setting.DefaultValue != null)
             {
-                if (DrawDefaultButton())
+                if (DefaultButton())
                     setting.Set(setting.DefaultValue);
             }
             else if (setting.SettingType.IsClass)
             {
-                if (DrawDefaultButton())
+                if (DefaultButton())
                     setting.Set(null);
             }
         }

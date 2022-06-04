@@ -12,7 +12,6 @@ namespace ConfigurationManager.Utilities
     {
         private static bool forceToUnShow;
         private static int useControlID = -1;
-        private readonly string boxStyle;
         private readonly string buttonStyle;
         private bool isClickedComboButton;
         private readonly GUIContent[] listContent;
@@ -25,20 +24,8 @@ namespace ConfigurationManager.Utilities
             ButtonContent = buttonContent;
             this.listContent = listContent;
             buttonStyle = "button";
-            boxStyle = "box";
             this.listStyle = listStyle;
             _windowYmax = (int)windowYmax;
-        }
-
-        public ComboBox(Rect rect, GUIContent buttonContent, GUIContent[] listContent, string buttonStyle,
-            string boxStyle, GUIStyle listStyle)
-        {
-            Rect = rect;
-            ButtonContent = buttonContent;
-            this.listContent = listContent;
-            this.buttonStyle = buttonStyle;
-            this.boxStyle = boxStyle;
-            this.listStyle = listStyle;
         }
 
         public Rect Rect { get; set; }

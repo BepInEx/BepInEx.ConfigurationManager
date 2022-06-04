@@ -4,7 +4,6 @@
 using BepInEx;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -35,44 +34,9 @@ namespace ConfigurationManager.Utilities
             return result;
         }
 
-        /// <summary>
-        ///     Return items with browsable attribute same as expectedBrowsable, and optionally items with no browsable attribute
-        /// </summary>
-        public static IEnumerable<T> FilterBrowsable<T>(this IEnumerable<T> props, bool expectedBrowsable,
-            bool includeNotSet = false) where T : MemberInfo
-        {
-            if (includeNotSet)
-                return props.Where(p => p.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>().All(x => x.Browsable == expectedBrowsable));
-
-            return props.Where(p => p.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>().Any(x => x.Browsable == expectedBrowsable));
-        }
-
-        public static bool IsSubclassOfRawGeneric(this Type toCheck, Type generic)
-        {
-            while (toCheck != null && toCheck != typeof(object))
-            {
-                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-                if (generic == cur)
-                    return true;
-                toCheck = toCheck.BaseType;
-            }
-            return false;
-        }
-
-        // Additionally search for BaseUnityPlugin to find dynamically loaded plugins
-        public static BaseUnityPlugin[] FindPlugins() => BepInEx.Bootstrap.Chainloader.Plugins.Concat(Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>()).Distinct().ToArray();
-
-        public static bool IsNumber(this object value) => value is sbyte
-                   || value is byte
-                   || value is short
-                   || value is ushort
-                   || value is int
-                   || value is uint
-                   || value is long
-                   || value is ulong
-                   || value is float
-                   || value is double
-                   || value is decimal;
+        // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins. Doing this makes checking Chainloader.PluginInfos redundant.
+        // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
+        public static BaseUnityPlugin[] FindPlugins() => Array.ConvertAll(Object.FindObjectsOfType(typeof(BaseUnityPlugin)), input => (BaseUnityPlugin)input);
 
         public static string AppendZero(this string s)
         {
@@ -148,6 +112,7 @@ namespace ConfigurationManager.Utilities
 
         public static string GetWebsite(BaseUnityPlugin bepInPlugin)
         {
+            if (bepInPlugin == null) return null;
             try
             {
                 var fileName = bepInPlugin.GetType().Assembly.Location;
@@ -164,7 +129,7 @@ namespace ConfigurationManager.Utilities
             }
             catch (Exception e)
             {
-                ConfigurationManager.Logger.LogWarning("Failed to get Uri info - " + e.Message);
+                ConfigurationManager.Logger.LogWarning($"Failed to get URI for {bepInPlugin?.Info?.Metadata?.Name} - {e.Message}");
                 return null;
             }
         }
