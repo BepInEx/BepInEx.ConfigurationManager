@@ -31,9 +31,6 @@ namespace ConfigurationManager
             SettingDrawHandlers = new Dictionary<Type, Action<SettingEntryBase>>
             {
                 {typeof(bool), DrawBoolField},
-#pragma warning disable 618 // Disable obsolete warning
-                {typeof(BepInEx.KeyboardShortcut), DrawKeyboardShortcut},
-#pragma warning restore 618
                 {typeof(BepInEx.Configuration.KeyboardShortcut), DrawKeyboardShortcut},
                 {typeof(Color), DrawColor },
                 {typeof(Vector2), DrawVector2 },
@@ -300,7 +297,7 @@ namespace ConfigurationManager
                 var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType);
                 if (CanCovert(value, setting.SettingType))
                 {
-                    var result = GUILayout.TextField(value, GUILayout.Width(rightColumnWidth),  GUILayout.MaxWidth(rightColumnWidth));
+                    var result = GUILayout.TextField(value, GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
                     if (result != value)
                         setting.Set(Convert.ChangeType(result, setting.SettingType, CultureInfo.InvariantCulture));
                 }
@@ -335,10 +332,6 @@ namespace ConfigurationManager
 
         private static void DrawKeyboardShortcut(SettingEntryBase setting)
         {
-#pragma warning disable 618 // Disable obsolete warning
-            var value = setting.Get();
-            var isOldType = value is BepInEx.KeyboardShortcut;
-
             if (_currentKeyboardShortcutToSet == setting)
             {
                 GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
@@ -348,8 +341,7 @@ namespace ConfigurationManager
                 {
                     if (Input.GetKeyUp(key))
                     {
-                        if (isOldType) setting.Set(new BepInEx.KeyboardShortcut(key, _keysToCheck.Where(Input.GetKey).ToArray()));
-                        else setting.Set(new BepInEx.Configuration.KeyboardShortcut(key, _keysToCheck.Where(Input.GetKey).ToArray()));
+                        setting.Set(new BepInEx.Configuration.KeyboardShortcut(key, _keysToCheck.Where(Input.GetKey).ToArray()));
                         _currentKeyboardShortcutToSet = null;
                         break;
                     }
@@ -360,17 +352,15 @@ namespace ConfigurationManager
             }
             else
             {
-                if (GUILayout.Button(value.ToString(), GUILayout.ExpandWidth(true)))
+                if (GUILayout.Button(setting.Get().ToString(), GUILayout.ExpandWidth(true)))
                     _currentKeyboardShortcutToSet = setting;
 
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
-                    if (isOldType) setting.Set(new BepInEx.KeyboardShortcut());
-                    else setting.Set(BepInEx.Configuration.KeyboardShortcut.Empty);
+                    setting.Set(BepInEx.Configuration.KeyboardShortcut.Empty);
                     _currentKeyboardShortcutToSet = null;
                 }
             }
-#pragma warning restore 618
         }
 
         private static void DrawVector2(SettingEntryBase obj)
