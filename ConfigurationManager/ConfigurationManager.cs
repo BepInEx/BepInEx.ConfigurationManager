@@ -263,7 +263,7 @@ namespace ConfigurationManager
                 SetUnlockCursor(0, true);
 
                 if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
-                    !SettingWindowRect.Contains(Input.mousePosition))
+                    !SettingWindowRect.Contains(UnityInput.Current.mousePosition))
                     DisplayingWindow = false;
 
                 GUI.Box(SettingWindowRect, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
@@ -271,7 +271,7 @@ namespace ConfigurationManager
                 GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
 
                 if (!SettingFieldDrawer.SettingKeyboardShortcut)
-                    Input.ResetInputAxes();
+                    UnityInput.Current.ResetInputAxes();
             }
         }
 

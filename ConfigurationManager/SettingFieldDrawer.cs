@@ -8,13 +8,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using BepInEx;
 using UnityEngine;
 
 namespace ConfigurationManager
 {
     internal class SettingFieldDrawer
     {
-        private static readonly IEnumerable<KeyCode> _keysToCheck = BepInEx.Configuration.KeyboardShortcut.AllKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
+        private static IEnumerable<KeyCode> _keysToCheck;
 
         public static Dictionary<Type, Action<SettingEntryBase>> SettingDrawHandlers { get; }
 
@@ -337,11 +338,13 @@ namespace ConfigurationManager
                 GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
+                var input = UnityInput.Current;
+                if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
                 foreach (var key in _keysToCheck)
                 {
-                    if (Input.GetKeyUp(key))
+                    if (input.GetKeyUp(key))
                     {
-                        setting.Set(new BepInEx.Configuration.KeyboardShortcut(key, _keysToCheck.Where(Input.GetKey).ToArray()));
+                        setting.Set(new BepInEx.Configuration.KeyboardShortcut(key, _keysToCheck.Where(input.GetKey).ToArray()));
                         _currentKeyboardShortcutToSet = null;
                         break;
                     }
