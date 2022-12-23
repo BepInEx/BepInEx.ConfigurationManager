@@ -22,7 +22,7 @@ namespace ConfigurationManager
         private static readonly Dictionary<SettingEntryBase, ComboBox> _comboBoxCache = new Dictionary<SettingEntryBase, ComboBox>();
         private static readonly Dictionary<SettingEntryBase, ColorCacheEntry> _colorCache = new Dictionary<SettingEntryBase, ColorCacheEntry>();
 
-        private readonly ConfigurationManager _instance;
+        private static ConfigurationManager _instance;
 
         private static SettingEntryBase _currentKeyboardShortcutToSet;
         public static bool SettingKeyboardShortcut => _currentKeyboardShortcutToSet != null;
@@ -33,6 +33,7 @@ namespace ConfigurationManager
             {
                 {typeof(bool), DrawBoolField},
                 {typeof(BepInEx.Configuration.KeyboardShortcut), DrawKeyboardShortcut},
+                {typeof(KeyCode), DrawKeyCode },
                 {typeof(Color), DrawColor },
                 {typeof(Vector2), DrawVector2 },
                 {typeof(Vector3), DrawVector3 },
@@ -54,15 +55,12 @@ namespace ConfigurationManager
                 DrawRangeField(setting);
             else if (setting.AcceptableValues != null)
                 DrawListField(setting);
+            else if (DrawFieldBasedOnValueType(setting))
+                return;
             else if (setting.SettingType.IsEnum)
-            {
-                if (setting.SettingType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
-                    DrawFlagsField(setting, Enum.GetValues(setting.SettingType), _instance.RightColumnWidth);
-                else
-                    DrawComboboxField(setting, Enum.GetValues(setting.SettingType), _instance.SettingWindowRect.yMax);
-            }
+                DrawEnumField(setting);
             else
-                DrawFieldBasedOnValueType(setting);
+                DrawUnknownField(setting, _instance.RightColumnWidth);
         }
 
         public static void ClearCache()
@@ -129,7 +127,7 @@ namespace ConfigurationManager
             return false;
         }
 
-        private void DrawListField(SettingEntryBase setting)
+        private static void DrawListField(SettingEntryBase setting)
         {
             var acceptableValues = setting.AcceptableValues;
             if (acceptableValues.Length == 0)
@@ -138,15 +136,20 @@ namespace ConfigurationManager
             if (!setting.SettingType.IsInstanceOfType(acceptableValues.FirstOrDefault(x => x != null)))
                 throw new ArgumentException("AcceptableValueListAttribute returned a list with items of type other than the settng type itself.");
 
-            DrawComboboxField(setting, acceptableValues, _instance.SettingWindowRect.yMax);
+            if (setting.SettingType == typeof(KeyCode))
+                DrawKeyCode(setting);
+            else
+                DrawComboboxField(setting, acceptableValues, _instance.SettingWindowRect.yMax);
         }
 
-        private void DrawFieldBasedOnValueType(SettingEntryBase setting)
+        private static bool DrawFieldBasedOnValueType(SettingEntryBase setting)
         {
             if (SettingDrawHandlers.TryGetValue(setting.SettingType, out var drawMethod))
+            {
                 drawMethod(setting);
-            else
-                DrawUnknownField(setting, _instance.RightColumnWidth);
+                return true;
+            }
+            return false;
         }
 
         private static void DrawBoolField(SettingEntryBase setting)
@@ -155,6 +158,14 @@ namespace ConfigurationManager
             var result = GUILayout.Toggle(boolVal, boolVal ? "Enabled" : "Disabled", GUILayout.ExpandWidth(true));
             if (result != boolVal)
                 setting.Set(result);
+        }
+
+        private static void DrawEnumField(SettingEntryBase setting)
+        {
+            if (setting.SettingType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
+                DrawFlagsField(setting, Enum.GetValues(setting.SettingType), _instance.RightColumnWidth);
+            else
+                DrawComboboxField(setting, Enum.GetValues(setting.SettingType), _instance.SettingWindowRect.yMax);
         }
 
         private static void DrawFlagsField(SettingEntryBase setting, IList enumValues, int maxWidth)
@@ -328,6 +339,38 @@ namespace ConfigurationManager
             {
                 _canCovertCache[type] = false;
                 return false;
+            }
+        }
+
+        private static void DrawKeyCode(SettingEntryBase setting)
+        {
+            if (_currentKeyboardShortcutToSet == setting)
+            {
+                GUILayout.Label("Press any key", GUILayout.ExpandWidth(true));
+                GUIUtility.keyboardControl = -1;
+
+                var input = UnityInput.Current;
+                if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
+                foreach (var key in _keysToCheck)
+                {
+                    if (input.GetKeyUp(key))
+                    {
+                        setting.Set(key);
+                        _currentKeyboardShortcutToSet = null;
+                        break;
+                    }
+                }
+
+                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                    _currentKeyboardShortcutToSet = null;
+            }
+            else
+            {
+                var acceptableValues = setting.AcceptableValues?.Length > 1 ? setting.AcceptableValues : Enum.GetValues(setting.SettingType);
+                DrawComboboxField(setting, acceptableValues, _instance.SettingWindowRect.yMax);
+
+                if (GUILayout.Button(new GUIContent("Set...", "Set the key by pressing any key on your keyboard."), GUILayout.ExpandWidth(false)))
+                    _currentKeyboardShortcutToSet = setting;
             }
         }
 
