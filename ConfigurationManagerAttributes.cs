@@ -39,6 +39,52 @@ internal sealed class ConfigurationManagerAttributes
     public System.Action<BepInEx.Configuration.ConfigEntryBase> CustomDrawer;
 
     /// <summary>
+    /// Custom setting editor that allows polling keyboard input with the Input (or UnityInput) class.
+    /// Use either CustomDrawer or CustomHotkeyDrawer, using both at the same time leads to undefined behaviour.
+    /// </summary>
+    public CustomHotkeyDrawerFunc CustomHotkeyDrawer;
+
+    /// <summary>
+    /// Custom setting draw action that allows polling keyboard input with the Input class.
+    /// Note: Make sure to focus on your UI control when you are accepting input so user doesn't type in the search box or in another setting (best to do this on every frame).
+    /// If you don't draw any selectable UI controls You can use `GUIUtility.keyboardControl = -1;` on every frame to make sure that nothing is selected.
+    /// </summary>
+    /// <example>
+    /// CustomHotkeyDrawer = (ConfigEntryBase setting, ref bool isEditing) =>
+    /// {
+    ///     if (isEditing)
+    ///     {
+    ///         // Make sure nothing else is selected since we aren't focusing on a text box with GUI.FocusControl.
+    ///         GUIUtility.keyboardControl = -1;
+    ///                     
+    ///         // Use Input.GetKeyDown and others here, remember to set isEditing to false after you're done!
+    ///         // It's best to check Input.anyKeyDown and set isEditing to false immediately if it's true,
+    ///         // so that the input doesn't have a chance to propagate to the game itself.
+    /// 
+    ///         if (GUILayout.Button("Stop"))
+    ///             isEditing = false;
+    ///     }
+    ///     else
+    ///     {
+    ///         if (GUILayout.Button("Start"))
+    ///             isEditing = true;
+    ///     }
+    /// 
+    ///     // This will only be true when isEditing is true and you hold any key
+    ///     GUILayout.Label("Any key pressed: " + Input.anyKey);
+    /// }
+    /// </example>
+    /// <param name="setting">
+    /// Setting currently being set (if available).
+    /// </param>
+    /// <param name="isCurrentlyAcceptingInput">
+    /// Set this ref parameter to true when you want the current setting drawer to receive Input events.
+    /// The value will persist after being set, use it to see if the current instance is being edited.
+    /// Remember to set it to false after you are done!
+    /// </param>
+    public delegate void CustomHotkeyDrawerFunc(BepInEx.Configuration.ConfigEntryBase setting, ref bool isCurrentlyAcceptingInput);
+
+    /// <summary>
     /// Show this setting in the settings screen at all? If false, don't show.
     /// </summary>
     public bool? Browsable;

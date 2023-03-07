@@ -51,6 +51,16 @@ namespace ConfigurationManager
         {
             if (setting.CustomDrawer != null)
                 setting.CustomDrawer(setting is ConfigSettingEntry newSetting ? newSetting.Entry : null);
+            else if (setting.CustomHotkeyDrawer != null)
+            {
+                var isBeingSet = _currentKeyboardShortcutToSet == setting;
+                var isBeingSetOriginal = isBeingSet;
+
+                setting.CustomHotkeyDrawer(setting is ConfigSettingEntry newSetting ? newSetting.Entry : null, ref isBeingSet);
+
+                if (isBeingSet != isBeingSetOriginal)
+                    _currentKeyboardShortcutToSet = isBeingSet ? setting : null;
+            }
             else if (setting.ShowRangeAsPercent != null && setting.AcceptableValueRange.Key != null)
                 DrawRangeField(setting);
             else if (setting.AcceptableValues != null)
@@ -380,7 +390,7 @@ namespace ConfigurationManager
             {
                 GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
-
+                
                 var input = UnityInput.Current;
                 if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
                 foreach (var key in _keysToCheck)

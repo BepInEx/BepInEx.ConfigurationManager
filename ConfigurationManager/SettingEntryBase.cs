@@ -31,9 +31,23 @@ namespace ConfigurationManager
         public bool? ShowRangeAsPercent { get; protected set; }
 
         /// <summary>
-        /// Custom setting draw action
+        /// Custom setting draw action.
+        /// Use either CustomDrawer or CustomHotkeyDrawer, using both at the same time leads to undefined behaviour.
         /// </summary>
         public Action<BepInEx.Configuration.ConfigEntryBase> CustomDrawer { get; private set; }
+
+        /// <summary>
+        /// Custom setting draw action that allows polling keyboard input with the Input class.
+        /// Use either CustomDrawer or CustomHotkeyDrawer, using both at the same time leads to undefined behaviour.
+        /// </summary>
+        public CustomHotkeyDrawerFunc CustomHotkeyDrawer { get; private set; }
+
+        /// <summary>
+        /// Custom setting draw action that allows polling keyboard input with the Input class.
+        /// </summary>
+        /// <param name="setting">Setting currently being set, is available</param>
+        /// <param name="isCurrentlyAcceptingInput">Set this ref parameter to true when you want the current setting drawer to receive Input events. Remember to set it to false after you are done!</param>
+        public delegate void CustomHotkeyDrawerFunc(BepInEx.Configuration.ConfigEntryBase setting, ref bool isCurrentlyAcceptingInput);
 
         /// <summary>
         /// Show this setting in the settings screen at all? If false, don't show.
@@ -144,7 +158,7 @@ namespace ConfigurationManager
                 switch (attrib)
                 {
                     case null: break;
-                        
+
                     case DisplayNameAttribute da:
                         DispName = da.DisplayName;
                         break;
@@ -163,7 +177,7 @@ namespace ConfigurationManager
                     case BrowsableAttribute bro:
                         Browsable = bro.Browsable;
                         break;
-                        
+
                     case Action<SettingEntryBase> newCustomDraw:
                         CustomDrawer = _ => newCustomDraw(this);
                         break;
@@ -189,7 +203,13 @@ namespace ConfigurationManager
                                 {
                                     var val = propertyPair.other.GetValue(attrib);
                                     if (val != null)
+                                    {
+                                        // Handle delegate covariance not working when using reflection by manually converting the delegate
+                                        if (propertyPair.my.PropertyType != propertyPair.other.FieldType && typeof(Delegate).IsAssignableFrom(propertyPair.my.PropertyType))
+                                            val = Delegate.CreateDelegate(propertyPair.my.PropertyType, ((Delegate)val).Target, ((Delegate)val).Method);
+
                                         propertyPair.my.SetValue(this, val, null);
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
