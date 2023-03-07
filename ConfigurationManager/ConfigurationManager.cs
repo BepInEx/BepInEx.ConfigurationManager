@@ -380,85 +380,104 @@ namespace ConfigurationManager
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Tip: Click plugin names to expand. Click setting and group names to see their descriptions.");
-
-                GUILayout.FlexibleSpace();
-
-                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand" : "Collapse", GUILayout.ExpandWidth(false)))
-                {
-                    var newValue = !_pluginConfigCollapsedDefault.Value;
-                    _pluginConfigCollapsedDefault.Value = newValue;
-                    foreach (var plugin in _filteredSetings)
-                        plugin.Collapsed = newValue;
-                }
             }
             GUILayout.EndHorizontal();
         }
 
         private void DrawWindowHeader()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Show: ", GUILayout.ExpandWidth(false));
-
-                GUI.enabled = SearchString == string.Empty;
-
-                var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
-                if (_showSettings.Value != newVal)
+                GUILayout.BeginHorizontal(GUI.skin.box);
                 {
-                    _showSettings.Value = newVal;
-                    BuildFilteredSettingList();
-                }
+                    GUILayout.Label("Show: ");
 
-                newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
-                if (_showKeybinds.Value != newVal)
+                    GUI.enabled = SearchString == string.Empty;
+
+                    var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
+                    if (_showSettings.Value != newVal)
+                    {
+                        _showSettings.Value = newVal;
+                        BuildFilteredSettingList();
+                    }
+
+                    newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
+                    if (_showKeybinds.Value != newVal)
+                    {
+                        _showKeybinds.Value = newVal;
+                        BuildFilteredSettingList();
+                    }
+
+                    var origColor = GUI.color;
+                    GUI.color = _advancedSettingColor;
+                    newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
+                    if (_showAdvanced.Value != newVal)
+                    {
+                        _showAdvanced.Value = newVal;
+                        BuildFilteredSettingList();
+                    }
+                    GUI.color = origColor;
+
+                    GUI.enabled = true;
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
                 {
-                    _showKeybinds.Value = newVal;
-                    BuildFilteredSettingList();
+                    if (GUILayout.Button("Close"))
+                    {
+                        DisplayingWindow = false;
+                    }
                 }
-
-                var origColor = GUI.color;
-                GUI.color = _advancedSettingColor;
-                newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
-                if (_showAdvanced.Value != newVal)
-                {
-                    _showAdvanced.Value = newVal;
-                    BuildFilteredSettingList();
-                }
-                GUI.color = origColor;
-
-                GUI.enabled = true;
-
-                newVal = GUILayout.Toggle(_showDebug, "Debug mode");
-                if (_showDebug != newVal)
-                {
-                    _showDebug = newVal;
-                    BuildSettingList();
-                }
-
-                if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
-                {
-                    try { Utils.OpenLog(); }
-                    catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
-                }
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Search settings: ", GUILayout.ExpandWidth(false));
-
-                GUI.SetNextControlName(SearchBoxName);
-                SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
-
-                if (_focusSearchBox)
+                GUILayout.BeginHorizontal(GUI.skin.box);
                 {
-                    GUI.FocusWindow(WindowId);
-                    GUI.FocusControl(SearchBoxName);
-                    _focusSearchBox = false;
-                }
+                    GUILayout.Label("Search: ", GUILayout.ExpandWidth(false));
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
-                    SearchString = string.Empty;
+                    GUI.SetNextControlName(SearchBoxName);
+                    SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true), GUILayout.MinWidth(250));
+
+                    if (_focusSearchBox)
+                    {
+                        GUI.FocusWindow(WindowId);
+                        GUI.FocusControl(SearchBoxName);
+                        _focusSearchBox = false;
+                    }
+
+                    if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                        SearchString = string.Empty;
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
+                {
+                    if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All"))
+                    {
+                        var newValue = !_pluginConfigCollapsedDefault.Value;
+                        _pluginConfigCollapsedDefault.Value = newValue;
+                        foreach (var plugin in _filteredSetings)
+                            plugin.Collapsed = newValue;
+                    }
+
+                    var newVal = GUILayout.Toggle(_showDebug, "Debug mode");
+                    if (_showDebug != newVal)
+                    {
+                        _showDebug = newVal;
+                        BuildSettingList();
+                    }
+
+                    if (GUILayout.Button("Open Log"))
+                    {
+                        try { Utils.OpenLog(); }
+                        catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
         }
