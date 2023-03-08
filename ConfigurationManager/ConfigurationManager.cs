@@ -63,6 +63,9 @@ namespace ConfigurationManager
 
         internal Rect SettingWindowRect { get; private set; }
         private bool _windowWasMoved;
+
+        private bool _tipsPluginHeaderWasClicked, _tipsWindowWasMoved;
+
         private Rect _screenRect;
         private Vector2 _settingWindowScrollPos;
         private int _tipsHeight;
@@ -281,6 +284,8 @@ namespace ConfigurationManager
                 {
                     _windowWasMoved = true;
                     SettingWindowRect = newRect;
+
+                    _tipsWindowWasMoved = true;
                 }
 
                 if (!SettingFieldDrawer.SettingKeyboardShortcut && (!_windowWasMoved || SettingWindowRect.Contains(UnityInput.Current.mousePosition)))
@@ -392,11 +397,17 @@ namespace ConfigurationManager
 
         private void DrawTips()
         {
-            GUILayout.BeginHorizontal();
+            var tip = !_tipsPluginHeaderWasClicked ? "Tip: Click plugin names to expand. Click setting and group names to see their descriptions." :
+                !_tipsWindowWasMoved ? "Tip: You can drag this window to move it. It will stay open while you interact with the game." : null;
+
+            if (tip != null)
             {
-                GUILayout.Label("Tip: Click plugin names to expand. Click setting and group names to see their descriptions.");
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.Label(tip);
+                }
+                GUILayout.EndHorizontal();
             }
-            GUILayout.EndHorizontal();
         }
 
         private void DrawWindowHeader()
@@ -480,6 +491,8 @@ namespace ConfigurationManager
                     _pluginConfigCollapsedDefault.Value = newValue;
                     foreach (var plugin in _filteredSetings)
                         plugin.Collapsed = newValue;
+
+                    _tipsPluginHeaderWasClicked = true;
                 }
             }
             GUILayout.EndHorizontal();
@@ -524,7 +537,10 @@ namespace ConfigurationManager
                 }
 
                 if (SettingFieldDrawer.DrawPluginHeader(categoryHeader, plugin.Collapsed && !isSearching) && !isSearching)
+                {
+                    _tipsPluginHeaderWasClicked = true;
                     plugin.Collapsed = !plugin.Collapsed;
+                }
 
                 if (hasWebsite)
                 {
