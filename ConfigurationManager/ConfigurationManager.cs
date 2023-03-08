@@ -62,6 +62,7 @@ namespace ConfigurationManager
         private List<PluginSettingsData> _filteredSetings = new List<PluginSettingsData>();
 
         internal Rect SettingWindowRect { get; private set; }
+        private bool _windowWasMoved;
         private Rect _screenRect;
         private Vector2 _settingWindowScrollPos;
         private int _tipsHeight;
@@ -254,6 +255,8 @@ namespace ConfigurationManager
 
             LeftColumnWidth = Mathf.RoundToInt(SettingWindowRect.width / 2.5f);
             RightColumnWidth = (int)SettingWindowRect.width - LeftColumnWidth - 115;
+
+            _windowWasMoved = false;
         }
 
         private void OnGUI()
@@ -262,15 +265,25 @@ namespace ConfigurationManager
             {
                 SetUnlockCursor(0, true);
 
-                if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
-                    !SettingWindowRect.Contains(UnityInput.Current.mousePosition))
-                    DisplayingWindow = false;
+                // If the window hasn't been moved by the user yet, block the whole screen and use a solid background to make the window easier to see
+                if (!_windowWasMoved)
+                {
+                    if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
+                        !SettingWindowRect.Contains(UnityInput.Current.mousePosition))
+                        DisplayingWindow = false;
 
-                GUI.Box(SettingWindowRect, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
+                    GUI.Box(SettingWindowRect, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
+                }
 
-                GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
+                var newRect = GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
 
-                if (!SettingFieldDrawer.SettingKeyboardShortcut)
+                if (newRect != SettingWindowRect)
+                {
+                    _windowWasMoved = true;
+                    SettingWindowRect = newRect;
+                }
+
+                if (!SettingFieldDrawer.SettingKeyboardShortcut && (!_windowWasMoved || SettingWindowRect.Contains(UnityInput.Current.mousePosition)))
                     UnityInput.Current.ResetInputAxes();
             }
         }
@@ -373,6 +386,8 @@ namespace ConfigurationManager
 
             if (!SettingFieldDrawer.DrawCurrentDropdown())
                 DrawTooltip(SettingWindowRect);
+
+            GUI.DragWindow();
         }
 
         private void DrawTips()
@@ -386,98 +401,86 @@ namespace ConfigurationManager
 
         private void DrawWindowHeader()
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUI.enabled = SearchString == string.Empty;
+
+                var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
+                if (_showSettings.Value != newVal)
                 {
-                    GUILayout.Label("Show: ");
-
-                    GUI.enabled = SearchString == string.Empty;
-
-                    var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
-                    if (_showSettings.Value != newVal)
-                    {
-                        _showSettings.Value = newVal;
-                        BuildFilteredSettingList();
-                    }
-
-                    newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
-                    if (_showKeybinds.Value != newVal)
-                    {
-                        _showKeybinds.Value = newVal;
-                        BuildFilteredSettingList();
-                    }
-
-                    var origColor = GUI.color;
-                    GUI.color = _advancedSettingColor;
-                    newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
-                    if (_showAdvanced.Value != newVal)
-                    {
-                        _showAdvanced.Value = newVal;
-                        BuildFilteredSettingList();
-                    }
-                    GUI.color = origColor;
-
-                    GUI.enabled = true;
+                    _showSettings.Value = newVal;
+                    BuildFilteredSettingList();
                 }
-                GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
+                newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
+                if (_showKeybinds.Value != newVal)
                 {
-                    if (GUILayout.Button("Close"))
-                    {
-                        DisplayingWindow = false;
-                    }
+                    _showKeybinds.Value = newVal;
+                    BuildFilteredSettingList();
                 }
-                GUILayout.EndHorizontal();
+
+                var origColor = GUI.color;
+                GUI.color = _advancedSettingColor;
+                newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
+                if (_showAdvanced.Value != newVal)
+                {
+                    _showAdvanced.Value = newVal;
+                    BuildFilteredSettingList();
+                }
+                GUI.color = origColor;
+
+                GUI.enabled = true;
+
+                GUILayout.Space(8);
+
+                newVal = GUILayout.Toggle(_showDebug, "Debug info");
+                if (_showDebug != newVal)
+                {
+                    _showDebug = newVal;
+                    BuildSettingList();
+                }
+
+                if (GUILayout.Button("Open Log"))
+                {
+                    try { Utils.OpenLog(); }
+                    catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
+                }
+
+                GUILayout.Space(8);
+
+                if (GUILayout.Button("Close"))
+                {
+                    DisplayingWindow = false;
+                }
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.Label("Search: ", GUILayout.ExpandWidth(false));
+
+                GUI.SetNextControlName(SearchBoxName);
+                SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
+
+                if (_focusSearchBox)
                 {
-                    GUILayout.Label("Search: ", GUILayout.ExpandWidth(false));
-
-                    GUI.SetNextControlName(SearchBoxName);
-                    SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true), GUILayout.MinWidth(250));
-
-                    if (_focusSearchBox)
-                    {
-                        GUI.FocusWindow(WindowId);
-                        GUI.FocusControl(SearchBoxName);
-                        _focusSearchBox = false;
-                    }
-
-                    if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
-                        SearchString = string.Empty;
+                    GUI.FocusWindow(WindowId);
+                    GUI.FocusControl(SearchBoxName);
+                    _focusSearchBox = false;
                 }
-                GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
+                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                    SearchString = string.Empty;
+
+                GUILayout.Space(8);
+
+                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All", GUILayout.ExpandWidth(false)))
                 {
-                    if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All"))
-                    {
-                        var newValue = !_pluginConfigCollapsedDefault.Value;
-                        _pluginConfigCollapsedDefault.Value = newValue;
-                        foreach (var plugin in _filteredSetings)
-                            plugin.Collapsed = newValue;
-                    }
-
-                    var newVal = GUILayout.Toggle(_showDebug, "Debug mode");
-                    if (_showDebug != newVal)
-                    {
-                        _showDebug = newVal;
-                        BuildSettingList();
-                    }
-
-                    if (GUILayout.Button("Open Log"))
-                    {
-                        try { Utils.OpenLog(); }
-                        catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
-                    }
+                    var newValue = !_pluginConfigCollapsedDefault.Value;
+                    _pluginConfigCollapsedDefault.Value = newValue;
+                    foreach (var plugin in _filteredSetings)
+                        plugin.Collapsed = newValue;
                 }
-                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
         }
