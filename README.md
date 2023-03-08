@@ -6,7 +6,7 @@ The configuration manager can be accessed in-game by pressing the hotkey (by def
 ![Configuration manager](Screenshot.PNG)
 
 ## How to use
-- Install a build of BepInEx 5 from at least 26/09/2019 (older won't work).
+- Install BepInEx v5.4.20 or newer (older v5 versions won't work, v6 won't work either without a compatibility layer).
 - Download latest release from the Releases tab above.
 - Place the .dll inside your BepInEx\Plugins folder.
 - Start the game and press F1.
