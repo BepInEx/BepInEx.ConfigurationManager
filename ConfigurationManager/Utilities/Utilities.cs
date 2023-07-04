@@ -11,6 +11,7 @@ using System.Reflection;
 using BepInEx.Logging;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using BepInEx.Bootstrap;
 
 namespace ConfigurationManager.Utilities
 {
@@ -34,9 +35,18 @@ namespace ConfigurationManager.Utilities
             return result;
         }
 
-        // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins. Doing this makes checking Chainloader.PluginInfos redundant.
-        // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
-        public static BaseUnityPlugin[] FindPlugins() => Array.ConvertAll(Object.FindObjectsOfType(typeof(BaseUnityPlugin)), input => (BaseUnityPlugin)input);
+        /// <summary>
+        /// Search for all instances of BaseUnityPlugin loaded by chainloader or other means.
+        /// </summary>
+        public static BaseUnityPlugin[] FindPlugins()
+        {
+            // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins.
+            // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
+            // Still look inside Chainloader.PluginInfos in case the BepInEx_Manager GameObject uses HideFlags.HideAndDontSave, which hides it from Object.Find methods.
+            return Chainloader.PluginInfos.Values.Select(x => x.Instance)
+                              .Union(Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>())
+                              .ToArray();
+        }
 
         public static string AppendZero(this string s)
         {
