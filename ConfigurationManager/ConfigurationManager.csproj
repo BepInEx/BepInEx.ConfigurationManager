@@ -58,6 +58,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingEntryBase.cs" />
     <Compile Include="SettingFieldDrawer.cs" />
+    <Compile Include="Utilities\GUIFocus.cs" />
+    <Compile Include="Utilities\GUIHelper.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
   </ItemGroup>

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,7 +19,6 @@ namespace ConfigurationManager
     /// https://github.com/ManlyMarco/BepInEx.ConfigurationManager
     /// </summary>
     [BepInPlugin(GUID, "Configuration Manager", Version)]
-    [Browsable(false)]
     public class ConfigurationManager : BaseUnityPlugin
     {
         /// <summary>

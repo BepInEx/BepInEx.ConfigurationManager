@@ -32,6 +32,7 @@ namespace ConfigurationManager
             SettingDrawHandlers = new Dictionary<Type, Action<SettingEntryBase>>
             {
                 {typeof(bool), DrawBoolField},
+                {typeof(float), DrawFloatField},
                 {typeof(BepInEx.Configuration.KeyboardShortcut), DrawKeyboardShortcut},
                 {typeof(KeyCode), DrawKeyCode },
                 {typeof(Color), DrawColor },
@@ -168,6 +169,94 @@ namespace ConfigurationManager
             var result = GUILayout.Toggle(boolVal, boolVal ? "Enabled" : "Disabled", GUILayout.ExpandWidth(true));
             if (result != boolVal)
                 setting.Set(result);
+        }
+
+        sealed class FloatConfigCacheEntry
+        {
+            public float Value = 0f;
+            public string FieldText = string.Empty;
+            public Color FieldColor = Color.clear;
+        }
+
+        static readonly Dictionary<SettingEntryBase, FloatConfigCacheEntry> _floatConfigCache = new Dictionary<SettingEntryBase, FloatConfigCacheEntry>();
+
+        public static void DrawFloatField(SettingEntryBase configEntry)
+        {
+            float configValue = (float)configEntry.Get();
+
+            if (!_floatConfigCache.TryGetValue(configEntry, out FloatConfigCacheEntry cacheEntry))
+            {
+                cacheEntry = new FloatConfigCacheEntry()
+                {
+                    Value = configValue,
+                    FieldColor = GUI.color,
+                };
+
+                _floatConfigCache[configEntry] = cacheEntry;
+            }
+
+            if (GUIFocus.HasChanged() || GUIHelper.IsEnterPressed() || cacheEntry.Value != configValue)
+            {
+                cacheEntry.Value = configValue;
+                cacheEntry.FieldText = configValue.ToString(NumberFormatInfo.InvariantInfo);
+                cacheEntry.FieldColor = GUI.color;
+            }
+
+            GUIHelper.BeginColor(cacheEntry.FieldColor);
+            string textValue = GUILayout.TextField(cacheEntry.FieldText, GUILayout.ExpandWidth(true));
+            GUIHelper.EndColor();
+
+            if (textValue == cacheEntry.FieldText)
+            {
+                return;
+            }
+
+            cacheEntry.FieldText = textValue;
+
+            if (ShouldParse(textValue)
+                && float.TryParse(textValue, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out float result))
+            {
+                configEntry.Set(result);
+                cacheEntry.Value = (float)configEntry.Get();
+                cacheEntry.FieldText = cacheEntry.Value.ToString(NumberFormatInfo.InvariantInfo);
+
+                if (cacheEntry.FieldText == textValue)
+                {
+                    cacheEntry.FieldColor = GUI.color;
+                }
+                else
+                {
+                    cacheEntry.FieldColor = Color.yellow;
+                    cacheEntry.FieldText = textValue;
+                }
+            }
+            else
+            {
+                cacheEntry.FieldColor = Color.red;
+            }
+        }
+
+        static bool ShouldParse(string text)
+        {
+            if (text == null || text.Length <= 0)
+            {
+                return false;
+            }
+
+            char lastChar = text[text.Length - 1];
+            switch (lastChar)
+            {
+                case 'e':
+                case 'E':
+                case '+':
+                case '-':
+                case '.':
+                case ',':
+                    return false;
+                default:
+                    return true;
+            }
+
         }
 
         private static void DrawEnumField(SettingEntryBase setting)
@@ -469,25 +558,45 @@ namespace ConfigurationManager
 
         private static void DrawColor(SettingEntryBase obj)
         {
-            var setting = (Color)obj.Get();
+            Color setting = (Color)obj.Get();
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginHorizontal();
+            DrawHexField(ref setting);
+
+            GUILayout.Space(3f);
+            GUIHelper.BeginColor(setting);
+            GUILayout.Label(string.Empty, GUILayout.ExpandWidth(true));
 
             if (!_colorCache.TryGetValue(obj, out var cacheEntry))
             {
                 cacheEntry = new ColorCacheEntry { Tex = new Texture2D(40, 10, TextureFormat.ARGB32, false), Last = setting };
                 cacheEntry.Tex.FillTexture(setting);
                 _colorCache[obj] = cacheEntry;
+                
             }
 
-            GUILayout.Label("R", GUILayout.ExpandWidth(false));
-            setting.r = GUILayout.HorizontalSlider(setting.r, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("G", GUILayout.ExpandWidth(false));
-            setting.g = GUILayout.HorizontalSlider(setting.g, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("B", GUILayout.ExpandWidth(false));
-            setting.b = GUILayout.HorizontalSlider(setting.b, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("A", GUILayout.ExpandWidth(false));
-            setting.a = GUILayout.HorizontalSlider(setting.a, 0f, 1f, GUILayout.ExpandWidth(true));
+            if (Event.current.type == EventType.Repaint)
+            {
+                GUI.DrawTexture(GUILayoutUtility.GetLastRect(), cacheEntry.Tex);
+            }
 
-            GUILayout.Space(4);
+            GUIHelper.EndColor();
+            GUILayout.Space(3f);
+
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(4f);
+            GUILayout.BeginHorizontal();
+            
+            DrawColorField("R", ref setting, ref setting.r);
+            GUILayout.Space(3f);
+            DrawColorField("G", ref setting, ref setting.g);
+            GUILayout.Space(3f);
+            DrawColorField("B", ref setting, ref setting.b);
+            GUILayout.Space(3f);
+            DrawColorField("A", ref setting, ref setting.a);
 
             if (setting != cacheEntry.Last)
             {
@@ -495,9 +604,54 @@ namespace ConfigurationManager
                 cacheEntry.Tex.FillTexture(setting);
                 cacheEntry.Last = setting;
             }
+            
+            GUILayout.EndHorizontal();
 
-            GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
+            GUILayout.EndVertical();
         }
+
+        private static void DrawColorField(string fieldLabel, ref Color settingColor, ref float settingValue)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(fieldLabel, GUILayout.ExpandWidth(true));
+            GUILayout.TextField(settingValue.ToString(CultureInfo.CurrentCulture), GUILayout.MaxWidth(45f), GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2f);
+            switch (fieldLabel)
+            {
+                case "R":
+                    settingColor.r = GUILayout.HorizontalSlider(settingValue, 0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+                case "G":
+                    settingColor.g = GUILayout.HorizontalSlider(settingValue, 0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+                case "B":
+                    settingColor.b = GUILayout.HorizontalSlider(settingValue, 0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+                case "A":
+                    settingColor.a = GUILayout.HorizontalSlider(settingValue, 0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+            }
+
+            GUILayout.EndVertical();
+        }
+
+        private static void DrawHexField(ref Color value)
+        {
+            string currentText = $"#{ColorUtility.ToHtmlStringRGBA(value)}";
+            string textValue = GUILayout.TextField(currentText, GUILayout.Width(90f), GUILayout.ExpandWidth(false));
+            if (textValue == currentText)
+            {
+                return;
+            }
+
+            if (ColorUtility.TryParseHtmlString(textValue, out Color color))
+            {
+                value = color;
+            }
+        }
+
 
         private sealed class ColorCacheEntry
         {
