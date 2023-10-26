@@ -86,7 +86,7 @@ namespace ConfigurationManager
         {
             GUILayout.BeginHorizontal(options);
             GUILayout.FlexibleSpace();
-            GUILayout.Label(text);
+            GUILayout.Label(text, UCStyle.LabelStyle());
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
@@ -141,10 +141,10 @@ namespace ConfigurationManager
         {
             var acceptableValues = setting.AcceptableValues;
             if (acceptableValues.Length == 0)
-                throw new ArgumentException("AcceptableValueListAttribute returned an empty list of acceptable values. You need to supply at least 1 option.");
+                throw new ArgumentException(Utils.UseLang(19));
 
             if (!setting.SettingType.IsInstanceOfType(acceptableValues.FirstOrDefault(x => x != null)))
-                throw new ArgumentException("AcceptableValueListAttribute returned a list with items of type other than the settng type itself.");
+                throw new ArgumentException(Utils.UseLang(20));
 
             if (setting.SettingType == typeof(KeyCode))
                 DrawKeyCode(setting);
@@ -165,7 +165,7 @@ namespace ConfigurationManager
         private static void DrawBoolField(SettingEntryBase setting)
         {
             var boolVal = (bool)setting.Get();
-            var result = GUILayout.Toggle(boolVal, boolVal ? "Enabled" : "Disabled", GUILayout.ExpandWidth(true));
+            var result = GUILayout.Toggle(boolVal, boolVal ? Utils.UseLang(21) : Utils.UseLang(22), UCStyle.ToggleStyle(), GUILayout.ExpandWidth(true));
             if (result != boolVal)
                 setting.Set(result);
         }
@@ -205,7 +205,8 @@ namespace ConfigurationManager
                                     break;
 
                                 GUI.changed = false;
-                                var newVal = GUILayout.Toggle((currentValue & value.val) == value.val, value.name,
+                                var newVal = GUILayout.Toggle((currentValue & value.val) == value.val, value.name, 
+                                    UCStyle.ToggleStyle(),
                                     GUILayout.ExpandWidth(false));
                                 if (GUI.changed)
                                 {
@@ -269,7 +270,7 @@ namespace ConfigurationManager
             var leftValue = (float)Convert.ToDouble(setting.AcceptableValueRange.Key, CultureInfo.InvariantCulture);
             var rightValue = (float)Convert.ToDouble(setting.AcceptableValueRange.Value, CultureInfo.InvariantCulture);
 
-            var result = GUILayout.HorizontalSlider(converted, leftValue, rightValue, GUILayout.ExpandWidth(true));
+            var result = GUILayout.HorizontalSlider(converted, leftValue, rightValue, UCStyle.Slider(), UCStyle.Slider(),GUILayout.ExpandWidth(true));
             if (Math.Abs(result - converted) > Mathf.Abs(rightValue - leftValue) / 1000)
             {
                 var newValue = Convert.ChangeType(result, setting.SettingType, CultureInfo.InvariantCulture);
@@ -285,7 +286,7 @@ namespace ConfigurationManager
             else
             {
                 var strVal = value.ToString().AppendZeroIfFloat(setting.SettingType);
-                var strResult = GUILayout.TextField(strVal, GUILayout.Width(50));
+                var strResult = GUILayout.TextField(strVal, UCStyle.TextFieldStyle(), GUILayout.Width(50));
                 if (strResult != strVal)
                 {
                     try
@@ -308,7 +309,7 @@ namespace ConfigurationManager
             if (setting.ObjToStr != null && setting.StrToObj != null)
             {
                 var text = setting.ObjToStr(setting.Get()).AppendZeroIfFloat(setting.SettingType);
-                var result = GUILayout.TextField(text, GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
+                var result = GUILayout.TextField(text, UCStyle.TextFieldStyle(), GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
                 if (result != text)
                     setting.Set(setting.StrToObj(result));
             }
@@ -319,13 +320,13 @@ namespace ConfigurationManager
                 var value = rawValue == null ? "NULL" : rawValue.ToString().AppendZeroIfFloat(setting.SettingType);
                 if (CanCovert(value, setting.SettingType))
                 {
-                    var result = GUILayout.TextField(value, GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
+                    var result = GUILayout.TextField(value, UCStyle.TextFieldStyle(),GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
                     if (result != value)
                         setting.Set(Convert.ChangeType(result, setting.SettingType, CultureInfo.InvariantCulture));
                 }
                 else
                 {
-                    GUILayout.TextArea(value, GUILayout.MaxWidth(rightColumnWidth));
+                    GUILayout.TextArea(value, UCStyle.TextArea(), GUILayout.MaxWidth(rightColumnWidth));
                 }
             }
 
@@ -356,7 +357,7 @@ namespace ConfigurationManager
         {
             if (_currentKeyboardShortcutToSet == setting)
             {
-                GUILayout.Label("Press any key", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Utils.UseLang(23), UCStyle.LabelStyle(), GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
                 var input = UnityInput.Current;
@@ -371,7 +372,7 @@ namespace ConfigurationManager
                     }
                 }
 
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Utils.UseLang(24), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -379,7 +380,7 @@ namespace ConfigurationManager
                 var acceptableValues = setting.AcceptableValues?.Length > 1 ? setting.AcceptableValues : Enum.GetValues(setting.SettingType);
                 DrawComboboxField(setting, acceptableValues, _instance.SettingWindowRect.yMax);
 
-                if (GUILayout.Button(new GUIContent("Set...", "Set the key by pressing any key on your keyboard."), GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(new GUIContent(Utils.UseLang(25), Utils.UseLang(26)), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = setting;
             }
         }
@@ -388,7 +389,7 @@ namespace ConfigurationManager
         {
             if (_currentKeyboardShortcutToSet == setting)
             {
-                GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
+                GUILayout.Label(Utils.UseLang(27), UCStyle.LabelStyle(), GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
                 
                 var input = UnityInput.Current;
@@ -403,7 +404,7 @@ namespace ConfigurationManager
                     }
                 }
 
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Utils.UseLang(24), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -411,7 +412,7 @@ namespace ConfigurationManager
                 if (GUILayout.Button(setting.Get().ToString(), GUILayout.ExpandWidth(true)))
                     _currentKeyboardShortcutToSet = setting;
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Utils.UseLang(14), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false)))
                 {
                     setting.Set(BepInEx.Configuration.KeyboardShortcut.Empty);
                     _currentKeyboardShortcutToSet = null;
@@ -463,7 +464,7 @@ namespace ConfigurationManager
         private static float DrawSingleVectorSlider(float setting, string label)
         {
             GUILayout.Label(label, GUILayout.ExpandWidth(false));
-            float.TryParse(GUILayout.TextField(setting.ToString("F", CultureInfo.InvariantCulture), GUILayout.ExpandWidth(true)), NumberStyles.Any, CultureInfo.InvariantCulture, out var x);
+            float.TryParse(GUILayout.TextField(setting.ToString("F", CultureInfo.InvariantCulture), UCStyle.TextFieldStyle(),GUILayout.ExpandWidth(true)), NumberStyles.Any, CultureInfo.InvariantCulture, out var x);
             return x;
         }
 
@@ -496,7 +497,7 @@ namespace ConfigurationManager
                 cacheEntry.Last = setting;
             }
 
-            GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
+            GUILayout.Label(cacheEntry.Tex, UCStyle.LabelStyle(), GUILayout.ExpandWidth(false));
         }
 
         private sealed class ColorCacheEntry

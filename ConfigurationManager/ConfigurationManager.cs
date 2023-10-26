@@ -98,11 +98,9 @@ namespace ConfigurationManager
             _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
             _showKeybinds = Config.Bind("Filtering", "Show keybinds", true);
             _showSettings = Config.Bind("Filtering", "Show settings", true);
-            _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1),
-                new ConfigDescription("The shortcut used to toggle the config manager window on and off.\n" +
-                                      "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
-            _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
-            _pluginConfigCollapsedDefault = Config.Bind("General", "Plugin collapsed default", true, new ConfigDescription("If set to true plugins will be collapsed when opening the configuration manager window"));
+            _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1), new ConfigDescription(Utils.UseLang(0)));
+            _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription(Utils.UseLang(1)));
+            _pluginConfigCollapsedDefault = Config.Bind("General", "Plugin collapsed default", true, new ConfigDescription(Utils.UseLang(2)));
         }
 
         /// <summary>
@@ -153,7 +151,7 @@ namespace ConfigurationManager
             if (onGuiDrawer == null) throw new ArgumentNullException(nameof(onGuiDrawer));
 
             if (SettingFieldDrawer.SettingDrawHandlers.ContainsKey(settingType))
-                Logger.LogWarning("Tried to add a setting drawer for type " + settingType.FullName + " while one already exists.");
+                Logger.LogWarning(string.Format(Utils.UseLang(3), settingType.FullName));
             else
                 SettingFieldDrawer.SettingDrawHandlers[settingType] = onGuiDrawer;
         }
@@ -248,16 +246,25 @@ namespace ConfigurationManager
 
         private void CalculateWindowRect()
         {
-            var width = Mathf.Min(Screen.width, 650);
+            int width = 0;
+
+            if (Utils.Config.UseCustomScreen)
+                width = Utils.Config.ScreenWidth - 100;
+            else
+                width = Mathf.Min(Screen.width, 650);
+
             var height = Screen.height < 560 ? Screen.height : Screen.height - 100;
             var offsetX = Mathf.RoundToInt((Screen.width - width) / 2f);
             var offsetY = Mathf.RoundToInt((Screen.height - height) / 2f);
             SettingWindowRect = new Rect(offsetX, offsetY, width, height);
-
             _screenRect = new Rect(0, 0, Screen.width, Screen.height);
 
-            LeftColumnWidth = Mathf.RoundToInt(SettingWindowRect.width / 2.5f);
-            RightColumnWidth = (int)SettingWindowRect.width - LeftColumnWidth - 115;
+            LeftColumnWidth = Utils.Config.UseCustomScreen ?
+                   Mathf.RoundToInt(SettingWindowRect.width / 3f) :
+                   Mathf.RoundToInt(SettingWindowRect.width / 2.5f);
+            RightColumnWidth = Utils.Config.UseCustomScreen ?
+                Mathf.RoundToInt(SettingWindowRect.width / 3f) :
+                (int)SettingWindowRect.width - LeftColumnWidth - 115;
 
             _windowWasMoved = false;
         }
@@ -278,7 +285,7 @@ namespace ConfigurationManager
                     GUI.Box(SettingWindowRect, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
                 }
 
-                var newRect = GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "Plugin / mod settings");
+                var newRect = GUILayout.Window(WindowId, SettingWindowRect, SettingsWindow, "");
 
                 if (newRect != SettingWindowRect)
                 {
@@ -397,8 +404,7 @@ namespace ConfigurationManager
 
         private void DrawTips()
         {
-            var tip = !_tipsPluginHeaderWasClicked ? "Tip: Click plugin names to expand. Click setting and group names to see their descriptions." :
-                !_tipsWindowWasMoved ? "Tip: You can drag this window to move it. It will stay open while you interact with the game." : null;
+            var tip = !_tipsPluginHeaderWasClicked ? Utils.UseLang(4) :!_tipsWindowWasMoved ? Utils.UseLang(5) : null;
 
             if (tip != null)
             {
@@ -412,46 +418,49 @@ namespace ConfigurationManager
 
         private void DrawWindowHeader()
         {
+            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.Label(Utils.UseLang(6), UCStyle.LabelStyle());
+            GUILayout.EndVertical();
+
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
                 GUI.enabled = SearchString == string.Empty;
-
-                var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
+                var origColor = GUI.color;
+                GUI.color = _advancedSettingColor;
+                var newVal = GUILayout.Toggle(_showSettings.Value, Utils.UseLang(7), UCStyle.ToggleStyle());
                 if (_showSettings.Value != newVal)
                 {
                     _showSettings.Value = newVal;
                     BuildFilteredSettingList();
                 }
 
-                newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
+                newVal = GUILayout.Toggle(_showKeybinds.Value, Utils.UseLang(8), UCStyle.ToggleStyle());
                 if (_showKeybinds.Value != newVal)
                 {
                     _showKeybinds.Value = newVal;
                     BuildFilteredSettingList();
                 }
-
-                var origColor = GUI.color;
-                GUI.color = _advancedSettingColor;
-                newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
+             
+                newVal = GUILayout.Toggle(_showAdvanced.Value, Utils.UseLang(9), UCStyle.ToggleStyle());
                 if (_showAdvanced.Value != newVal)
                 {
                     _showAdvanced.Value = newVal;
                     BuildFilteredSettingList();
                 }
-                GUI.color = origColor;
-
-                GUI.enabled = true;
-
+             
                 GUILayout.Space(8);
 
-                newVal = GUILayout.Toggle(_showDebug, "Debug info");
+                newVal = GUILayout.Toggle(_showDebug, Utils.UseLang(10), UCStyle.ToggleStyle());
                 if (_showDebug != newVal)
                 {
                     _showDebug = newVal;
                     BuildSettingList();
                 }
+                GUI.color = origColor;
 
-                if (GUILayout.Button("Open Log"))
+                GUI.enabled = true;
+
+                if (GUILayout.Button(Utils.UseLang(11), UCStyle.ButtonStyle()))
                 {
                     try { Utils.OpenLog(); }
                     catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
@@ -459,7 +468,7 @@ namespace ConfigurationManager
 
                 GUILayout.Space(8);
 
-                if (GUILayout.Button("Close"))
+                if (GUILayout.Button(Utils.UseLang(12), UCStyle.ButtonStyle()))
                 {
                     DisplayingWindow = false;
                 }
@@ -468,7 +477,7 @@ namespace ConfigurationManager
 
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.Label("Search: ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(Utils.UseLang(13), UCStyle.LabelStyle(),GUILayout.ExpandWidth(false));
 
                 GUI.SetNextControlName(SearchBoxName);
                 SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
@@ -480,12 +489,12 @@ namespace ConfigurationManager
                     _focusSearchBox = false;
                 }
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Utils.UseLang(14), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false)))
                     SearchString = string.Empty;
 
                 GUILayout.Space(8);
 
-                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? Utils.UseLang(15) : Utils.UseLang(16), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false)))
                 {
                     var newValue = !_pluginConfigCollapsedDefault.Value;
                     _pluginConfigCollapsedDefault.Value = newValue;
@@ -546,7 +555,7 @@ namespace ConfigurationManager
                 {
                     var origColor = GUI.color;
                     GUI.color = Color.gray;
-                    if (GUILayout.Button(new GUIContent("URL", plugin.Website), GUI.skin.label, GUILayout.ExpandWidth(false)))
+                    if (GUILayout.Button(new GUIContent("URL", plugin.Website), UCStyle.LabelStyle(), GUILayout.ExpandWidth(false)))
                         Utils.OpenWebsite(plugin.Website);
                     GUI.color = origColor;
                     GUILayout.EndHorizontal();
@@ -562,6 +571,8 @@ namespace ConfigurationManager
                         if (plugin.Categories.Count > 1 || !_hideSingleSection.Value)
                             SettingFieldDrawer.DrawCategoryHeader(category.Name);
                     }
+
+                    GUILayout.Space(10);
 
                     foreach (var setting in category.Settings)
                     {
@@ -601,7 +612,7 @@ namespace ConfigurationManager
             if (setting.IsAdvanced == true)
                 GUI.color = _advancedSettingColor;
 
-            GUILayout.Label(new GUIContent(setting.DispName.TrimStart('!'), setting.Description),
+            GUILayout.Label(new GUIContent(setting.DispName.TrimStart('!'), setting.Description), UCStyle.LabelStyle(true),
                 GUILayout.Width(LeftColumnWidth), GUILayout.MaxWidth(LeftColumnWidth));
 
             GUI.color = origColor;
@@ -614,7 +625,7 @@ namespace ConfigurationManager
             bool DefaultButton()
             {
                 GUILayout.Space(5);
-                return GUILayout.Button("Reset", GUILayout.ExpandWidth(false));
+                return GUILayout.Button(Utils.UseLang(17), UCStyle.ButtonStyle(), GUILayout.ExpandWidth(false));
             }
 
             if (setting.DefaultValue != null)
@@ -631,6 +642,7 @@ namespace ConfigurationManager
 
         private void Start()
         {
+       
             var background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
             background.SetPixel(0, 0, Color.black);
             background.Apply();
@@ -653,10 +665,11 @@ namespace ConfigurationManager
                 _curLockState = typeof(Screen).GetProperty("lockCursor", BindingFlags.Static | BindingFlags.Public);
                 _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
             }
-
+            Utils.ReadConfig();
+            Utils.ReadLangs();
             // Check if user has permissions to write config files to disk
             try { Config.Save(); }
-            catch (IOException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Failed to write to config directory, expect issues!\nError message:" + ex.Message); }
+            catch (IOException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, Utils.UseLang(18) + ex.Message); }
             catch (UnauthorizedAccessException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Permission denied to write to config directory, expect issues!\nError message:" + ex.Message); }
         }
 

@@ -12,6 +12,8 @@ using BepInEx.Logging;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using BepInEx.Bootstrap;
+using System.Text;
+using ConfigurationManager.Config;
 
 namespace ConfigurationManager.Utilities
 {
@@ -155,6 +157,77 @@ namespace ConfigurationManager.Utilities
             {
                 ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, $"Failed to open URL {url}\nCause: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Customized user configuration
+        /// </summary>
+        public static UserConfig Config { get; private set; }
+        public static void ReadConfig()
+        {
+            var path = Path.Combine(Path.Combine(Application.dataPath, ".."), "BepInEx", "UserConfig.json");
+            if (File.Exists(path))
+            {
+                var txt = File.ReadAllText(path, Encoding.UTF8);
+                Config = JsonUtility.FromJson<UserConfig>(txt);
+            }
+            else
+            {
+                Config = new UserConfig
+                {
+                    ScreenWidth = Screen.width,
+                    UseCustomScreen = true,
+                    FontSize = 50,
+                    UseLangs = false,
+                };
+
+                var txt = Encoding.UTF8.GetBytes(JsonUtility.ToJson(Config));
+                var fs = new FileStream(path, FileMode.Create);
+                fs.Write(txt, 0, txt.Length);
+                fs.Flush();
+                fs.Close();
+                fs.Dispose();
+            }
+        }
+        public static List<Langs> Lang { get; private set; }
+        public static void ReadLangs()
+        {
+            var path = Path.Combine(Path.Combine(Application.dataPath, ".."), "BepInEx", "Langs.txt");
+            if (File.Exists(path))
+            {
+                var Data = File.ReadAllText(path, Encoding.Default).Split('|');
+                Lang = new List<Langs>();
+                foreach (var data in Data)
+                {
+                    Lang.Add(JsonUtility.FromJson<Langs>(data.Trim()));
+                }
+            }
+            else
+            {
+                var F = typeof(LangDict).GetFields(BindingFlags.Public | BindingFlags.Static).ToList();
+                List<string> langs = new List<string>();
+                for (var index = 1; index <= 30; index++)
+                {
+                    var defaultLang = F.Where(t => t.Name == $"L{index}").First().GetValue(null).ToString();
+                    var model = new Langs
+                    {
+                        En = defaultLang,
+                        Other = ""
+                    };
+                    langs.Add(JsonUtility.ToJson(model));
+                }
+                File.WriteAllText(path, string.Join("|", langs));
+            }
+        }
+
+        public static string UseLang(int index)
+        {
+            if (Lang == null)
+            {
+                return typeof(LangDict).GetFields(BindingFlags.Public | BindingFlags.Static)
+                     .Where(t => t.Name == $"L{index + 1}").First().GetValue(null).ToString();
+            }
+            return Config.UseLangs ? Lang[index].Other : Lang[index].En;
         }
     }
 }
