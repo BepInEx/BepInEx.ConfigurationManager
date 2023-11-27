@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ConfigurationManager.Utilities
@@ -6,6 +7,8 @@ namespace ConfigurationManager.Utilities
     internal static class ImguiUtils
     {
 #if IL2CPP
+        private static Dictionary<ulong, Texture2D> _texCache = new Dictionary<ulong, Texture2D>();
+
         public static void DrawWindowBackground(Rect position, Color? color = null)
         {
             DrawBackground(position, color, 7, 4, 3, 2, 1, 1, 1);
@@ -21,23 +24,32 @@ namespace ConfigurationManager.Utilities
             int width = (int)position.width, height = (int)position.height;
             if (width <= 0 || height <= 0)
                 return;
-            Color32[] colors = new Color32[width * height];
-            colors.Fill(color ?? Color.gray);
-            Color32 clear = Color.clear;
-            int cornerHeight = Math.Min(corner.Length, height);
-            for (int i = 0, j = -1; i <= cornerHeight; j = i++)
+
+            var cacheKey = (ulong)width << 32 | (uint)height;
+            _texCache.TryGetValue(cacheKey, out var texture);
+            if (!texture)
             {
-                int start = j >= 0 ? Math.Min(corner[j], width) : 0;
-                int length = i < cornerHeight ? Math.Min(corner[i], width) : 0;
-                length += start;
-                start = i * width - start;
-                colors.Fill(start, length, clear);
-                start = colors.Length - start - length;
-                colors.Fill(start, length, clear);
+                Color32[] colors = new Color32[width * height];
+                colors.Fill(color ?? Color.gray);
+                Color32 clear = Color.clear;
+                int cornerHeight = Math.Min(corner.Length, height);
+                for (int i = 0, j = -1; i <= cornerHeight; j = i++)
+                {
+                    int start = j >= 0 ? Math.Min(corner[j], width) : 0;
+                    int length = i < cornerHeight ? Math.Min(corner[i], width) : 0;
+                    length += start;
+                    start = i * width - start;
+                    colors.Fill(start, length, clear);
+                    start = colors.Length - start - length;
+                    colors.Fill(start, length, clear);
+                }
+                texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                texture.SetPixels32(colors);
+                texture.Apply();
+
+                _texCache[cacheKey] = texture;
             }
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            texture.SetPixels32(colors);
-            texture.Apply();
+
             GUI.DrawTexture(position, texture, ScaleMode.StretchToFill, true);
         }
 

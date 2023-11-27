@@ -93,7 +93,7 @@ namespace ConfigurationManager
         /// </summary>
         private static IEnumerable<SettingEntryBase> GetBepInExCoreConfig()
         {
-            var bepinMeta = new BepInPlugin(nameof(BepInEx), nameof(BepInEx), BepInEx.Paths.BepInExVersion.ToString());
+            var bepinMeta = new BepInPlugin(nameof(BepInEx), nameof(BepInEx), BepInEx.Paths.BepInExVersion.ToString().Split('+')[0]);
 
             return ConfigFile.CoreConfig.Select(kvp => (SettingEntryBase)new ConfigSettingEntry(kvp.Value, null) { IsAdvanced = true, PluginInfo = bepinMeta });
         }
