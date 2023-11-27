@@ -293,15 +293,17 @@ namespace ConfigurationManager
             {
                 SetUnlockCursor(0, true);
 
+#if IL2CPP
+                Vector2 mousePosition = Input.mousePosition; //todo move to UnityInput whenever it is added
+#else
+                Vector2 mousePosition = UnityInput.Current.mousePosition;
+#endif
+                mousePosition.y = Screen.height - mousePosition.y;
+
                 // If the window hasn't been moved by the user yet, block the whole screen and use a solid background to make the window easier to see
                 if (!_windowWasMoved)
                 {
-                    if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) &&
-#if IL2CPP
-                        !SettingWindowRect.Contains(Input.mousePosition))
-#else
-                                                !SettingWindowRect.Contains(UnityInput.Current.mousePosition))
-#endif
+                    if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) && !SettingWindowRect.Contains(mousePosition))
                         DisplayingWindow = false;
 
                     ImguiUtils.DrawWindowBackground(SettingWindowRect);
@@ -317,7 +319,7 @@ namespace ConfigurationManager
                     _tipsWindowWasMoved = true;
                 }
 
-                if (!SettingFieldDrawer.SettingKeyboardShortcut && (!_windowWasMoved || SettingWindowRect.Contains(Input.mousePosition)))
+                if (!SettingFieldDrawer.SettingKeyboardShortcut && (!_windowWasMoved || SettingWindowRect.Contains(mousePosition)))
                     Input.ResetInputAxes();
             }
         }
