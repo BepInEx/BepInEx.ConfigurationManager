@@ -44,7 +44,7 @@ namespace ConfigurationManager.Utilities
             var controlID = GUIUtility.GetControlID(FocusType.Passive);
 
             Vector2 currentMousePosition = Vector2.zero;
-            if (Event.current.GetTypeForControl(controlID) == EventType.mouseUp)
+            if (Event.current.GetTypeForControl(controlID) == EventType.MouseUp)
             {
                 if (isClickedComboButton)
                 {
@@ -96,8 +96,7 @@ namespace ConfigurationManager.Utilities
                     var scrpos = GUIUtility.ScreenToGUIPoint(location);
                     var outerRectLocal = new Rect(scrpos.x, scrpos.y, outerRectScreen.width, outerRectScreen.height);
 
-                    GUI.Box(outerRectLocal, GUIContent.none,
-                        new GUIStyle { normal = new GUIStyleState { background = ConfigurationManager.WindowBackground } });
+                    ImguiUtils.DrawContolBackground(outerRectLocal);
 
                     _scrollPosition = GUI.BeginScrollView(outerRectLocal, _scrollPosition, innerRect, false, false);
                     {

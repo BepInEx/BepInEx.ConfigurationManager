@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using BepInEx;
+using BepInEx.Configuration;
 using UnityEngine;
 
 namespace ConfigurationManager
@@ -16,7 +17,6 @@ namespace ConfigurationManager
     internal class SettingFieldDrawer
     {
         private static IEnumerable<KeyCode> _keysToCheck;
-
         public static Dictionary<Type, Action<SettingEntryBase>> SettingDrawHandlers { get; }
 
         private static readonly Dictionary<SettingEntryBase, ComboBox> _comboBoxCache = new Dictionary<SettingEntryBase, ComboBox>();
@@ -31,14 +31,14 @@ namespace ConfigurationManager
         {
             SettingDrawHandlers = new Dictionary<Type, Action<SettingEntryBase>>
             {
-                {typeof(bool), DrawBoolField},
-                {typeof(BepInEx.Configuration.KeyboardShortcut), DrawKeyboardShortcut},
-                {typeof(KeyCode), DrawKeyCode },
-                {typeof(Color), DrawColor },
-                {typeof(Vector2), DrawVector2 },
-                {typeof(Vector3), DrawVector3 },
-                {typeof(Vector4), DrawVector4 },
-                {typeof(Quaternion), DrawQuaternion },
+                { typeof(bool), DrawBoolField },
+                { typeof(KeyboardShortcut), DrawKeyboardShortcut},
+                { typeof(KeyCode), DrawKeyCode },
+                { typeof(Color), DrawColor },
+                { typeof(Vector2), DrawVector2 },
+                { typeof(Vector3), DrawVector3 },
+                { typeof(Vector4), DrawVector4 },
+                { typeof(Quaternion), DrawQuaternion },
             };
         }
 
@@ -71,6 +71,7 @@ namespace ConfigurationManager
                 DrawEnumField(setting);
             else
                 DrawUnknownField(setting, _instance.RightColumnWidth);
+
         }
 
         public static void ClearCache()
@@ -309,6 +310,7 @@ namespace ConfigurationManager
             {
                 var text = setting.ObjToStr(setting.Get()).AppendZeroIfFloat(setting.SettingType);
                 var result = GUILayout.TextField(text, GUILayout.Width(rightColumnWidth), GUILayout.MaxWidth(rightColumnWidth));
+
                 if (result != text)
                     setting.Set(setting.StrToObj(result));
             }
@@ -354,11 +356,19 @@ namespace ConfigurationManager
 
         private static void DrawKeyCode(SettingEntryBase setting)
         {
-            if (_currentKeyboardShortcutToSet == setting)
+            if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
             {
                 GUILayout.Label("Press any key", GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
+#if IL2CPP
+                KeyCode key = KeyboardShortcut.ModifierBlockKeyCodes.FirstOrDefault(Input.GetKeyUp);
+                if (key != KeyCode.None)
+                {
+                    setting.Set(key);
+                    _currentKeyboardShortcutToSet = null;
+                }
+#else
                 var input = UnityInput.Current;
                 if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
                 foreach (var key in _keysToCheck)
@@ -370,7 +380,7 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-
+#endif
                 if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
@@ -379,18 +389,26 @@ namespace ConfigurationManager
                 var acceptableValues = setting.AcceptableValues?.Length > 1 ? setting.AcceptableValues : Enum.GetValues(setting.SettingType);
                 DrawComboboxField(setting, acceptableValues, _instance.SettingWindowRect.yMax);
 
-                if (GUILayout.Button(new GUIContent("Set...", "Set the key by pressing any key on your keyboard."), GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(new GUIContent("Set...", null, "Set the key by pressing any key on your keyboard."), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = setting;
             }
         }
 
         private static void DrawKeyboardShortcut(SettingEntryBase setting)
         {
-            if (_currentKeyboardShortcutToSet == setting)
+            if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
             {
                 GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
-                
+
+#if IL2CPP
+                KeyCode key = KeyboardShortcut.ModifierBlockKeyCodes.FirstOrDefault(Input.GetKeyUp);
+                if (key != KeyCode.None)
+                {
+                    setting.Set(new KeyboardShortcut(key, KeyboardShortcut.ModifierBlockKeyCodes.Where(Input.GetKey).ToArray()));
+                    _currentKeyboardShortcutToSet = null;
+                }
+#else
                 var input = UnityInput.Current;
                 if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
                 foreach (var key in _keysToCheck)
@@ -402,7 +420,7 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-
+#endif
                 if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }

@@ -1,8 +1,10 @@
-﻿using BepInEx;
+﻿using System;
+using System.Collections.Generic;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
-using ConfigurationManager.Utilities;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -18,6 +20,10 @@ namespace ConfigurationManager
             "OnGUI"
         };
 
+        // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins. Doing this makes checking Chainloader.PluginInfos redundant.
+        // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
+        public static IReadOnlyList<PluginInfo> FindPlugins() => IL2CPPChainloader.Instance.Plugins.Values.Where(x => x.Instance is BasePlugin).ToList();
+
         public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug)
         {
             modsWithoutSettings = new List<string>();
@@ -31,7 +37,7 @@ namespace ConfigurationManager
                 ConfigurationManager.Logger.LogError(ex);
             }
 
-            foreach (var plugin in Utils.FindPlugins())
+            foreach (var plugin in FindPlugins())
             {
                 var type = plugin.Instance.GetType();
 
@@ -41,7 +47,7 @@ namespace ConfigurationManager
                 {
                     var metadata = plugin.Metadata;
 
-                    if (ConfigurationManager.Instance.OverrideHotkey || metadata.GUID != ConfigurationManager.GUID)
+                    if (metadata.GUID != ConfigurationManager.GUID)
                     {
                         modsWithoutSettings.Add(metadata.Name);
                         continue;
@@ -87,7 +93,7 @@ namespace ConfigurationManager
         /// </summary>
         private static IEnumerable<SettingEntryBase> GetBepInExCoreConfig()
         {
-            var bepinMeta = new BepInPlugin(nameof(BepInEx), nameof(BepInEx), typeof(BepInEx.Bootstrap.BaseChainloader<BasePlugin>).Assembly.GetName().Version.ToString());
+            var bepinMeta = new BepInPlugin(nameof(BepInEx), nameof(BepInEx), BepInEx.Paths.BepInExVersion.ToString());
 
             return ConfigFile.CoreConfig.Select(kvp => (SettingEntryBase)new ConfigSettingEntry(kvp.Value, null) { IsAdvanced = true, PluginInfo = bepinMeta });
         }

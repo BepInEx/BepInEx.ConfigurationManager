@@ -3,12 +3,17 @@
 
 using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Unity.IL2CPP;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-#if NETSTANDARD || NETCOREAPP
-using System.Runtime.CompilerServices;
-#endif
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
+
+#if IL2CPP
+using BaseUnityPlugin = BepInEx.PluginInfo;
+#endif
 
 namespace ConfigurationManager.Utilities
 {
@@ -31,10 +36,6 @@ namespace ConfigurationManager.Utilities
 
             return result;
         }
-
-        // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins. Doing this makes checking Chainloader.PluginInfos redundant.
-        // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
-        public static IReadOnlyList<PluginInfo> FindPlugins() => IL2CPPChainloader.Instance.Plugins.Values.Where(x => x.Instance is BasePlugin).ToList();
 
         public static string AppendZero(this string s)
         {
@@ -80,6 +81,14 @@ namespace ConfigurationManager.Utilities
             // Generated in most versions unless disabled
             candidates.Add(Path.Combine(Application.dataPath, "output_log.txt"));
 
+            // Available since 2018.3
+            var prop = typeof(Application).GetProperty("consoleLogPath", BindingFlags.Static | BindingFlags.Public);
+            if (prop != null)
+            {
+                var path = prop.GetValue(null, null) as string;
+                candidates.Add(path);
+            }
+
             if (Directory.Exists(Application.persistentDataPath))
             {
                 var file = Directory.GetFiles(Application.persistentDataPath, "output_log.txt", SearchOption.AllDirectories).FirstOrDefault();
@@ -100,12 +109,16 @@ namespace ConfigurationManager.Utilities
             throw new FileNotFoundException("No log files were found");
         }
 
-        public static string GetWebsite(PluginInfo bepInPlugin)
+        public static string GetWebsite(BaseUnityPlugin bepInPlugin)
         {
             if (bepInPlugin == null) return null;
             try
             {
-                var fileName = bepInPlugin.Instance.GetType().Module.FullyQualifiedName;
+#if IL2CPP
+                var fileName = bepInPlugin.Location;//.Instance.GetType().Module.FullyQualifiedName;
+#else
+                var fileName = bepInPlugin.Info.Location; //.GetType().Assembly.Location;
+#endif
                 if (!File.Exists(fileName)) return null;
                 var fi = FileVersionInfo.GetVersionInfo(fileName);
                 return new[]
@@ -119,7 +132,11 @@ namespace ConfigurationManager.Utilities
             }
             catch (Exception e)
             {
-                ConfigurationManager.Logger.LogWarning("Failed to get URI for " + bepInPlugin?.Metadata?.Name + " - " + e.Message);
+#if IL2CPP
+                ConfigurationManager.Logger.LogWarning($"Failed to get URI for {bepInPlugin.Metadata?.Name} - {e.Message}");
+#else
+                ConfigurationManager.Logger.LogWarning($"Failed to get URI for {bepInPlugin.Info?.Metadata?.Name} - {e.Message}");
+#endif
                 return null;
             }
         }
@@ -133,65 +150,8 @@ namespace ConfigurationManager.Utilities
             }
             catch (Exception ex)
             {
-                ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, "Failed to open URL " + url + "\nCause: " + ex.Message);
+                ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, $"Failed to open URL {url}\nCause: {ex.Message}");
             }
         }
-
-        public static void DrawWindowBackground(Rect position, Color? color = null)
-        {
-            DrawBackground(position, color, 7, 4, 3, 2, 1, 1, 1);
-        }
-
-        public static void DrawContolBackground(Rect position, Color? color = null)
-        {
-            DrawBackground(position, color, 5, 3, 2, 1, 1);
-        }
-
-        private static void DrawBackground(Rect position, Color? color, params int[] corner)
-        {
-            int width = (int)position.width, height = (int)position.height;
-            if (width <= 0 || height <= 0)
-                return;
-            Color32[] colors = new Color32[width * height];
-            colors.Fill(color ?? Color.gray);
-            Color32 clear = Color.clear;
-            int cornerHeight = Math.Min(corner.Length, height);
-            for (int i = 0, j = -1; i <= cornerHeight; j = i++)
-            {
-                int start = j >= 0 ? Math.Min(corner[j], width) : 0;
-                int length = i < cornerHeight ? Math.Min(corner[i], width) : 0;
-                length += start;
-                start = i * width - start;
-                colors.Fill(start, length, clear);
-                start = colors.Length - start - length;
-                colors.Fill(start, length, clear);
-            }
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            texture.SetPixels32(colors);
-            texture.Apply();
-            GUI.DrawTexture(position, texture, ScaleMode.StretchToFill, true);
-        }
-
-#if NETSTANDARD || NETCOREAPP
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Fill<T>(this T[] array, T value) =>
-            new Span<T>(array).Fill(value);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Fill<T>(this T[] array, int start, int length, T value) =>
-            new Span<T>(array, start, length).Fill(value);
-#else
-        public static void Fill<T>(this T[] array, T value)
-        {
-            for (int i = 0; i < array.Length; i++)
-                array[i] = value;
-        }
-
-        public static void Fill<T>(this T[] array, int start, int length, T value)
-        {
-            for (int i = start; i < start + length; i++)
-                array[i] = value;
-        }
-#endif
     }
 }

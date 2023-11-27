@@ -1,4 +1,6 @@
-﻿using BepInEx.Logging;
+﻿// This is copied from BepInEx 5 and modified to work with BepInEx 6 nightlies where this type is missing
+// This is a temporary fix until this struct is added to BepInEx 6 proper
+using BepInEx.Logging;
 using System.Reflection;
 using UnityEngine;
 using Logger = BepInEx.Logging.Logger;

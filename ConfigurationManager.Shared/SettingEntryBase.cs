@@ -2,8 +2,15 @@
 // Copyright 2018 GNU General Public License v3.0
 
 using BepInEx;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
+
+#if IL2CPP
+using BaseUnityPlugin = BepInEx.PluginInfo;
+#endif
 
 namespace ConfigurationManager
 {
@@ -100,7 +107,7 @@ namespace ConfigurationManager
         /// <summary>
         /// Instance of the plugin that owns this setting
         /// </summary>
-        public PluginInfo PluginInstance { get; private set; }
+        public BaseUnityPlugin PluginInstance { get; private set; }
 
         /// <summary>
         /// Is this setting advanced
@@ -143,11 +150,14 @@ namespace ConfigurationManager
 
         private static readonly PropertyInfo[] _myProperties = typeof(SettingEntryBase).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-        internal void SetFromAttributes(object[] attribs, PluginInfo pluginInstance)
+        internal void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)
         {
             PluginInstance = pluginInstance;
+#if IL2CPP
             PluginInfo = pluginInstance?.Metadata;
-
+#else
+            PluginInfo = pluginInstance?.Info.Metadata;
+#endif
             if (attribs == null || attribs.Length == 0) return;
 
             foreach (var attrib in attribs)

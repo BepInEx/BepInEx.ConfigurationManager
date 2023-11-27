@@ -6,6 +6,10 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 
+#if IL2CPP
+using BaseUnityPlugin = BepInEx.PluginInfo;
+#endif
+
 namespace ConfigurationManager
 {
     internal sealed class ConfigSettingEntry : SettingEntryBase
