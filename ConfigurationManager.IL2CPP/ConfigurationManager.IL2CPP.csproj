@@ -7,13 +7,12 @@
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <RootNamespace>ConfigurationManager</RootNamespace>
     <AssemblyName>ConfigurationManager</AssemblyName>
-  </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);IL2CPP</DefineConstants>
-  </PropertyGroup>
+    <OutputPath>D:\SVN\BepInEx.ConfigurationManager\bin\IL2CPP</OutputPath>  
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
     <DefineConstants>$(DefineConstants);IL2CPP</DefineConstants>
   </PropertyGroup>
 
@@ -29,4 +28,5 @@
   </ItemGroup>
 
   <Import Project="..\ConfigurationManager.Shared\ConfigurationManager.Shared.projitems" Label="Shared" />
+
 </Project>
