@@ -8,6 +8,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
+#if IL2CPP
+using BaseUnityPlugin = BepInEx.PluginInfo;
+#endif
+
 namespace ConfigurationManager
 {
     /// <summary>
@@ -149,8 +153,11 @@ namespace ConfigurationManager
         internal void SetFromAttributes(object[] attribs, BaseUnityPlugin pluginInstance)
         {
             PluginInstance = pluginInstance;
+#if IL2CPP
+            PluginInfo = pluginInstance?.Metadata;
+#else
             PluginInfo = pluginInstance?.Info.Metadata;
-
+#endif
             if (attribs == null || attribs.Length == 0) return;
 
             foreach (var attrib in attribs)

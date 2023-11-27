@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.757
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationManager", "ConfigurationManager\ConfigurationManager.csproj", "{22EDD399-1CC6-47C8-B8B8-A95FF2999901}"
 EndProject
@@ -9,6 +9,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 	ProjectSection(SolutionItems) = preProject
 		ConfigurationManagerAttributes.cs = ConfigurationManagerAttributes.cs
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConfigurationManager.IL2CPP", "ConfigurationManager.IL2CPP\ConfigurationManager.IL2CPP.csproj", "{1144B70F-5FF8-4C60-9862-87698157EE1D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BepInEx.KeyboardShortcut.IL2CPP", "BepInEx.KeyboardShortcut\BepInEx.KeyboardShortcut.IL2CPP.csproj", "{731F8BE1-BE79-44B9-BBD7-50BBF77B1C36}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ConfigurationManager.Shared", "ConfigurationManager.Shared\ConfigurationManager.Shared.shproj", "{28E965B5-225F-4AD4-938F-2D6F8C20C73F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BepInEx6", "BepInEx6", "{EDDA2447-3A53-4215-8C41-EE8F8FF9942A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BepInEx5", "BepInEx5", "{0DAFE064-F071-4A40-B53D-0470F8BF2039}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,11 +30,29 @@ Global
 		{22EDD399-1CC6-47C8-B8B8-A95FF2999901}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22EDD399-1CC6-47C8-B8B8-A95FF2999901}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22EDD399-1CC6-47C8-B8B8-A95FF2999901}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1144B70F-5FF8-4C60-9862-87698157EE1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1144B70F-5FF8-4C60-9862-87698157EE1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1144B70F-5FF8-4C60-9862-87698157EE1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1144B70F-5FF8-4C60-9862-87698157EE1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{731F8BE1-BE79-44B9-BBD7-50BBF77B1C36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{731F8BE1-BE79-44B9-BBD7-50BBF77B1C36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{731F8BE1-BE79-44B9-BBD7-50BBF77B1C36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{731F8BE1-BE79-44B9-BBD7-50BBF77B1C36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{22EDD399-1CC6-47C8-B8B8-A95FF2999901} = {0DAFE064-F071-4A40-B53D-0470F8BF2039}
+		{1144B70F-5FF8-4C60-9862-87698157EE1D} = {EDDA2447-3A53-4215-8C41-EE8F8FF9942A}
+		{731F8BE1-BE79-44B9-BBD7-50BBF77B1C36} = {EDDA2447-3A53-4215-8C41-EE8F8FF9942A}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C09747C2-9F25-47B1-946B-C6C6669A528F}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{1144b70f-5ff8-4c60-9862-87698157ee1d}*SharedItemsImports = 5
+		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{22edd399-1cc6-47c8-b8b8-a95ff2999901}*SharedItemsImports = 4
+		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{28e965b5-225f-4ad4-938f-2d6f8c20c73f}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

@@ -1,11 +1,11 @@
 ﻿using System;
 using BepInEx;
 using BepInEx.Configuration;
-using ConfigurationManager.Utilities;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Bootstrap;
 
 namespace ConfigurationManager
 {
@@ -18,6 +18,19 @@ namespace ConfigurationManager
             "LateUpdate",
             "OnGUI"
         };
+
+        /// <summary>
+        /// Search for all instances of BaseUnityPlugin loaded by chainloader or other means.
+        /// </summary>
+        public static BaseUnityPlugin[] FindPlugins()
+        {
+            // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins.
+            // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
+            // Still look inside Chainloader.PluginInfos in case the BepInEx_Manager GameObject uses HideFlags.HideAndDontSave, which hides it from Object.Find methods.
+            return Chainloader.PluginInfos.Values.Select(x => x.Instance)
+                              .Union(UnityEngine.Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>())
+                              .ToArray();
+        }
 
         public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug)
         {
@@ -33,7 +46,7 @@ namespace ConfigurationManager
                 ConfigurationManager.Logger.LogError(ex);
             }
 
-            foreach (var plugin in Utils.FindPlugins())
+            foreach (var plugin in FindPlugins())
             {
                 var type = plugin.GetType();
 
