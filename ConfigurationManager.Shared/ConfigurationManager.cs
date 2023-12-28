@@ -71,6 +71,11 @@ namespace ConfigurationManager
         internal Rect SettingWindowRect { get; private set; }
         private bool _windowWasMoved;
 
+        /// <summary>
+        /// Window is visible and is blocking the whole screen. This is true until the user moves the window, which lets it run while user interacts with the game.
+        /// </summary>
+        public bool IsWindowFullscreen => DisplayingWindow && !_windowWasMoved;
+
         private bool _tipsPluginHeaderWasClicked, _tipsWindowWasMoved;
 
         private Rect _screenRect;
