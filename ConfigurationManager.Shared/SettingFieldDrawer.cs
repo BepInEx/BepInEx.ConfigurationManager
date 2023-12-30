@@ -485,36 +485,74 @@ namespace ConfigurationManager
             return x;
         }
 
+        private static bool _drawColorHex;
         private static void DrawColor(SettingEntryBase obj)
         {
-            var setting = (Color)obj.Get();
+            var colorValue = (Color)obj.Get();
+
+            GUI.changed = false;
 
             if (!_colorCache.TryGetValue(obj, out var cacheEntry))
             {
-                cacheEntry = new ColorCacheEntry { Tex = new Texture2D(40, 10, TextureFormat.ARGB32, false), Last = setting };
-                cacheEntry.Tex.FillTexture(setting);
+                var tex = new Texture2D(100, 20, TextureFormat.ARGB32, false);
+                cacheEntry = new ColorCacheEntry { Tex = tex, Last = colorValue };
+                FillTex(colorValue, tex);
                 _colorCache[obj] = cacheEntry;
             }
 
-            GUILayout.Label("R", GUILayout.ExpandWidth(false));
-            setting.r = GUILayout.HorizontalSlider(setting.r, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("G", GUILayout.ExpandWidth(false));
-            setting.g = GUILayout.HorizontalSlider(setting.g, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("B", GUILayout.ExpandWidth(false));
-            setting.b = GUILayout.HorizontalSlider(setting.b, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("A", GUILayout.ExpandWidth(false));
-            setting.a = GUILayout.HorizontalSlider(setting.a, 0f, 1f, GUILayout.ExpandWidth(true));
-
-            GUILayout.Space(4);
-
-            if (setting != cacheEntry.Last)
+            GUILayout.BeginVertical();
             {
-                obj.Set(setting);
-                cacheEntry.Tex.FillTexture(setting);
-                cacheEntry.Last = setting;
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
+
+                    var colorStr = _drawColorHex ? "#" + ColorUtility.ToHtmlStringRGBA(colorValue) : $"{colorValue.r:F2} {colorValue.g:F2} {colorValue.b:F2} {colorValue.a:F2}";
+                    var newColorStr = GUILayout.TextField(colorStr, GUILayout.ExpandWidth(true));
+                    if (GUI.changed && colorStr != newColorStr)
+                    {
+                        if (_drawColorHex)
+                        {
+                            if (ColorUtility.TryParseHtmlString(newColorStr, out var parsedColor))
+                                colorValue = parsedColor;
+                        }
+                        else
+                        {
+                            var split = newColorStr.Split(' ');
+                            if (split.Length == 4 && float.TryParse(split[0], out var r) && float.TryParse(split[1], out var g) && float.TryParse(split[2], out var b) && float.TryParse(split[3], out var a))
+                                colorValue = new Color(r, g, b, a);
+                        }
+                    }
+
+                    _drawColorHex = GUILayout.Toggle(_drawColorHex, "Hex", GUILayout.ExpandWidth(false));
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.Label("R", GUILayout.ExpandWidth(false));
+                    colorValue.r = GUILayout.HorizontalSlider(colorValue.r, 0f, 1f, GUILayout.ExpandWidth(true));
+                    GUILayout.Label("G", GUILayout.ExpandWidth(false));
+                    colorValue.g = GUILayout.HorizontalSlider(colorValue.g, 0f, 1f, GUILayout.ExpandWidth(true));
+                    GUILayout.Label("B", GUILayout.ExpandWidth(false));
+                    colorValue.b = GUILayout.HorizontalSlider(colorValue.b, 0f, 1f, GUILayout.ExpandWidth(true));
+                    GUILayout.Label("A", GUILayout.ExpandWidth(false));
+                    colorValue.a = GUILayout.HorizontalSlider(colorValue.a, 0f, 1f, GUILayout.ExpandWidth(true));
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+
+            if (colorValue != cacheEntry.Last)
+            {
+                obj.Set(colorValue);
+                FillTex(colorValue, cacheEntry.Tex);
+                cacheEntry.Last = colorValue;
             }
 
-            GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
+            void FillTex(Color color, Texture2D tex)
+            {
+                if (color.a < 1f) tex.FillTextureCheckerboard();
+                tex.FillTexture(color);
+            }
         }
 
         private sealed class ColorCacheEntry

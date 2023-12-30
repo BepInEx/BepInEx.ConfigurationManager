@@ -49,9 +49,36 @@ namespace ConfigurationManager.Utilities
 
         public static void FillTexture(this Texture2D tex, Color color)
         {
+            if (color.a < 1f)
+            {
+                // SetPixel ignores alpha, so we need to lerp manually
+                for (var x = 0; x < tex.width; x++)
+                {
+                    for (var y = 0; y < tex.height; y++)
+                    {
+                        var origColor = tex.GetPixel(x, y);
+                        var lerpedColor = Color.Lerp(origColor, color, color.a);
+                        // Not accurate, but good enough for our purposes
+                        lerpedColor.a = Mathf.Max(origColor.a, color.a);
+                        tex.SetPixel(x, y, lerpedColor);
+                    }
+                }
+            }
+            else
+            {
+                for (var x = 0; x < tex.width; x++)
+                    for (var y = 0; y < tex.height; y++)
+                        tex.SetPixel(x, y, color);
+            }
+
+            tex.Apply(false);
+        }
+
+        public static void FillTextureCheckerboard(this Texture2D tex)
+        {
             for (var x = 0; x < tex.width; x++)
                 for (var y = 0; y < tex.height; y++)
-                    tex.SetPixel(x, y, color);
+                    tex.SetPixel(x, y, (x / 10 + y / 10) % 2 == 1 ? Color.black : Color.white);
 
             tex.Apply(false);
         }
