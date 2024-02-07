@@ -97,13 +97,11 @@ namespace ConfigurationManager
         {
             if (_categoryHeaderSkin == null)
             {
-                _categoryHeaderSkin = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.UpperCenter,
-                    wordWrap = true,
-                    stretchWidth = true,
-                    fontSize = 14
-                };
+                _categoryHeaderSkin = GUI.skin.label.CreateCopy();
+                _categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
+                _categoryHeaderSkin.wordWrap = true;
+                _categoryHeaderSkin.stretchWidth = true;
+                _categoryHeaderSkin.fontSize = 14;
             }
 
             GUILayout.Label(text, _categoryHeaderSkin);
@@ -114,13 +112,11 @@ namespace ConfigurationManager
         {
             if (_pluginHeaderSkin == null)
             {
-                _pluginHeaderSkin = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.UpperCenter,
-                    wordWrap = true,
-                    stretchWidth = true,
-                    fontSize = 15
-                };
+                _pluginHeaderSkin = GUI.skin.label.CreateCopy();
+                _pluginHeaderSkin.alignment = TextAnchor.UpperCenter;
+                _pluginHeaderSkin.wordWrap = true;
+                _pluginHeaderSkin.stretchWidth = true;
+                _pluginHeaderSkin.fontSize = 15;
             }
 
             if (isCollapsed) content.text += "\n...";

@@ -334,7 +334,7 @@ namespace ConfigurationManager
             string tooltip = GUI.tooltip;
             if (!string.IsNullOrEmpty(tooltip))
             {
-                var style = new GUIStyle(GUI.skin.box);
+                var style = GUI.skin.box.CreateCopy();
                 style.wordWrap = true;
                 style.alignment = TextAnchor.MiddleCenter;
 
