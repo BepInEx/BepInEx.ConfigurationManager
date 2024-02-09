@@ -180,5 +180,17 @@ namespace ConfigurationManager.Utilities
                 ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, $"Failed to open URL {url}\nCause: {ex.Message}");
             }
         }
+
+        public static GUIStyle CreateCopy(this GUIStyle original)
+        {
+#if IL2CPP
+            // Copy constructor is sometimes stripped out in IL2CPP
+            var guiStyle = new GUIStyle();
+            guiStyle.m_Ptr = GUIStyle.Internal_Copy(guiStyle, original);
+            return guiStyle;
+#else
+            return new GUIStyle(original);
+#endif
+        }
     }
 }
