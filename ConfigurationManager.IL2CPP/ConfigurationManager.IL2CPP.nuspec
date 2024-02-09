@@ -1,15 +1,14 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>BepInEx.ConfigurationManager</id>
+    <id>BepInEx.ConfigurationManager.IL2CPP</id>
     <version>$version$</version>
     <authors>ManlyMarco</authors>
     <projectUrl>https://github.com/BepInEx/BepInEx.ConfigurationManager</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Plugin configuration manager for BepInEx 5</description>
-    <developmentDependency>true</developmentDependency>
+    <description>Plugin configuration manager for BepInEx 6 (IL2CPP, bleeding edge)</description>
+    <dependencies>
+      <group targetFramework="net6.0" />
+    </dependencies>
   </metadata>
-  <files>
-    <file src="install.ps1" target="tools" />
-  </files>
 </package>
