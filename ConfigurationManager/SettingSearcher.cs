@@ -28,6 +28,7 @@ namespace ConfigurationManager
             // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
             // Still look inside Chainloader.PluginInfos in case the BepInEx_Manager GameObject uses HideFlags.HideAndDontSave, which hides it from Object.Find methods.
             return Chainloader.PluginInfos.Values.Select(x => x.Instance)
+                              .Where(plugin => plugin != null)
                               .Union(UnityEngine.Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>())
                               .ToArray();
         }
