@@ -14,6 +14,7 @@ namespace ConfigurationManager
 {
     internal sealed class ConfigSettingEntry : SettingEntryBase
     {
+        private readonly Type[] supportedTypes = { typeof(AcceptableValueList<>), typeof(AcceptableValueRange<>)};
         public ConfigEntryBase Entry { get; }
 
         public ConfigSettingEntry(ConfigEntryBase entry, BaseUnityPlugin owner)
@@ -32,12 +33,32 @@ namespace ConfigurationManager
             }
 
             var values = entry.Description?.AcceptableValues;
-            if (values != null)
+
+            if (values != null && IsTypeSupported(values.GetType()))
                 GetAcceptableValues(values);
 
             DefaultValue = entry.DefaultValue;
 
             SetFromAttributes(entry.Description?.Tags, owner);
+        }
+
+        private bool IsTypeSupported(Type type)
+        {
+            foreach (var t in supportedTypes)
+                if (IsSubclassOfRawGeneric(t, type)) return true;
+            return false;
+        }
+
+        // Taken from https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class
+        private static bool IsSubclassOfRawGeneric(Type generic, Type toCheck) {
+            while (toCheck != null && toCheck != typeof(object)) {
+                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
+                if (generic == cur) {
+                    return true;
+                }
+                toCheck = toCheck.BaseType;
+            }
+            return false;
         }
 
         private void GetAcceptableValues(AcceptableValueBase values)
