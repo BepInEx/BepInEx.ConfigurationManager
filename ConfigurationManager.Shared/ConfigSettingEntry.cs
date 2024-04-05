@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,6 @@ namespace ConfigurationManager
 {
     internal sealed class ConfigSettingEntry : SettingEntryBase
     {
-        private readonly Type[] supportedTypes = { typeof(AcceptableValueList<>), typeof(AcceptableValueRange<>)};
         public ConfigEntryBase Entry { get; }
 
         public ConfigSettingEntry(ConfigEntryBase entry, BaseUnityPlugin owner)
@@ -33,7 +32,6 @@ namespace ConfigurationManager
             }
 
             var values = entry.Description?.AcceptableValues;
-
             if (values != null)
                 GetAcceptableValues(values);
 
@@ -41,6 +39,7 @@ namespace ConfigurationManager
 
             SetFromAttributes(entry.Description?.Tags, owner);
         }
+
         private void GetAcceptableValues(AcceptableValueBase values)
         {
             var t = values.GetType();
@@ -57,7 +56,7 @@ namespace ConfigurationManager
                 {
                     AcceptableValueRange = new KeyValuePair<object, object>(minProp.GetValue(values, null), maxProp.GetValue(values, null));
                     ShowRangeAsPercent = (AcceptableValueRange.Key.Equals(0) || AcceptableValueRange.Key.Equals(1)) && AcceptableValueRange.Value.Equals(100) ||
-                                            AcceptableValueRange.Key.Equals(0f) && AcceptableValueRange.Value.Equals(1f);
+                                         AcceptableValueRange.Key.Equals(0f) && AcceptableValueRange.Value.Equals(1f);
                 }
             }
         }
