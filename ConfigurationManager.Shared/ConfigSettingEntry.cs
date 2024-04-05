@@ -34,33 +34,13 @@ namespace ConfigurationManager
 
             var values = entry.Description?.AcceptableValues;
 
-            if (values != null && IsTypeSupported(values.GetType()))
+            if (values != null)
                 GetAcceptableValues(values);
 
             DefaultValue = entry.DefaultValue;
 
             SetFromAttributes(entry.Description?.Tags, owner);
         }
-
-        private bool IsTypeSupported(Type type)
-        {
-            foreach (var t in supportedTypes)
-                if (IsSubclassOfRawGeneric(t, type)) return true;
-            return false;
-        }
-
-        // Taken from https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class
-        private static bool IsSubclassOfRawGeneric(Type generic, Type toCheck) {
-            while (toCheck != null && toCheck != typeof(object)) {
-                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-                if (generic == cur) {
-                    return true;
-                }
-                toCheck = toCheck.BaseType;
-            }
-            return false;
-        }
-
         private void GetAcceptableValues(AcceptableValueBase values)
         {
             var t = values.GetType();
@@ -72,13 +52,12 @@ namespace ConfigurationManager
             else
             {
                 var minProp = t.GetProperty(nameof(AcceptableValueRange<bool>.MinValue), BindingFlags.Instance | BindingFlags.Public);
-                if (minProp != null)
+                var maxProp = t.GetProperty(nameof(AcceptableValueRange<bool>.MaxValue), BindingFlags.Instance | BindingFlags.Public);
+                if (minProp != null && maxProp != null)
                 {
-                    var maxProp = t.GetProperty(nameof(AcceptableValueRange<bool>.MaxValue), BindingFlags.Instance | BindingFlags.Public);
-                    if (maxProp == null) throw new ArgumentNullException(nameof(maxProp));
                     AcceptableValueRange = new KeyValuePair<object, object>(minProp.GetValue(values, null), maxProp.GetValue(values, null));
                     ShowRangeAsPercent = (AcceptableValueRange.Key.Equals(0) || AcceptableValueRange.Key.Equals(1)) && AcceptableValueRange.Value.Equals(100) ||
-                                         AcceptableValueRange.Key.Equals(0f) && AcceptableValueRange.Value.Equals(1f);
+                                            AcceptableValueRange.Key.Equals(0f) && AcceptableValueRange.Value.Equals(1f);
                 }
             }
         }
