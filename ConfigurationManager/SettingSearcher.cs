@@ -52,11 +52,12 @@ namespace ConfigurationManager
                 var type = plugin.GetType();
 
                 var pluginInfo = plugin.Info.Metadata;
+                var pluginName = pluginInfo?.Name ?? plugin.GetType().FullName;
 
                 if (type.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>()
-                    .Any(x => !x.Browsable))
+                        .Any(x => !x.Browsable))
                 {
-                    modsWithoutSettings.Add(pluginInfo.Name);
+                    modsWithoutSettings.Add(pluginName);
                     continue;
                 }
 
@@ -67,7 +68,7 @@ namespace ConfigurationManager
                 detected.RemoveAll(x => x.Browsable == false);
 
                 if (detected.Count == 0)
-                    modsWithoutSettings.Add(pluginInfo.Name);
+                    modsWithoutSettings.Add(pluginName);
 
                 // Allow to enable/disable plugin if it uses any update methods ------
                 if (showDebug && type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(x => _updateMethodNames.Contains(x.Name)))
