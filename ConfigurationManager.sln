@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{F28F879D-0FA8-488C-A696-BDCCD27099B9}"
 	ProjectSection(SolutionItems) = preProject
 		ConfigurationManagerAttributes.cs = ConfigurationManagerAttributes.cs
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConfigurationManager.IL2CPP", "ConfigurationManager.IL2CPP\ConfigurationManager.IL2CPP.csproj", "{1144B70F-5FF8-4C60-9862-87698157EE1D}"
@@ -52,7 +53,7 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{1144b70f-5ff8-4c60-9862-87698157ee1d}*SharedItemsImports = 5
-		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{22edd399-1cc6-47c8-b8b8-a95ff2999901}*SharedItemsImports = 4
+		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{22edd399-1cc6-47c8-b8b8-a95ff2999901}*SharedItemsImports = 5
 		ConfigurationManager.Shared\ConfigurationManager.Shared.projitems*{28e965b5-225f-4ad4-938f-2d6f8c20c73f}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

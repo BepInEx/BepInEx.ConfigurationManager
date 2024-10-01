@@ -14,7 +14,6 @@
 
     <DebugType>embedded</DebugType>
     <DefineConstants>$(DefineConstants);IL2CPP</DefineConstants>
-    <Version>18.2.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
