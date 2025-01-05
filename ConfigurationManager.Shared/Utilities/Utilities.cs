@@ -2,16 +2,18 @@
 // Copyright 2018 GNU General Public License v3.0
 
 using BepInEx;
+using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using BepInEx.Logging;
 using UnityEngine;
-using Object = UnityEngine.Object;
-using BepInEx.Bootstrap;
+
+#if IL2CPP
+using BaseUnityPlugin = BepInEx.PluginInfo;
+#endif
 
 namespace ConfigurationManager.Utilities
 {
@@ -35,19 +37,6 @@ namespace ConfigurationManager.Utilities
             return result;
         }
 
-        /// <summary>
-        /// Search for all instances of BaseUnityPlugin loaded by chainloader or other means.
-        /// </summary>
-        public static BaseUnityPlugin[] FindPlugins()
-        {
-            // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins.
-            // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
-            // Still look inside Chainloader.PluginInfos in case the BepInEx_Manager GameObject uses HideFlags.HideAndDontSave, which hides it from Object.Find methods.
-            return Chainloader.PluginInfos.Values.Select(x => x.Instance)
-                              .Union(Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>())
-                              .ToArray();
-        }
-
         public static string AppendZero(this string s)
         {
             return !s.Contains(".") ? s + ".0" : s;
@@ -60,9 +49,36 @@ namespace ConfigurationManager.Utilities
 
         public static void FillTexture(this Texture2D tex, Color color)
         {
+            if (color.a < 1f)
+            {
+                // SetPixel ignores alpha, so we need to lerp manually
+                for (var x = 0; x < tex.width; x++)
+                {
+                    for (var y = 0; y < tex.height; y++)
+                    {
+                        var origColor = tex.GetPixel(x, y);
+                        var lerpedColor = Color.Lerp(origColor, color, color.a);
+                        // Not accurate, but good enough for our purposes
+                        lerpedColor.a = Mathf.Max(origColor.a, color.a);
+                        tex.SetPixel(x, y, lerpedColor);
+                    }
+                }
+            }
+            else
+            {
+                for (var x = 0; x < tex.width; x++)
+                    for (var y = 0; y < tex.height; y++)
+                        tex.SetPixel(x, y, color);
+            }
+
+            tex.Apply(false);
+        }
+
+        public static void FillTextureCheckerboard(this Texture2D tex)
+        {
             for (var x = 0; x < tex.width; x++)
                 for (var y = 0; y < tex.height; y++)
-                    tex.SetPixel(x, y, color);
+                    tex.SetPixel(x, y, (x / 10 + y / 10) % 2 == 1 ? Color.black : Color.white);
 
             tex.Apply(false);
         }
@@ -74,7 +90,7 @@ namespace ConfigurationManager.Utilities
                 if (path == null) return false;
                 try
                 {
-                    Process.Start(path);
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
                     return true;
                 }
                 catch
@@ -125,7 +141,11 @@ namespace ConfigurationManager.Utilities
             if (bepInPlugin == null) return null;
             try
             {
-                var fileName = bepInPlugin.GetType().Assembly.Location;
+#if IL2CPP
+                var fileName = bepInPlugin.Location;//.Instance.GetType().Module.FullyQualifiedName;
+#else
+                var fileName = bepInPlugin.Info.Location; //.GetType().Assembly.Location;
+#endif
                 if (!File.Exists(fileName)) return null;
                 var fi = FileVersionInfo.GetVersionInfo(fileName);
                 return new[]
@@ -139,7 +159,11 @@ namespace ConfigurationManager.Utilities
             }
             catch (Exception e)
             {
-                ConfigurationManager.Logger.LogWarning($"Failed to get URI for {bepInPlugin?.Info?.Metadata?.Name} - {e.Message}");
+#if IL2CPP
+                ConfigurationManager.Logger.LogWarning($"Failed to get URI for {bepInPlugin.Metadata?.Name} - {e.Message}");
+#else
+                ConfigurationManager.Logger.LogWarning($"Failed to get URI for {bepInPlugin.Info?.Metadata?.Name} - {e.Message}");
+#endif
                 return null;
             }
         }
@@ -149,12 +173,24 @@ namespace ConfigurationManager.Utilities
             try
             {
                 if (string.IsNullOrEmpty(url)) throw new Exception("Empty URL");
-                Process.Start(url);
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
                 ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, $"Failed to open URL {url}\nCause: {ex.Message}");
             }
+        }
+
+        public static GUIStyle CreateCopy(this GUIStyle original)
+        {
+#if IL2CPP
+            // Copy constructor is sometimes stripped out in IL2CPP
+            var guiStyle = new GUIStyle();
+            guiStyle.m_Ptr = GUIStyle.Internal_Copy(guiStyle, original);
+            return guiStyle;
+#else
+            return new GUIStyle(original);
+#endif
         }
     }
 }

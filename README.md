@@ -1,4 +1,4 @@
-## Plugin / mod configuration manager for BepInEx 5
+## Plugin / mod configuration manager for BepInEx
 An easy way to let user configure how a plugin behaves without the need to make your own GUI. The user can change any of the settings you expose, even keyboard shortcuts.
 
 The configuration manager can be accessed in-game by pressing the hotkey (by default F1). Hover over the setting names to see their descriptions, if any.
@@ -6,12 +6,18 @@ The configuration manager can be accessed in-game by pressing the hotkey (by def
 ![Configuration manager](Screenshot.PNG)
 
 ## How to use
-- Install BepInEx v5.4.20 or newer (older v5 versions won't work, v6 won't work either without a compatibility layer).
-- Download latest release from the Releases tab above.
-- Place the .dll inside your BepInEx\Plugins folder.
+There are two versions of this plugin, for BepInEx 5 (version 5.4.20 or newer, mono only) and BepInEx 6 (nightly build 664 or newer, IL2CPP only).
+
+- Install and configure the correct BepInEx version for your game (see above).
+- Download latest release for your BepInEx from the [Releases](https://github.com/BepInEx/BepInEx.ConfigurationManager/releases).
+- Extract the plugin directly into your game directory, where the BepInEx folder is (the .dll should end up inside your BepInEx\Plugins folder).
 - Start the game and press F1.
 
-Note: The .xml file is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
+Note: The .xml file include in the release zip is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
+
+### Known issues
+- If no text is visible anywhere in RUE windows, most likely the `Arial.ttf` font is missing from the system (Unity UI default font, may be different in some games). This can happen when running a game on Linux with [misconfigured wine](https://github.com/ManlyMarco/RuntimeUnityEditor/issues/55).
+- The IL2CPP version currently only works in some games that have unstripped `UnityEngine.IMGUIModule.dll` (support for some of the games can be added with a patcher that restores missing members, [example](https://github.com/IllusionMods/BepisPlugins/tree/fe2c5e14c8bcb14602ba5380226aee3ddd20b2f8/src/IMGUIModule.Il2Cpp.CoreCLR.Patcher)).
 
 ## How to make my mod compatible?
 ConfigurationManager will automatically display all settings from your plugin's `Config`. All metadata (e.g. description, value range) will be used by ConfigurationManager to display the settings to the user.

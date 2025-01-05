@@ -1,11 +1,11 @@
 ﻿using System;
 using BepInEx;
 using BepInEx.Configuration;
-using ConfigurationManager.Utilities;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Bootstrap;
 
 namespace ConfigurationManager
 {
@@ -18,6 +18,20 @@ namespace ConfigurationManager
             "LateUpdate",
             "OnGUI"
         };
+
+        /// <summary>
+        /// Search for all instances of BaseUnityPlugin loaded by chainloader or other means.
+        /// </summary>
+        public static BaseUnityPlugin[] FindPlugins()
+        {
+            // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins.
+            // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
+            // Still look inside Chainloader.PluginInfos in case the BepInEx_Manager GameObject uses HideFlags.HideAndDontSave, which hides it from Object.Find methods.
+            return Chainloader.PluginInfos.Values.Select(x => x.Instance)
+                              .Where(plugin => plugin != null)
+                              .Union(UnityEngine.Object.FindObjectsOfType(typeof(BaseUnityPlugin)).Cast<BaseUnityPlugin>())
+                              .ToArray();
+        }
 
         public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug)
         {
@@ -33,16 +47,17 @@ namespace ConfigurationManager
                 ConfigurationManager.Logger.LogError(ex);
             }
 
-            foreach (var plugin in Utils.FindPlugins())
+            foreach (var plugin in FindPlugins())
             {
                 var type = plugin.GetType();
 
                 var pluginInfo = plugin.Info.Metadata;
+                var pluginName = pluginInfo?.Name ?? plugin.GetType().FullName;
 
                 if (type.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>()
-                    .Any(x => !x.Browsable))
+                        .Any(x => !x.Browsable))
                 {
-                    modsWithoutSettings.Add(pluginInfo.Name);
+                    modsWithoutSettings.Add(pluginName);
                     continue;
                 }
 
@@ -53,7 +68,7 @@ namespace ConfigurationManager
                 detected.RemoveAll(x => x.Browsable == false);
 
                 if (detected.Count == 0)
-                    modsWithoutSettings.Add(pluginInfo.Name);
+                    modsWithoutSettings.Add(pluginName);
 
                 // Allow to enable/disable plugin if it uses any update methods ------
                 if (showDebug && type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(x => _updateMethodNames.Contains(x.Name)))

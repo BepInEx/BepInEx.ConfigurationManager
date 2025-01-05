@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("BepInEx.ConfigurationManager")]
 [assembly: AssemblyTitle("BepInEx.ConfigurationManager")]
 
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Universal in-game configuration manager for BepInEx plugins")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("https://github.com/BepInEx/BepInEx.ConfigurationManager")]
 [assembly: AssemblyCopyright("Copyright © 2019")]

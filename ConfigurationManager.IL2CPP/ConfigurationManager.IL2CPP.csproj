@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <RootNamespace>ConfigurationManager</RootNamespace>
+    <AssemblyName>ConfigurationManager</AssemblyName>
+
+    <OutputPath>D:\SVN\BepInEx.ConfigurationManager\bin\IL2CPP</OutputPath>  
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+
+    <DebugType>embedded</DebugType>
+    <DefineConstants>$(DefineConstants);IL2CPP</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.664" />
+    <PackageReference Include="IllusionLibs.HoneyCome.Il2Cppmscorlib" Version="2023.99.12.15" />
+    <PackageReference Include="IllusionLibs.HoneyCome.UnityEngine" Version="2021.3.14.3" />
+    <PackageReference Include="IllusionLibs.HoneyCome.UnityEngine.UI" Version="2021.3.14.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BepInEx.KeyboardShortcut\BepInEx.KeyboardShortcut.IL2CPP.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\ConfigurationManager.Shared\ConfigurationManager.Shared.projitems" Label="Shared" />
+
+</Project>
