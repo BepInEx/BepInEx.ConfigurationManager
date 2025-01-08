@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx.Bootstrap;
@@ -18,6 +19,8 @@ namespace ConfigurationManager
             "LateUpdate",
             "OnGUI"
         };
+        public static HashSet<string> recognizedFiles = new HashSet<string>();
+        public static List<string> OtherConfigFiles { get; private set; } = new List<string>();
 
         /// <summary>
         /// Search for all instances of BaseUnityPlugin loaded by chainloader or other means.
@@ -36,6 +39,7 @@ namespace ConfigurationManager
         public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug)
         {
             modsWithoutSettings = new List<string>();
+            OtherConfigFiles = new List<string>();
 
             try
             {
@@ -47,6 +51,8 @@ namespace ConfigurationManager
                 ConfigurationManager.Logger.LogError(ex);
             }
 
+            recognizedFiles.Clear();
+            OtherConfigFiles.Clear();
             foreach (var plugin in FindPlugins())
             {
                 var type = plugin.GetType();
@@ -54,8 +60,7 @@ namespace ConfigurationManager
                 var pluginInfo = plugin.Info.Metadata;
                 var pluginName = pluginInfo?.Name ?? plugin.GetType().FullName;
 
-                if (type.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>()
-                        .Any(x => !x.Browsable))
+                if (type.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>().Any(x => !x.Browsable))
                 {
                     modsWithoutSettings.Add(pluginName);
                     continue;
@@ -69,6 +74,10 @@ namespace ConfigurationManager
 
                 if (detected.Count == 0)
                     modsWithoutSettings.Add(pluginName);
+                
+                
+                // Track recognized config files
+                recognizedFiles.Add(plugin.Config.ConfigFilePath);
 
                 // Allow to enable/disable plugin if it uses any update methods ------
                 if (showDebug && type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(x => _updateMethodNames.Contains(x.Name)))
@@ -83,6 +92,15 @@ namespace ConfigurationManager
                 if (detected.Count > 0)
                     results = results.Concat(detected);
             }
+            
+            // Collect unrecognized config files
+            var allFiles = Directory.GetFiles(Paths.ConfigPath, "*.*", SearchOption.AllDirectories)
+                .Where(file => file.EndsWith(".cfg") || file.EndsWith(".json") || file.EndsWith(".yaml") || file.EndsWith(".yml"))
+                .ToList();
+
+            
+            
+            OtherConfigFiles = allFiles.Except(recognizedFiles).ToList();
         }
 
         /// <summary>
@@ -106,5 +124,6 @@ namespace ConfigurationManager
         {
             return plugin.Config.Select(kvp => new ConfigSettingEntry(kvp.Value, plugin));
         }
+
     }
 }

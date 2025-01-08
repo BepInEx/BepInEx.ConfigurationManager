@@ -49,6 +49,20 @@ namespace ConfigurationManager
         private const string SearchBoxName = "searchBox";
         private bool _focusSearchBox;
         private string _searchString = string.Empty;
+        private string _selectedPluginName = null;
+
+        private enum Tab
+        {
+            Plugins,
+            OtherFiles
+        }
+
+        private Tab _selectedTab = Tab.Plugins;
+
+// Store recognized files
+        private List<string> _recognizedFiles = new List<string>();
+        private string _selectedOtherFile;
+
 
         /// <summary>
         /// Event fired every time the manager window is shown or hidden.
@@ -79,6 +93,7 @@ namespace ConfigurationManager
         private bool _tipsPluginHeaderWasClicked, _tipsWindowWasMoved;
 
         private Rect _screenRect;
+        private Vector2 _pluginWindowScrollPos;
         private Vector2 _settingWindowScrollPos;
         private int _tipsHeight;
 
@@ -111,9 +126,7 @@ namespace ConfigurationManager
             _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
             _showKeybinds = Config.Bind("Filtering", "Show keybinds", true);
             _showSettings = Config.Bind("Filtering", "Show settings", true);
-            _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1),
-                new ConfigDescription("The shortcut used to toggle the config manager window on and off.\n" +
-                                      "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
+            _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1), new ConfigDescription("The shortcut used to toggle the config manager window on and off.\nThe key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
             _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
             _pluginConfigCollapsedDefault = Config.Bind("General", "Plugin collapsed default", true, new ConfigDescription("If set to true plugins will be collapsed when opening the configuration manager window"));
         }
@@ -265,12 +278,12 @@ namespace ConfigurationManager
 
         private static bool ContainsSearchString(SettingEntryBase setting, string[] searchStrings)
         {
-            var combinedSearchTarget = setting.PluginInfo.Name + "\n" +
-                                       setting.PluginInfo.GUID + "\n" +
-                                       setting.DispName + "\n" +
-                                       setting.Category + "\n" +
-                                       setting.Description + "\n" +
-                                       setting.DefaultValue + "\n" +
+            var combinedSearchTarget = setting.PluginInfo.Name + Environment.NewLine +
+                                       setting.PluginInfo.GUID + Environment.NewLine +
+                                       setting.DispName + Environment.NewLine +
+                                       setting.Category + Environment.NewLine +
+                                       setting.Description + Environment.NewLine +
+                                       setting.DefaultValue + Environment.NewLine +
                                        setting.Get();
 
             return searchStrings.All(s => combinedSearchTarget.IndexOf(s, StringComparison.InvariantCultureIgnoreCase) >= 0);
@@ -278,16 +291,23 @@ namespace ConfigurationManager
 
         private void CalculateWindowRect()
         {
-            var width = Mathf.Min(Screen.width, 650);
-            var height = Screen.height < 560 ? Screen.height : Screen.height - 100;
+            float widthFactor = 0.50f; // 50% of the screen width
+            float heightFactor = 0.95f; // 95% of the screen height
+
+            // Ensure the window size is within reasonable limits
+            var width = Mathf.Clamp(Screen.width * widthFactor, 400, Screen.width * widthFactor);
+            var height = Mathf.Clamp(Screen.height * heightFactor, 300, Screen.height * heightFactor);
+
+            // Center the window
             var offsetX = Mathf.RoundToInt((Screen.width - width) / 2f);
             var offsetY = Mathf.RoundToInt((Screen.height - height) / 2f);
+
             SettingWindowRect = new Rect(offsetX, offsetY, width, height);
 
             _screenRect = new Rect(0, 0, Screen.width, Screen.height);
 
-            LeftColumnWidth = Mathf.RoundToInt(SettingWindowRect.width / 2.5f);
-            RightColumnWidth = (int)SettingWindowRect.width - LeftColumnWidth - 115;
+            LeftColumnWidth = Mathf.RoundToInt(SettingWindowRect.width / 3.5f);
+            RightColumnWidth = (int)SettingWindowRect.width - LeftColumnWidth;
 
             _windowWasMoved = false;
         }
@@ -305,6 +325,21 @@ namespace ConfigurationManager
 #endif
                 mousePosition.y = Screen.height - mousePosition.y;
 
+
+                if (Event.current.type == EventType.mouseDown && SettingWindowRect.Contains(Event.current.mousePosition))
+                {
+                    Debug.Log("MouseDown inside the window");
+                    Event.current.Use(); // Prevent further propagation
+                }
+
+                if (Input.GetMouseButtonDown(0) && SettingWindowRect.Contains(Input.mousePosition))
+                {
+                    Debug.Log($"Mouse clicked at: {Input.mousePosition}");
+                    Debug.Log("Current: " + Event.current);
+                    Debug.Log("Current Type: " + Event.current.type);
+                    Event.current.Use(); // Prevent further propagation
+                }
+
                 // If the window hasn't been moved by the user yet, block the whole screen and use a solid background to make the window easier to see
                 if (!_windowWasMoved)
                 {
@@ -314,7 +349,8 @@ namespace ConfigurationManager
                     ImguiUtils.DrawWindowBackground(SettingWindowRect);
                 }
 
-                var newRect = GUILayout.Window(WindowId, SettingWindowRect, (GUI.WindowFunction)SettingsWindow, "Plugin / mod settings");
+                var newRect = GUILayout.Window(WindowId, SettingWindowRect, (GUI.WindowFunction)SettingsWindow, $"Configuration Manager {Version}");
+                GUI.FocusWindow(WindowId);
 
                 if (newRect != SettingWindowRect)
                 {
@@ -354,12 +390,12 @@ namespace ConfigurationManager
                     : mousePosition.y + 25;
 
                 Rect position = new Rect(x, y, width, height);
-                ImguiUtils.DrawContolBackground(position, Color.black);
+                ImguiUtils.DrawControlBackground(position, Color.black);
                 style.Draw(position, content, -1);
             }
         }
 
-        private void SettingsWindow(int id)
+        /*private void SettingsWindow(int id)
         {
             DrawWindowHeader();
 
@@ -439,6 +475,136 @@ namespace ConfigurationManager
                 DrawTooltip(SettingWindowRect);
 
             GUI.DragWindow();
+        }*/
+        private void SettingsWindow(int id)
+        {
+            DrawWindowHeader();
+
+            // Define columns
+            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true), GUILayout.MaxWidth(LeftColumnWidth + RightColumnWidth));
+            {
+                // Left Column: Plugin List
+                GUILayout.BeginVertical(GUILayout.MaxWidth(LeftColumnWidth), GUILayout.ExpandWidth(true));
+                {
+                    GUILayout.BeginHorizontal(GUI.skin.box);
+                    {
+                        if (GUILayout.Button("Plugins", GUILayout.ExpandWidth(true)))
+                        {
+                            _selectedTab = Tab.Plugins;
+                            _selectedPluginName = null;
+                            _selectedOtherFile = null;
+                        }
+
+                        if (GUILayout.Button("Other Config Files", GUILayout.ExpandWidth(true)))
+                        {
+                            _selectedTab = Tab.OtherFiles;
+                            _selectedPluginName = null;
+                            _selectedOtherFile = null;
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+
+                    _pluginWindowScrollPos = GUILayout.BeginScrollView(_pluginWindowScrollPos);
+                    if (_selectedTab == Tab.Plugins)
+                    {
+                        foreach (var plugin in _filteredSetings)
+                        {
+                            DrawSinglePlugin(plugin);
+                        }
+                    }
+                    else if (_selectedTab == Tab.OtherFiles)
+                    {
+                        foreach (var file in SettingSearcher.OtherConfigFiles)
+                        {
+                            DrawOtherFile(file);
+                        }
+                    }
+
+                    if (_showDebug)
+                    {
+                        GUILayout.Space(10);
+                        GUILayout.Label("Plugins with no options available: " + _modsWithoutSettings);
+                    }
+                    else
+                    {
+                        // Always leave some space in case there's a dropdown box at the very bottom of the list
+                        GUILayout.Space(70);
+                    }
+
+                    GUILayout.EndScrollView();
+                }
+                GUILayout.EndVertical();
+
+
+                // Add a vertical separator between columns
+                GUILayout.Box(GUIContent.none, GUILayout.Width(1), GUILayout.ExpandHeight(true));
+
+
+                // Right Column: Plugin Settings
+                GUILayout.BeginVertical(GUILayout.MaxWidth(RightColumnWidth), GUILayout.ExpandWidth(false));
+                {
+                    _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, GUILayout.ExpandWidth(false));
+
+                    if (_selectedTab == Tab.Plugins)
+                    {
+                        if (string.IsNullOrEmpty(_selectedPluginName))
+                        {
+                            GUILayout.Label("Select a plugin from the left column to view settings.");
+                        }
+                        else
+                        {
+                            var selectedPlugin = _filteredSetings.FirstOrDefault(p => p.Info.Name == _selectedPluginName);
+                            if (selectedPlugin != null)
+                            {
+                                GUILayout.Label($"Editing: {selectedPlugin.Info.Name}", GUILayout.ExpandWidth(false));
+                                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
+
+                                var buttonStyle = new GUIStyle(GUI.skin.button);
+
+                                if (GUILayout.Button($"Reset All Settings For {selectedPlugin.Info.Name}", buttonStyle, GUILayout.ExpandWidth(false)))
+                                {
+                                    foreach (var category in selectedPlugin.Categories)
+                                    {
+                                        foreach (var setting in category.Settings)
+                                        {
+                                            setting.Set(setting.DefaultValue);
+                                        }
+                                    }
+
+                                    BuildFilteredSettingList();
+                                }
+
+                                GUILayout.EndHorizontal();
+                                DrawPluginSettings(selectedPlugin);
+                            }
+                            else
+                            {
+                                GUILayout.Label("Plugin not found.", GUILayout.MaxWidth(RightColumnWidth));
+                            }
+                        }
+                    }
+                    else if (_selectedTab == Tab.OtherFiles)
+                    {
+                        if (string.IsNullOrEmpty(_selectedOtherFile))
+                        {
+                            GUILayout.Label("Select a file from the left column to edit.");
+                        }
+                        else
+                        {
+                            DrawOtherFileEditor(_selectedOtherFile);
+                        }
+                    }
+
+                    GUILayout.EndScrollView();
+                }
+                GUILayout.EndVertical();
+            }
+            GUILayout.EndHorizontal();
+
+            if (!SettingFieldDrawer.DrawCurrentDropdown())
+                DrawTooltip(SettingWindowRect);
+
+            GUI.DragWindow();
         }
 
         private void DrawTips()
@@ -455,6 +621,48 @@ namespace ConfigurationManager
                 GUILayout.EndHorizontal();
             }
         }
+
+        private void DrawOtherFileEditor(string filePath)
+        {
+            try
+            {
+                GUILayout.Label($"Editing: {Path.GetFileName(filePath)}", GUILayout.ExpandWidth(false));
+
+                string content = File.ReadAllText(filePath);
+                string updatedContent = content;
+
+                // Place the Save button above the text editor
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Save", GUILayout.ExpandWidth(false)))
+                    {
+                        File.WriteAllText(filePath, updatedContent);
+                        Logger.LogInfo($"File saved: {filePath}");
+                    }
+
+                    if (GUILayout.Button("Delete File", GUILayout.ExpandWidth(false)))
+                    {
+                        File.Delete(filePath);
+                        Logger.LogInfo($"File deleted: {filePath}");
+                    }
+
+                    GUILayout.Space(10);
+                    if (GUILayout.Button("Open File Location", GUILayout.ExpandWidth(false)))
+                    {
+                        Utils.OpenFileLocation(filePath);
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                // Display content in a scrollable text area
+                updatedContent = GUILayout.TextArea(content, GUILayout.ExpandHeight(true));
+            }
+            catch (Exception ex)
+            {
+                GUILayout.Label($"Failed to load or edit file: {ex.Message}", GUILayout.ExpandWidth(false));
+            }
+        }
+
 
         private void DrawWindowHeader()
         {
@@ -484,6 +692,7 @@ namespace ConfigurationManager
                     _showAdvanced.Value = newVal;
                     BuildFilteredSettingList();
                 }
+
                 GUI.color = origColor;
 
                 GUI.enabled = true;
@@ -497,13 +706,31 @@ namespace ConfigurationManager
                     BuildSettingList();
                 }
 
-                if (GUILayout.Button("Open Log"))
+                if (GUILayout.Button("Open BepInEx Log"))
                 {
-                    try { Utils.OpenLog(); }
-                    catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
+                    try
+                    {
+                        Utils.OpenBepInExLog();
+                    }
+                    catch (SystemException ex)
+                    {
+                        Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message);
+                    }
                 }
 
-                GUILayout.Space(8);
+                if (GUILayout.Button("Open Player Log"))
+                {
+                    try
+                    {
+                        Utils.OpenLog();
+                    }
+                    catch (SystemException ex)
+                    {
+                        Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message);
+                    }
+                }
+
+                //GUILayout.Space(8);
 
                 if (GUILayout.Button("Close"))
                 {
@@ -529,7 +756,7 @@ namespace ConfigurationManager
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                     SearchString = string.Empty;
 
-                GUILayout.Space(8);
+                /*GUILayout.Space(8);
 
                 if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All", GUILayout.ExpandWidth(false)))
                 {
@@ -539,7 +766,7 @@ namespace ConfigurationManager
                         plugin.Collapsed = newValue;
 
                     _tipsPluginHeaderWasClicked = true;
-                }
+                }*/
             }
             GUILayout.EndHorizontal();
         }
@@ -566,11 +793,15 @@ namespace ConfigurationManager
 
         private void DrawSinglePlugin(PluginSettingsData plugin)
         {
-            GUILayout.BeginVertical(GUI.skin.box);
+            GUIStyle style = new GUIStyle(GUI.skin.box)
+            {
+                normal = { background = GUI.skin.box.normal.background },
+                active = { background = GUI.skin.box.normal.background },
+                hover = { background = GUI.skin.button.hover.background }
+            };
+            GUILayout.BeginVertical(style);
 
-            var categoryHeader = _showDebug ?
-                new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", null, "GUID: " + plugin.Info.GUID) :
-                new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}");
+            var categoryHeader = _showDebug ? new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", null, "GUID: " + plugin.Info.GUID) : new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}");
 
             var isSearching = !string.IsNullOrEmpty(SearchString);
 
@@ -582,10 +813,10 @@ namespace ConfigurationManager
                     GUILayout.Space(29); // Same as the URL button to keep the plugin name centered
                 }
 
-                if (SettingFieldDrawer.DrawPluginHeader(categoryHeader, plugin.Collapsed && !isSearching) && !isSearching)
+                if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
                 {
                     _tipsPluginHeaderWasClicked = true;
-                    plugin.Collapsed = !plugin.Collapsed;
+                    _selectedPluginName = plugin.Info.Name;
                 }
 
                 if (hasWebsite)
@@ -599,36 +830,74 @@ namespace ConfigurationManager
                 }
             }
 
-            if (isSearching || !plugin.Collapsed)
-            {
-                foreach (var category in plugin.Categories)
-                {
-                    if (!string.IsNullOrEmpty(category.Name))
-                    {
-                        if (plugin.Categories.Count > 1 || !_hideSingleSection.Value)
-                            SettingFieldDrawer.DrawCategoryHeader(category.Name);
-                    }
+            GUILayout.EndVertical();
+        }
 
-                    foreach (var setting in category.Settings)
-                    {
-                        DrawSingleSetting(setting);
-                        GUILayout.Space(2);
-                    }
+        private void DrawPluginSettings(PluginSettingsData selectedPlugin)
+        {
+            foreach (var category in selectedPlugin.Categories)
+            {
+                GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandWidth(false));
+                if (!string.IsNullOrEmpty(category.Name))
+                {
+                    SettingFieldDrawer.DrawCategoryHeader(category.Name);
                 }
+
+                foreach (var setting in category.Settings)
+                {
+                    DrawSingleSetting(setting);
+                    GUILayout.Space(2);
+                }
+
+                GUILayout.EndVertical();
             }
+        }
+
+        private void DrawOtherFile(string file)
+        {
+            string fileType = Path.GetExtension(file).ToUpperInvariant().TrimStart('.');
+            var categoryHeader = _showDebug
+                ? new GUIContent($"{Path.GetFileName(file)} ({fileType})", null, "File Type: " + fileType)
+                : new GUIContent($"{Path.GetFileName(file)} ({fileType})");
+
+            var isSearching = !string.IsNullOrEmpty(SearchString);
+
+            GUIStyle style = new GUIStyle(GUI.skin.box)
+            {
+                normal = { background = GUI.skin.box.normal.background },
+                active = { background = GUI.skin.box.normal.background },
+                hover = { background = GUI.skin.button.hover.background }
+            };
+
+
+            GUILayout.BeginVertical(style);
+
+
+            if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
+            {
+                _tipsPluginHeaderWasClicked = true;
+                _selectedOtherFile = file;
+            }
+
 
             GUILayout.EndVertical();
         }
 
+
         private void DrawSingleSetting(SettingEntryBase setting)
         {
-            GUILayout.BeginHorizontal();
+            var ligherBox = GUI.skin.box.CreateCopy();
+            var isDefaultValue = setting.DefaultValue != null && (setting.Get() != null && setting.Get().Equals(setting.DefaultValue));
+            ligherBox.normal.background = ImguiUtils.MakeTexture(1, 1, isDefaultValue ? new Color(0.4f, 0.4f, 0.4f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f));
+            GUILayout.BeginHorizontal(ligherBox, GUILayout.ExpandWidth(false));
             {
                 try
                 {
                     DrawSettingName(setting);
-                    _fieldDrawer.DrawSettingValue(setting);
-                    DrawDefaultButton(setting);
+                    if (!isDefaultValue)
+                    {
+                        DrawDefaultButton(setting);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -641,16 +910,66 @@ namespace ConfigurationManager
 
         private void DrawSettingName(SettingEntryBase setting)
         {
-            if (setting.HideSettingName) return;
+            if (!setting.HideSettingName)
+            {
+                var nameStyle = new GUIStyle(GUI.skin.label)
+                {
+                    wordWrap = true, // Ensure name doesn't wrap
+                    fontStyle = FontStyle.Bold,
+                    normal = { textColor = Color.white }
+                };
 
-            var origColor = GUI.color;
-            if (setting.IsAdvanced == true)
-                GUI.color = _advancedSettingColor;
+                var descriptionStyle = new GUIStyle(GUI.skin.label)
+                {
+                    wordWrap = true, // Enable word wrapping for the description
+                    fontStyle = FontStyle.Italic,
+                    normal = { textColor = Color.black }
+                };
 
-            GUILayout.Label(new GUIContent(setting.DispName.TrimStart('!'), null, setting.Description),
-                GUILayout.Width(LeftColumnWidth), GUILayout.MaxWidth(LeftColumnWidth));
+                var defaultValueStyle = new GUIStyle(GUI.skin.label)
+                {
+                    wordWrap = true, // Enable word wrapping for the description
+                    fontStyle = FontStyle.BoldAndItalic,
+                    normal = { textColor = _advancedSettingColor }
+                };
 
-            GUI.color = origColor;
+                GUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.MaxWidth(RightColumnWidth));
+                {
+                    GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+                    // Render the name
+                    GUILayout.Label(setting.DispName.TrimStart('!'), nameStyle, GUILayout.ExpandWidth(false));
+
+                    // Render the type of the setting
+                    GUILayout.Label($" ({setting.SettingType.Name})", descriptionStyle, GUILayout.ExpandWidth(false));
+
+                    // If the setting type is a range, render the min and max values like [min - max]
+                    if (setting.AcceptableValueRange.Key != null)
+                    {
+                        var min = setting.AcceptableValueRange.Key;
+                        var max = setting.AcceptableValueRange.Value;
+                        GUILayout.Label($" [{min} - {max}]", descriptionStyle, GUILayout.ExpandWidth(false));
+                    }
+
+                    // Render the default value
+                    if (setting.DefaultValue != null)
+                    {
+                        GUILayout.Label($" Default: {setting.DefaultValue}", defaultValueStyle, GUILayout.ExpandWidth(false));
+                    }
+
+                    GUILayout.EndHorizontal();
+                    // Render the description below the name
+                    if (!string.IsNullOrEmpty(setting.Description))
+                    {
+                        GUILayout.Label(setting.Description, descriptionStyle);
+                    }
+                }
+                _fieldDrawer.DrawSettingValue(setting);
+                GUILayout.EndVertical();
+            }
+            else
+            {
+                _fieldDrawer.DrawSettingValue(setting);
+            }
         }
 
         private static void DrawDefaultButton(SettingEntryBase setting)
@@ -682,9 +1001,18 @@ namespace ConfigurationManager
             }
 
             // Check if user has permissions to write config files to disk
-            try { Config.Save(); }
-            catch (IOException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Failed to write to config directory, expect issues!\nError message:" + ex.Message); }
-            catch (UnauthorizedAccessException ex) { Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Permission denied to write to config directory, expect issues!\nError message:" + ex.Message); }
+            try
+            {
+                Config.Save();
+            }
+            catch (IOException ex)
+            {
+                Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Failed to write to config directory, expect issues!\nError message:" + ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Log(LogLevel.Message | LogLevel.Warning, "WARNING: Permission denied to write to config directory, expect issues!\nError message:" + ex.Message);
+            }
         }
 
         private void Update()
@@ -725,6 +1053,7 @@ namespace ConfigurationManager
             public string Website;
 
             private bool _collapsed;
+
             public bool Collapsed
             {
                 get => _collapsed;

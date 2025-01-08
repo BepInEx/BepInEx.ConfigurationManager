@@ -14,7 +14,7 @@ namespace ConfigurationManager.Utilities
             DrawBackground(position, color, 7, 4, 3, 2, 1, 1, 1);
         }
 
-        public static void DrawContolBackground(Rect position, Color? color = null)
+        public static void DrawControlBackground(Rect position, Color? color = null)
         {
             DrawBackground(position, color, 5, 3, 2, 1, 1);
         }
@@ -33,7 +33,7 @@ namespace ConfigurationManager.Utilities
                 colors.Fill(color ?? Color.gray);
                 Color32 clear = Color.clear;
                 int cornerHeight = Math.Min(corner.Length, height);
-                for (int i = 0, j = -1; i <= cornerHeight; j = i++)
+                for (int i = 0, j = -1; i <= cornerHeight; j = ++i)
                 {
                     int start = j >= 0 ? Math.Min(corner[j], width) : 0;
                     int length = i < cornerHeight ? Math.Min(corner[i], width) : 0;
@@ -53,6 +53,20 @@ namespace ConfigurationManager.Utilities
             GUI.DrawTexture(position, texture, ScaleMode.StretchToFill, true);
         }
 
+        internal static Texture2D MakeTexture(int width, int height, Color color)
+        {
+            var texture = new Texture2D(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    texture.SetPixel(x, y, color);
+                }
+            }
+            texture.Apply();
+            return texture;
+        }
+
 #if NETSTANDARD || NETCOREAPP
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public static void Fill<T>(this T[] array, T value) =>
@@ -64,13 +78,13 @@ namespace ConfigurationManager.Utilities
 #else
         public static void Fill<T>(this T[] array, T value)
         {
-            for (int i = 0; i < array.Length; i++)
+            for (int i = 0; i < array.Length; ++i)
                 array[i] = value;
         }
 
         public static void Fill<T>(this T[] array, int start, int length, T value)
         {
-            for (int i = start; i < start + length; i++)
+            for (int i = start; i < start + length; ++i)
                 array[i] = value;
         }
 #endif
@@ -92,7 +106,7 @@ namespace ConfigurationManager.Utilities
             GUI.Box(position, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = _windowBackground } });
         }
 
-        public static void DrawContolBackground(Rect position, Color color = default)
+        public static void DrawControlBackground(Rect position, Color color = default)
         {
             if (!_tooltipBg)
             {
@@ -104,6 +118,22 @@ namespace ConfigurationManager.Utilities
 
             GUI.Box(position, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = _tooltipBg } });
         }
+
+        internal static Texture2D MakeTexture(int width, int height, Color color)
+        {
+            var texture = new Texture2D(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    texture.SetPixel(x, y, color);
+                }
+            }
+
+            texture.Apply();
+            return texture;
+        }
+
 #endif
     }
 }

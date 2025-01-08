@@ -28,7 +28,7 @@ namespace ConfigurationManager.Utilities
             string result = str.Substring(0, 1).ToUpper();
 
             // Add the remaining characters.
-            for (int i = 1; i < str.Length; i++)
+            for (int i = 1; i < str.Length; ++i)
             {
                 if (char.IsUpper(str[i])) result += " ";
                 result += str[i];
@@ -52,9 +52,9 @@ namespace ConfigurationManager.Utilities
             if (color.a < 1f)
             {
                 // SetPixel ignores alpha, so we need to lerp manually
-                for (var x = 0; x < tex.width; x++)
+                for (var x = 0; x < tex.width; ++x)
                 {
-                    for (var y = 0; y < tex.height; y++)
+                    for (var y = 0; y < tex.height; ++y)
                     {
                         var origColor = tex.GetPixel(x, y);
                         var lerpedColor = Color.Lerp(origColor, color, color.a);
@@ -66,9 +66,9 @@ namespace ConfigurationManager.Utilities
             }
             else
             {
-                for (var x = 0; x < tex.width; x++)
-                    for (var y = 0; y < tex.height; y++)
-                        tex.SetPixel(x, y, color);
+                for (var x = 0; x < tex.width; ++x)
+                for (var y = 0; y < tex.height; ++y)
+                    tex.SetPixel(x, y, color);
             }
 
             tex.Apply(false);
@@ -76,9 +76,9 @@ namespace ConfigurationManager.Utilities
 
         public static void FillTextureCheckerboard(this Texture2D tex)
         {
-            for (var x = 0; x < tex.width; x++)
-                for (var y = 0; y < tex.height; y++)
-                    tex.SetPixel(x, y, (x / 10 + y / 10) % 2 == 1 ? Color.black : Color.white);
+            for (var x = 0; x < tex.width; ++x)
+            for (var y = 0; y < tex.height; ++y)
+                tex.SetPixel(x, y, (x / 10 + y / 10) % 2 == 1 ? Color.black : Color.white);
 
             tex.Apply(false);
         }
@@ -136,6 +136,43 @@ namespace ConfigurationManager.Utilities
             throw new FileNotFoundException("No log files were found");
         }
 
+        public static void OpenBepInExLog()
+        {
+            bool TryOpen(string path)
+            {
+                if (string.IsNullOrEmpty(path)) return false;
+                try
+                {
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    ConfigurationManager.Logger.Log(LogLevel.Warning, $"Failed to open log file at {path}\nCause: {ex.Message}");
+                    return false;
+                }
+            }
+
+            try
+            {
+                // Get the path to the BepInEx log file
+                string logFilePath = Path.Combine(Paths.BepInExRootPath, "LogOutput.log");
+
+                // Find the latest log file
+                var logFiles = Directory.GetFiles(Paths.BepInExRootPath, "LogOutput.log*");
+                var latestLog = logFiles.OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
+
+                if (latestLog != null && TryOpen(latestLog)) return;
+
+                throw new FileNotFoundException("No BepInEx log files found.");
+            }
+            catch (Exception ex)
+            {
+                ConfigurationManager.Logger.Log(LogLevel.Error, $"Error opening BepInEx log file: {ex.Message}");
+            }
+        }
+
+
         public static string GetWebsite(BaseUnityPlugin bepInPlugin)
         {
             if (bepInPlugin == null) return null;
@@ -178,6 +215,19 @@ namespace ConfigurationManager.Utilities
             catch (Exception ex)
             {
                 ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, $"Failed to open URL {url}\nCause: {ex.Message}");
+            }
+        }
+
+        public static void OpenFileLocation(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path)) throw new Exception("Empty path");
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                ConfigurationManager.Logger.Log(LogLevel.Message | LogLevel.Warning, $"Failed to open file location {path}\nCause: {ex.Message}");
             }
         }
 

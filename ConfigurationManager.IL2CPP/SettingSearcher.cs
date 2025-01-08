@@ -6,6 +6,7 @@ using BepInEx.Unity.IL2CPP;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using Il2CppSystem.IO;
 using UnityEngine;
 
 namespace ConfigurationManager
@@ -20,6 +21,9 @@ namespace ConfigurationManager
             "OnGUI"
         };
 
+        public static HashSet<string> recognizedFiles = new HashSet<string>();
+        public static List<string> OtherConfigFiles { get; private set; } = new List<string>();
+
         // Search for instances of BaseUnityPlugin to also find dynamically loaded plugins. Doing this makes checking Chainloader.PluginInfos redundant.
         // Have to use FindObjectsOfType(Type) instead of FindObjectsOfType<T> because the latter is not available in some older unity versions.
         public static IReadOnlyList<PluginInfo> FindPlugins() => IL2CPPChainloader.Instance.Plugins.Values.Where(x => x.Instance is BasePlugin).ToList();
@@ -27,6 +31,8 @@ namespace ConfigurationManager
         public static void CollectSettings(out IEnumerable<SettingEntryBase> results, out List<string> modsWithoutSettings, bool showDebug)
         {
             modsWithoutSettings = new List<string>();
+            OtherConfigFiles = new List<string>();
+            
             try
             {
                 results = GetBepInExCoreConfig();
@@ -42,8 +48,7 @@ namespace ConfigurationManager
                 var type = plugin.Instance.GetType();
 
                 bool advanced = false;
-                if (type.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>()
-                    .Any(x => !x.Browsable))
+                if (type.GetCustomAttributes(typeof(BrowsableAttribute), false).Cast<BrowsableAttribute>().Any(x => !x.Browsable))
                 {
                     var metadata = plugin.Metadata;
 
@@ -52,6 +57,7 @@ namespace ConfigurationManager
                         modsWithoutSettings.Add(metadata.Name);
                         continue;
                     }
+
                     advanced = true;
                 }
 
@@ -61,13 +67,16 @@ namespace ConfigurationManager
 
                 if (detected.Count == 0 || advanced)
                     detected.ForEach(x => x.IsAdvanced = true);
+                
+                recognizedFiles.Clear();
+                // Track recognized config files
+               // recognizedFiles.UnionWith(plugin.Metadata..Config.Keys.Select(k => k.Section + "." + k.Key + ".cfg"));
 
                 // Allow to enable/disable plugin if it uses any update methods ------
                 if (showDebug)
                 {
                     var pluginAssembly = type.Assembly;
-                    var behaviours = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>()
-                        .Where(behaviour => behaviour.GetType().Assembly == pluginAssembly);
+                    var behaviours = UnityEngine.Object.FindObjectsOfType<MonoBehaviour>().Where(behaviour => behaviour.GetType().Assembly == pluginAssembly);
                     foreach (var behaviour in behaviours)
                     {
                         var behaviourType = behaviour.GetType();
@@ -81,6 +90,15 @@ namespace ConfigurationManager
                         detected.Add(enabledSetting);
                         break;
                     }
+                    
+                    // Collect unrecognized config files
+                    var allFiles = Directory.GetFiles(Paths.ConfigPath, "*.*", SearchOption.AllDirectories)
+                        .Where(file => file.EndsWith(".cfg") || file.EndsWith(".json") || file.EndsWith(".yaml") || file.EndsWith(".yml"))
+                        .ToList();
+
+                    OtherConfigFiles.Clear();
+            
+                    OtherConfigFiles = allFiles.Except(recognizedFiles).ToList();
                 }
 
                 if (detected.Count > 0)
