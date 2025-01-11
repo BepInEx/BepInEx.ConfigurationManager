@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 #if IL2CPP
@@ -241,6 +242,7 @@ namespace ConfigurationManager
                     var categories = pluginSettings
                         .GroupBy(eb => eb.Category)
                         .OrderBy(x => string.Equals(x.Key, shortcutsCatName, StringComparison.Ordinal))
+                        .ThenBy(x => IntPrefixOrder(x.Key))
                         .ThenBy(x => x.Key)
                         .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
 
@@ -256,6 +258,13 @@ namespace ConfigurationManager
                 })
                 .OrderBy(x => x.Info.Name)
                 .ToList();
+        }
+
+        private static int IntPrefixOrder(string name)
+        {
+            // match integer prefix at the start of the string
+            Match match = Regex.Match(name, @"^\d+");
+            return match.Success ? int.Parse(match.Value) : int.MaxValue;
         }
 
         private static bool IsKeyboardShortcut(SettingEntryBase x)
