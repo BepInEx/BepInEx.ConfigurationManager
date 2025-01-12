@@ -239,10 +239,11 @@ namespace ConfigurationManager
                 .Select(pluginSettings =>
                 {
                     var categories = pluginSettings
-                        .GroupBy(eb => eb.Category)
-                        .OrderBy(x => string.Equals(x.Key, shortcutsCatName, StringComparison.Ordinal))
-                        .ThenBy(x => x.Key)
-                        .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
+                        .GroupBy(eb => new { eb.SectionOrder, eb.Category })
+                        .OrderBy(x => string.Equals(x.Key.Category, shortcutsCatName, StringComparison.Ordinal))
+                        .ThenByDescending(x => x.Key.SectionOrder)
+                        .ThenBy(x => x.Key.Category)
+                        .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key.Category, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
 
                     var website = Utils.GetWebsite(pluginSettings.First().PluginInstance);
 

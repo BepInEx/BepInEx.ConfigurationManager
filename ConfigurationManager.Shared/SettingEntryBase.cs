@@ -120,6 +120,12 @@ namespace ConfigurationManager
         public int Order { get; protected set; }
 
         /// <summary>
+        /// Order of the section in the settings list relative to other sections. 0 by default, lower is higher on the list.
+        /// Sections with the same name but different <see cref="SectionOrder"/> values will be treated as separate sections.
+        /// </summary>
+        public int SectionOrder { get; protected set; }
+
+        /// <summary>
         /// Get the value of this setting
         /// </summary>
         public abstract object Get();

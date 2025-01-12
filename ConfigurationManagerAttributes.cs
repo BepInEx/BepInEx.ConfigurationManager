@@ -128,6 +128,13 @@ internal sealed class ConfigurationManagerAttributes
     public int? Order;
 
     /// <summary>
+    /// Order of the section in the settings list relative to other sections.
+    /// 0 by default, lower is higher on the list.
+    /// Sections with the same name but different <see cref="SectionOrder"/> values will be treated as separate sections.
+    /// </summary>
+    public int? SectionOrder;
+
+    /// <summary>
     /// Only show the value, don't allow editing it.
     /// </summary>
     public bool? ReadOnly;
