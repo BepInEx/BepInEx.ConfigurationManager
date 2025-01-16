@@ -238,9 +238,11 @@ namespace ConfigurationManager
                 .GroupBy(x => x.PluginInfo)
                 .Select(pluginSettings =>
                 {
+                    var originalCategoryOrder = pluginSettings.Select(x => x.Category).Distinct().ToList();
+
                     var categories = pluginSettings
-                        .GroupBy(eb => eb.Category)
-                        .OrderBy(x => string.Equals(x.Key, shortcutsCatName, StringComparison.Ordinal))
+                        .GroupBy(x => x.Category)
+                        .OrderBy(x => originalCategoryOrder.IndexOf(x.Key))
                         .ThenBy(x => x.Key)
                         .Select(x => new PluginSettingsData.PluginSettingsGroupData { Name = x.Key, Settings = x.OrderByDescending(set => set.Order).ThenBy(set => set.DispName).ToList() });
 
