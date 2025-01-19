@@ -1,14 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <RootNamespace>BepInEx.KeyboardShortcut</RootNamespace>
+    
+    <RootNamespace>BepInEx.Configuration</RootNamespace>
     <AssemblyName>BepInEx.KeyboardShortcut</AssemblyName>
-    <DebugType>embedded</DebugType>
+
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+
+    <DefineConstants>$(DefineConstants);IL2CPP</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 	
   <ItemGroup>
@@ -17,9 +28,11 @@
     </PackageReference>
     <PackageReference Include="IllusionLibs.HoneyCome.Il2Cppmscorlib" Version="2023.99.12.15">
       <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="IllusionLibs.HoneyCome.UnityEngine" Version="2021.3.14.3">
       <IncludeAssets>compile</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
 

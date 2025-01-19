@@ -26,7 +26,7 @@ namespace ConfigurationManager
     /// An easy way to let user configure how a plugin behaves without the need to make your own GUI. The user can change any of the settings you expose, even keyboard shortcuts.
     /// https://github.com/ManlyMarco/BepInEx.ConfigurationManager
     /// </summary>
-    [BepInPlugin(GUID, "Configuration Manager", Version)]
+    [BepInPlugin(GUID, "Configuration Manager", Constants.Version)]
     [Browsable(false)]
     public class ConfigurationManager : BaseUnityPlugin
     {

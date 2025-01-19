@@ -9,7 +9,6 @@
     <Import_RootNamespace>ConfigurationManager.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ConfigSettingEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ConfigurationManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PropertySettingEntry.cs" />
