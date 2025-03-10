@@ -1,22 +1,57 @@
 <Project>
 	<PropertyGroup>
 		<!-- This is the master version, only change this one -->
-		<Version>18.3.1</Version>
+		<Version>18.4</Version>
+
+		<!-- Sets the 'Product name' field on the dll file -->
+		<Product>BepInEx.ConfigurationManager</Product>
+		<!-- Sets the 'File description' field on the dll file -->
+		<AssemblyTitle>Universal in-game configuration manager for BepInEx plugins</AssemblyTitle>
+		<!-- Sets the 'Company' field on the dll file -->
+		<Authors>https://github.com/BepInEx/BepInEx.ConfigurationManager</Authors>
+		<!-- Sets the 'Copyright' field on the dll file -->
+		<Copyright>Copyright © 2019 / LGPL-3.0</Copyright>
+
+		<Deterministic>true</Deterministic>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>embedded</DebugType>
+		<FileAlignment>512</FileAlignment>
+    
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
 	</PropertyGroup>
 
-	<Target Name="AddGeneratedFile" BeforeTargets="BeforeCompile;CoreCompile" Inputs="$(MSBuildAllProjects)" Outputs="$(IntermediateOutputPath)GeneratedFile.cs">
+	<!-- Create a release zip file (after successful Release build) -->
+	<Target Name="CreateReleaseZip" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' And '$(AssemblyName)' == 'ConfigurationManager'">
 		<PropertyGroup>
-			<BepInExPluginVersion Condition="'$(BepInExPluginVersion)' == ''">$(Version)</BepInExPluginVersion>
-			<GeneratedText><![CDATA[
-namespace $(RootNamespace)
-{
-    internal static class Constants
-    {
-        public const string Version = "$(BepInExPluginVersion)"%3B
+			<CopyDir>$(OutputPath)\..\TEMP_COPY_$(AssemblyName)</CopyDir>
+		</PropertyGroup>
+		<ItemGroup>
+			<BuildFiles Include="$(OutputPath)\*"/>
+		</ItemGroup>
+
+		<RemoveDir Directories="$(CopyDir)" />
+		<Copy DestinationFolder="$(CopyDir)\BepInEx\plugins\ConfigurationManager" SourceFiles="@(BuildFiles)" />
+		<!-- https://learn.microsoft.com/en-us/visualstudio/msbuild/zipdirectory-task?view=vs-2022 -->
+		<ZipDirectory SourceDirectory="$(CopyDir)" DestinationFile="$(OutputPath)\..\BepInEx.ConfigurationManager$(ZipPostfix)_v$(Version).zip" Overwrite="true" />
+		<RemoveDir Directories="$(CopyDir)" />
+	</Target>
+
+	<!-- Allow using of the csproj properties defined above in the code itself -->
+	<Target Name="AddGeneratedConstantsFile" BeforeTargets="BeforeCompile;CoreCompile" Inputs="$(MSBuildAllProjects)" Outputs="$(IntermediateOutputPath)GeneratedConstantsFile.cs">
+		<PropertyGroup>
+			<GeneratedText>
+				<![CDATA[namespace $(RootNamespace) {
+    internal static class Constants {
+        public const string Version = "$(Version)"%3B
+        public const string Name = "$(Product)"%3B
+        public const string Description = "$(AssemblyTitle)"%3B
+        public const string Website = "$(Authors)"%3B
+        public const string Copyright = "$(Copyright)"%3B
     }
-}
-      ]]></GeneratedText>
-			<GeneratedFilePath>$(IntermediateOutputPath)Constants.cs</GeneratedFilePath>
+}]]>
+			</GeneratedText>
+			<GeneratedFilePath>$(IntermediateOutputPath)GeneratedConstantsFile.cs</GeneratedFilePath>
 		</PropertyGroup>
 		<ItemGroup>
 			<Compile Include="$(GeneratedFilePath)" />

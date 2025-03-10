@@ -5,10 +5,11 @@ VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationManager", "ConfigurationManager\ConfigurationManager.csproj", "{22EDD399-1CC6-47C8-B8B8-A95FF2999901}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{F28F879D-0FA8-488C-A696-BDCCD27099B9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Solution", "_Solution", "{F28F879D-0FA8-488C-A696-BDCCD27099B9}"
 	ProjectSection(SolutionItems) = preProject
-		ConfigurationManagerAttributes.cs = ConfigurationManagerAttributes.cs
 		Directory.Build.props = Directory.Build.props
+		README.md = README.md
+		ConfigurationManagerAttributes.cs = ConfigurationManagerAttributes.cs
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConfigurationManager.IL2CPP", "ConfigurationManager.IL2CPP\ConfigurationManager.IL2CPP.csproj", "{1144B70F-5FF8-4C60-9862-87698157EE1D}"
