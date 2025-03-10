@@ -54,7 +54,11 @@ namespace ConfigurationManager
         {
             if (setting.CustomDrawer != null)
             {
+                _instance.RightColumnWidth -= 50;
+                GUILayout.BeginHorizontal(GUILayout.MaxWidth(_instance.RightColumnWidth - 50), GUILayout.ExpandWidth(false));
                 setting.CustomDrawer(setting is ConfigSettingEntry newSetting ? newSetting.Entry : null);
+                GUILayout.EndHorizontal();
+                _instance.RightColumnWidth += 50;
             }
             else if (setting.CustomHotkeyDrawer != null)
             {
@@ -84,9 +88,7 @@ namespace ConfigurationManager
             }
             else
             {
-                GUILayout.BeginHorizontal(GUILayout.MaxWidth(_instance.RightColumnWidth - 50), GUILayout.ExpandWidth(false));
                 DrawUnknownField(setting, _instance.RightColumnWidth);
-                GUILayout.EndHorizontal();
             }
         }
 
@@ -680,10 +682,10 @@ namespace ConfigurationManager
             Color32[] pixels = new Color32[width * height];
 
             // row 0 => S=1, row (height-1) => S=0
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; ++y)
             {
                 float s = 1f - (float)y / (height - 1);
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < width; ++x)
                 {
                     float h = (float)x / (width - 1);
                     // convert H,S,V to color

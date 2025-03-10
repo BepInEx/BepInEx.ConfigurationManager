@@ -101,7 +101,7 @@ namespace ConfigurationManager
         private bool _previousCursorVisible;
 
         internal int LeftColumnWidth { get; private set; }
-        internal int RightColumnWidth { get; private set; }
+        internal int RightColumnWidth { get; set; }
 
         private GameObject _overlayCanvasObj;
         private Canvas _overlayCanvas;
@@ -207,7 +207,7 @@ namespace ConfigurationManager
             _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
             _showKeybinds = Config.Bind("Filtering", "Show keybinds", true);
             _showSettings = Config.Bind("Filtering", "Show settings", true);
-            _showDefault = Config.Bind("Filtering", "Show default", true);
+            _showDefault = Config.Bind("Filtering", "Show default settings as well as changed", true);
             _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1), new ConfigDescription("The shortcut used to toggle the config manager window on and off.\nThe key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
             _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
 
@@ -334,7 +334,7 @@ namespace ConfigurationManager
                 if (!_showSettings.Value)
                     results = results.Where(x => x.IsAdvanced == true || IsKeyboardShortcut(x));
                 if (!_showDefault.Value)
-                    results = results.Where(x => x.DefaultValue != null && (x.Get() != null && !x.Get().Equals(x.DefaultValue)));
+                    results = results.Where(x => x.DefaultValue != null && x.Get() != null && !x.Get().Equals(x.DefaultValue));
             }
 
             const string shortcutsCatName = "Keyboard shortcuts";
@@ -391,8 +391,8 @@ namespace ConfigurationManager
             float heightFactor = _windowSize.Value.y; // 95% of the screen height by default
 
             // Ensure the window size is within reasonable limits
-            var width = Mathf.Clamp(Screen.width * widthFactor, 400, Screen.width * widthFactor);
-            var height = Mathf.Clamp(Screen.height * heightFactor, 300, Screen.height * heightFactor);
+            var width = Mathf.Clamp(Screen.width * widthFactor, Screen.width * 0.25f, Screen.width * widthFactor);
+            var height = Mathf.Clamp(Screen.height * heightFactor, Screen.width * 0.20f, Screen.height * heightFactor);
 
             // Center the window
             var offsetX = Mathf.RoundToInt((Screen.width - width) / 2f);
@@ -600,7 +600,6 @@ namespace ConfigurationManager
 
                 // Add a vertical separator between columns
                 GUILayout.Box(GUIContent.none, GUILayout.Width(1), GUILayout.ExpandHeight(true));
-                Rect clipRect = GUILayoutUtility.GetRect(RightColumnWidth, SettingWindowRect.height);
 
                 // Right Column: Plugin Settings
                 GUILayout.BeginVertical(GUILayout.MaxWidth(RightColumnWidth), GUILayout.ExpandWidth(true));
@@ -882,11 +881,18 @@ namespace ConfigurationManager
         private void DrawSinglePlugin(PluginSettingsData plugin)
         {
             GUIStyle style = GUI.skin.box.CreateCopy();
-            var pooledPluginTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+            /*var pooledPluginTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
             pooledPluginTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
             pooledPluginTex.Apply();
+            var pooledPluginTexNormal = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+            pooledPluginTexNormal.SetPixel(0, 0, ConfigurationManager._categorySectionColor.Value);
+            pooledPluginTexNormal.Apply();
             style.hover.background = pooledPluginTex;
-            //TexturePool.ReleaseTexture2D(pooledPluginTex);
+            style.normal.background = pooledPluginTexNormal;
+            TexturePool.ReleaseTexture2D(pooledPluginTex);
+            TexturePool.ReleaseTexture2D(pooledPluginTexNormal);*/
+            style.hover.background = TexturePool.GetColorTexture(ConfigurationManager._highlightColor.Value);
+            style.normal.background = TexturePool.GetColorTexture(ConfigurationManager._categorySectionColor.Value);
             style.fontSize = ImguiUtils.fontSize;
 
 
@@ -904,7 +910,8 @@ namespace ConfigurationManager
                     GUILayout.Space(29); // Same as the URL button to keep the plugin name centered
                 }
 
-                if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
+                //if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
+                if (SettingFieldDrawer.DrawPluginHeader(categoryHeader))
                 {
                     _tipsPluginHeaderWasClicked = true;
                     _selectedPluginName = plugin.Info.Name;
@@ -1033,12 +1040,18 @@ namespace ConfigurationManager
             var pooledOtherFileTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
             pooledOtherFileTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
             pooledOtherFileTex.Apply();
+            var pooledOtherFileTexNormal = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+            pooledOtherFileTexNormal.SetPixel(0, 0, ConfigurationManager._categorySectionColor.Value);
+            pooledOtherFileTexNormal.Apply();
             style.hover.background = pooledOtherFileTex;
-            //TexturePool.ReleaseTexture2D(pooledOtherFileTex);
+            style.normal.background = pooledOtherFileTexNormal;
+            TexturePool.ReleaseTexture2D(pooledOtherFileTex);
+            TexturePool.ReleaseTexture2D(pooledOtherFileTexNormal);
 
             GUILayout.BeginVertical(style);
 
 
+            //if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
             if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
             {
                 _tipsPluginHeaderWasClicked = true;
@@ -1148,7 +1161,7 @@ namespace ConfigurationManager
         {
             if (setting.HideDefaultButton) return;
 
-            GUIHelper.BeginColor(_widgetBackgroundColor.Value);
+            //GUIHelper.BeginColor(_widgetBackgroundColor.Value);
 
             object defaultValue = setting.DefaultValue;
             if (defaultValue != null || setting.SettingType.IsClass)
@@ -1158,7 +1171,7 @@ namespace ConfigurationManager
                     setting.Set(defaultValue);
             }
 
-            GUIHelper.EndColor();
+            //GUIHelper.EndColor();
         }
 
         public static void PinPlugin(string pluginName)
@@ -1339,6 +1352,7 @@ namespace ConfigurationManager
         private void OnDestroy()
         {
             TexturePool.ClearAll();
+            TexturePool.ClearCache();
             PluginSettingsDataPool.ClearAll();
             System.GC.Collect(); // Force GC
         }

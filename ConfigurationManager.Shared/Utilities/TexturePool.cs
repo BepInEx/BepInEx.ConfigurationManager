@@ -13,6 +13,9 @@ namespace ConfigurationManager.Utilities
         // Value: Stack of available (unused) textures with the above specs
         private static readonly Dictionary<TextureKey, Stack<Texture2D>> _texturePool = new Dictionary<TextureKey, Stack<Texture2D>>();
 
+        // Cache one-pixel textures by color.
+        private static readonly Dictionary<Color, Texture2D> _colorTextureCache = new Dictionary<Color, Texture2D>();
+
         /// <summary>
         /// Retrieve a pooled texture (or create a new one) matching the desired specs.
         /// </summary>
@@ -81,6 +84,34 @@ namespace ConfigurationManager.Utilities
             }
 
             _texturePool.Clear();
+        }
+
+        public static Texture2D GetColorTexture(Color color)
+        {
+            // If already cached, return it.
+            if (_colorTextureCache.TryGetValue(color, out Texture2D tex))
+                return tex;
+
+            // Otherwise, create a new one.
+            tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            tex.SetPixel(0, 0, color);
+            tex.Apply();
+            // Set the filtering and wrapping so that when stretched, it stays solid.
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            _colorTextureCache[color] = tex;
+            return tex;
+        }
+
+
+        public static void ClearCache()
+        {
+            foreach (var tex in _colorTextureCache.Values)
+            {
+                UnityEngine.Object.Destroy(tex);
+            }
+
+            _colorTextureCache.Clear();
         }
     }
 

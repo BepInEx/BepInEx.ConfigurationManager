@@ -76,9 +76,9 @@ namespace ConfigurationManager.Utilities
         internal static Texture2D MakeTexture(int width, int height, Color color)
         {
             var texture = new Texture2D(width, height);
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < width; ++x)
                 {
                     texture.SetPixel(x, y, color);
                 }
@@ -153,7 +153,7 @@ namespace ConfigurationManager.Utilities
                 pooledPluginTex.SetPixel(0, 0, ConfigurationManager._closeButtonColor.Value);
                 pooledPluginTex.Apply();
                 buttonStyle.hover.background = pooledPluginTex;
-                buttonStyle.normal.background = pooledPluginTex;
+                //buttonStyle.normal.background = pooledPluginTex;
                 TexturePool.ReleaseTexture2D(pooledPluginTex);
                 buttonStyle.fontSize = fontSize;
             }
