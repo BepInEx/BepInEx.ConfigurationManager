@@ -50,15 +50,20 @@ namespace ConfigurationManager
             _instance = instance;
         }
 
+        public bool IsModifiedValue(SettingEntryBase entry)
+        {
+            return entry.DefaultValue != null && entry.Get() != null && !entry.Get().Equals(entry.DefaultValue);
+        }
+
         public void DrawSettingValue(SettingEntryBase setting)
         {
             if (setting.CustomDrawer != null)
             {
-                _instance.RightColumnWidth -= 50;
+                _instance.RightColumnWidth -= IsModifiedValue(setting) ? 90 : 50;
                 GUILayout.BeginHorizontal(GUILayout.MaxWidth(_instance.RightColumnWidth - 50), GUILayout.ExpandWidth(false));
                 setting.CustomDrawer(setting is ConfigSettingEntry newSetting ? newSetting.Entry : null);
                 GUILayout.EndHorizontal();
-                _instance.RightColumnWidth += 50;
+                _instance.RightColumnWidth += IsModifiedValue(setting) ? 90 : 50;
             }
             else if (setting.CustomHotkeyDrawer != null)
             {
@@ -130,14 +135,27 @@ namespace ConfigurationManager
                 _categoryHeaderSkin.stretchWidth = true;
                 _categoryHeaderSkin.fontSize = 16;
                 _categoryHeaderSkin.fontStyle = FontStyle.Bold;
-                var pooledHeaderTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-                pooledHeaderTex.SetPixel(0, 0, ConfigurationManager._categoryHeaderColor.Value);
-                pooledHeaderTex.Apply();
-                _categoryHeaderSkin.normal.background = pooledHeaderTex;
-                TexturePool.ReleaseTexture2D(pooledHeaderTex);
+                _categoryHeaderSkin.normal.background = TexturePool.GetColorTexture(ConfigurationManager._categoryHeaderColor.Value);
             }
 
             GUIHelper.CreateLabelWithColor(text, style: _categoryHeaderSkin);
+        }
+        
+        public static bool DrawCollapsibleCategoryHeader(string text, bool collapsed)
+        {
+            if (_categoryHeaderSkin == null || _categoryHeaderSkin != null && ConfigurationManager._categoryHeaderColor.Value != _categoryHeaderSkin.normal.background.GetPixel(0, 0))
+            {
+                _categoryHeaderSkin = GUI.skin.box.CreateCopy();
+                _categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
+                _categoryHeaderSkin.wordWrap = true;
+                _categoryHeaderSkin.stretchWidth = true;
+                _categoryHeaderSkin.fontSize = 16;
+                _categoryHeaderSkin.fontStyle = FontStyle.Bold;
+                _categoryHeaderSkin.normal.background = TexturePool.GetColorTexture(ConfigurationManager._categoryHeaderColor.Value);
+            }
+            
+            string label = collapsed ? "► " + text : "▼ " + text;
+            return GUILayout.Button(label, _categoryHeaderSkin, GUILayout.ExpandWidth(true));
         }
 
         private static GUIStyle _pluginHeaderSkin;

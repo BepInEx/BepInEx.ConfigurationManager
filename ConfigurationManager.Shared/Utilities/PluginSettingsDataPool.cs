@@ -18,7 +18,6 @@ namespace ConfigurationManager.Utilities
                 data.Categories = categories;
                 data.Website = website;
                 data.Height = 0;
-                data.Collapsed = false; // or your default logic
             }
             else
             {
@@ -28,7 +27,6 @@ namespace ConfigurationManager.Utilities
                     Categories = categories,
                     Website = website,
                     Height = 0,
-                    Collapsed = false
                 };
             }
 

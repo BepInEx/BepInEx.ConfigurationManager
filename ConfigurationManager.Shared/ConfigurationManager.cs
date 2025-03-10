@@ -83,7 +83,7 @@ namespace ConfigurationManager
         private string _modsWithoutSettings;
 
         private List<SettingEntryBase> _allSettings;
-        private List<PluginSettingsData> _filteredSetings = new List<PluginSettingsData>();
+        private List<PluginSettingsData> _filteredSettings = new List<PluginSettingsData>();
 
         internal Rect SettingWindowRect { get; private set; }
         private bool _windowWasMoved;
@@ -93,7 +93,6 @@ namespace ConfigurationManager
         private Rect _screenRect;
         private Vector2 _pluginWindowScrollPos;
         private Vector2 _settingWindowScrollPos;
-        private int _tipsHeight;
 
         private PropertyInfo _curLockState;
         private PropertyInfo _curVisible;
@@ -193,7 +192,7 @@ namespace ConfigurationManager
             _lightGreenSettingTextColor = Config.Bind("Colors", "Light Green Setting Text Color", GUIHelper.LightGreenSettingText, "Light green color for setting text (#A7EDA7).");
             _saveButtonColor = Config.Bind("Colors", "Save Button Color", GUIHelper.DarkGreenSaveButton, "Dark green color for save button (#1C401B).");
             _leftPanelColor = Config.Bind("Colors", "Left Panel Color", GUIHelper.DarkGreyLeftPanel, "Dark grey background for the left panel (#262626).");
-            _panelBackgroundColor = Config.Bind("Colors", "Panel Background Color", GUIHelper.BlackPanelBackground, "Black background for the entire panel (#0D0D0D).");
+            _panelBackgroundColor = Config.Bind("Colors", "Panel Background Color", GUIHelper.WhitePanelBackground, "Black background for the entire panel (#0D0D0D).");
             _categorySectionColor = Config.Bind("Colors", "Category Section Color", GUIHelper.MediumBlackCategorySection, "Medium black background for category sections (#1F1F1F).");
             _categoryHeaderColor = Config.Bind("Colors", "Category Header Color", GUIHelper.MediumBlackCategoryHeader, "Medium black background for category header (#121212).");
             _lightGreySlidersColor = Config.Bind("Colors", "Light Grey Sliders Color", GUIHelper.LightGreySliders, "Light grey for sliders (#4C4C4C).");
@@ -309,13 +308,13 @@ namespace ConfigurationManager
         private void BuildFilteredSettingList()
         {
             // Release all old objects to the pool
-            for (int index = 0; index < _filteredSetings.Count; ++index)
+            for (int index = 0; index < _filteredSettings.Count; ++index)
             {
-                PluginSettingsData oldPlugin = _filteredSetings[index];
+                PluginSettingsData oldPlugin = _filteredSettings[index];
                 PluginSettingsDataPool.Release(oldPlugin);
             }
 
-            _filteredSetings.Clear();
+            _filteredSettings.Clear();
 
             IEnumerable<SettingEntryBase> results = _allSettings;
 
@@ -339,7 +338,7 @@ namespace ConfigurationManager
 
             const string shortcutsCatName = "Keyboard shortcuts";
 
-            _filteredSetings = results
+            _filteredSettings = results
                 .GroupBy(x => x.PluginInfo)
                 .Select(pluginSettings =>
                 {
@@ -361,7 +360,7 @@ namespace ConfigurationManager
                 .ToList();
 
             // 2) Then reorder so pinned appear on top
-            _filteredSetings = _filteredSetings
+            _filteredSettings = _filteredSettings
                 .OrderByDescending(p => IsPinned(p.Info.GUID)) // pinned = true => sort earlier
                 .ThenBy(p => p.Info.Name) // secondary sort by name if desired
                 .ToList();
@@ -499,7 +498,7 @@ namespace ConfigurationManager
 
         private void SettingsWindow(int id)
         {
-            GUI.DragWindow(new Rect(0.0f, 0.0f, this.SettingWindowRect.width, 20f));
+            GUI.DragWindow(new Rect(0.0f, 0.0f, SettingWindowRect.width, 20f));
             DrawWindowHeader();
 
             // Define columns
@@ -529,10 +528,10 @@ namespace ConfigurationManager
                     _pluginWindowScrollPos = GUILayout.BeginScrollView(_pluginWindowScrollPos);
                     if (_selectedTab == Tab.Plugins)
                     {
-                        var currentHeight = _tipsHeight;
-                        for (int index = 0; index < _filteredSetings.Count; ++index)
+                        var currentHeight = 0;
+                        for (int index = 0; index < _filteredSettings.Count; ++index)
                         {
-                            PluginSettingsData plugin = _filteredSetings[index];
+                            PluginSettingsData plugin = _filteredSettings[index];
                             var visible = plugin.Height == 0 || currentHeight + plugin.Height >= _pluginWindowScrollPos.y && currentHeight <= _pluginWindowScrollPos.y + SettingWindowRect.height;
                             if (visible)
                             {
@@ -615,7 +614,7 @@ namespace ConfigurationManager
                     }
 
                     // 2) Figure out the current item we're "Editing: ..."
-                    PluginSettingsData selectedPlugin = _filteredSetings.FirstOrDefault(p => p.Info.Name == _selectedPluginName);
+                    PluginSettingsData selectedPlugin = _filteredSettings.FirstOrDefault(p => p.Info.Name == _selectedPluginName);
 
                     string fileName;
                     if (selectedPlugin != null && !string.IsNullOrEmpty(_selectedPluginName))
@@ -652,6 +651,14 @@ namespace ConfigurationManager
                                 }
 
                                 BuildFilteredSettingList();
+                            }
+
+                            if (GUILayout.Button("Collapse All Settings", buttonStyle, GUILayout.ExpandWidth(false)))
+                            {
+                                foreach (var category in selectedPlugin.Categories)
+                                {
+                                    category.Collapsed = !category.Collapsed;
+                                }
                             }
                         }
                         GUILayout.EndHorizontal();
@@ -708,24 +715,6 @@ namespace ConfigurationManager
 
             if (!SettingFieldDrawer.DrawCurrentDropdown())
                 DrawTooltip(SettingWindowRect);
-        }
-
-
-        private void DrawTips()
-        {
-            var tip = !_tipsPluginHeaderWasClicked ? "Tip: Click plugin names to expand. Click setting and group names to see their descriptions." :
-                !_tipsWindowWasMoved ? "Tip: You can drag this window to move it. It will stay open while you interact with the game." : null;
-
-            if (tip != null)
-            {
-                GUILayout.BeginHorizontal();
-                {
-                    GUIHelper.BeginColor(_fontColor.Value);
-                    GUILayout.Label(tip);
-                    GUIHelper.EndColor();
-                }
-                GUILayout.EndHorizontal();
-            }
         }
 
         private void DrawOtherFileEditor(string filePath)
@@ -881,18 +870,8 @@ namespace ConfigurationManager
         private void DrawSinglePlugin(PluginSettingsData plugin)
         {
             GUIStyle style = GUI.skin.box.CreateCopy();
-            /*var pooledPluginTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-            pooledPluginTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
-            pooledPluginTex.Apply();
-            var pooledPluginTexNormal = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-            pooledPluginTexNormal.SetPixel(0, 0, ConfigurationManager._categorySectionColor.Value);
-            pooledPluginTexNormal.Apply();
-            style.hover.background = pooledPluginTex;
-            style.normal.background = pooledPluginTexNormal;
-            TexturePool.ReleaseTexture2D(pooledPluginTex);
-            TexturePool.ReleaseTexture2D(pooledPluginTexNormal);*/
-            style.hover.background = TexturePool.GetColorTexture(ConfigurationManager._highlightColor.Value);
-            style.normal.background = TexturePool.GetColorTexture(ConfigurationManager._categorySectionColor.Value);
+            style.hover.background = TexturePool.GetColorTexture(_highlightColor.Value);
+            style.normal.background = TexturePool.GetColorTexture(_categorySectionColor.Value);
             style.fontSize = ImguiUtils.fontSize;
 
 
@@ -900,7 +879,6 @@ namespace ConfigurationManager
 
             var categoryHeader = new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=grey>GUID: {plugin.Info.GUID}</color></size>", null, "GUID: " + plugin.Info.GUID);
 
-            var isSearching = !string.IsNullOrEmpty(SearchString);
 
             {
                 var hasWebsite = plugin.Website != null;
@@ -910,7 +888,6 @@ namespace ConfigurationManager
                     GUILayout.Space(29); // Same as the URL button to keep the plugin name centered
                 }
 
-                //if (SettingFieldDrawer.DrawPluginHeader(categoryHeader) && !isSearching)
                 if (SettingFieldDrawer.DrawPluginHeader(categoryHeader))
                 {
                     _tipsPluginHeaderWasClicked = true;
@@ -919,7 +896,7 @@ namespace ConfigurationManager
 
                 if (hasWebsite)
                 {
-                    if (GUIHelper.CreateButtonWithColor(new GUIContent("URL", null, plugin.Website), GUI.skin.label, _settingDescriptionColor.Value, GUILayout.ExpandWidth(false)))
+                    if (GUIHelper.CreateButtonWithColor(new GUIContent("URL", null, plugin.Website), ImguiUtils.buttonStyle, _settingDescriptionColor.Value, GUILayout.ExpandWidth(false)))
                         Utils.OpenWebsite(plugin.Website);
                     GUILayout.EndHorizontal();
                 }
@@ -1000,14 +977,20 @@ namespace ConfigurationManager
                 {
                     if (!string.IsNullOrEmpty(category.Name))
                     {
-                        SettingFieldDrawer.DrawCategoryHeader(category.Name);
+                        if (SettingFieldDrawer.DrawCollapsibleCategoryHeader(category.Name, category.Collapsed))
+                        {
+                            category.Collapsed = !category.Collapsed;
+                        }
+                        //SettingFieldDrawer.DrawCategoryHeader(category.Name);
                     }
 
-                    // Now iterate each setting
-                    foreach (var setting in category.Settings)
+                    if (!category.Collapsed)
                     {
-                        DrawSingleSetting(setting);
-                        GUILayout.FlexibleSpace();
+                        foreach (var setting in category.Settings)
+                        {
+                            DrawSingleSetting(setting);
+                            GUILayout.FlexibleSpace();
+                        }
                     }
                 }
                 GUILayout.EndVertical();
@@ -1038,10 +1021,10 @@ namespace ConfigurationManager
 
             var style = GUI.skin.box.CreateCopy();
             var pooledOtherFileTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-            pooledOtherFileTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
+            pooledOtherFileTex.SetPixel(0, 0, _highlightColor.Value);
             pooledOtherFileTex.Apply();
             var pooledOtherFileTexNormal = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-            pooledOtherFileTexNormal.SetPixel(0, 0, ConfigurationManager._categorySectionColor.Value);
+            pooledOtherFileTexNormal.SetPixel(0, 0, _categorySectionColor.Value);
             pooledOtherFileTexNormal.Apply();
             style.hover.background = pooledOtherFileTex;
             style.normal.background = pooledOtherFileTexNormal;
@@ -1065,10 +1048,12 @@ namespace ConfigurationManager
 
         private void DrawSingleSetting(SettingEntryBase setting)
         {
-            var ligherBox = GUI.skin.box.CreateCopy();
-            var isDefaultValue = setting.DefaultValue != null && (setting.Get() != null && setting.Get().Equals(setting.DefaultValue));
-            ligherBox.normal.background = ImguiUtils.MakeTexture(1, 1, isDefaultValue ? _categorySectionColor.Value : new Color(_categorySectionColor.Value.r / 2, _categorySectionColor.Value.g / 2, _categorySectionColor.Value.b / 2, _categorySectionColor.Value.a));
-            GUILayout.BeginHorizontal(ligherBox, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(RightColumnWidth));
+            var lighterBox = GUI.skin.box.CreateCopy();
+            bool isDefaultValue = setting.DefaultValue != null && (setting.Get() != null && setting.Get().Equals(setting.DefaultValue));
+            Color bgColor = isDefaultValue ? _categorySectionColor.Value : new Color(_categorySectionColor.Value.r / 2f, _categorySectionColor.Value.g / 2f, _categorySectionColor.Value.b / 2f, _categorySectionColor.Value.a);
+            lighterBox.normal.background = TexturePool.GetColorTexture(bgColor);
+
+            GUILayout.BeginHorizontal(lighterBox, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(RightColumnWidth));
             {
                 try
                 {
@@ -1120,26 +1105,27 @@ namespace ConfigurationManager
                 {
                     // TODO: You changed the max width and expand width parts here.
                     GUILayout.BeginHorizontal();
-                    // Render the name
-                    GUILayout.Label(setting.DispName.TrimStart('!'), nameStyle, GUILayout.ExpandWidth(false));
-
-                    // Render the type of the setting
-                    GUILayout.Label($" ({setting.SettingType.Name})", settingTypeStyle, GUILayout.ExpandWidth(false));
-
-                    // If the setting type is a range, render the min and max values like [min - max]
-                    if (setting.AcceptableValueRange.Key != null)
                     {
-                        var min = setting.AcceptableValueRange.Key;
-                        var max = setting.AcceptableValueRange.Value;
-                        GUILayout.Label($" [{min} - {max}]", settingRangeStyle, GUILayout.ExpandWidth(false));
-                    }
+                        // Render the name
+                        GUILayout.Label(setting.DispName.TrimStart('!'), nameStyle, GUILayout.ExpandWidth(false));
 
-                    // Render the default value
-                    if (setting.DefaultValue != null)
-                    {
-                        GUILayout.Label($" Default: {setting.DefaultValue}", defaultValueStyle, GUILayout.ExpandWidth(false));
-                    }
+                        // Render the type of the setting
+                        GUILayout.Label($" ({setting.SettingType.Name})", settingTypeStyle, GUILayout.ExpandWidth(false));
 
+                        // If the setting type is a range, render the min and max values like [min - max]
+                        if (setting.AcceptableValueRange.Key != null)
+                        {
+                            var min = setting.AcceptableValueRange.Key;
+                            var max = setting.AcceptableValueRange.Value;
+                            GUILayout.Label($" [{min} - {max}]", settingRangeStyle, GUILayout.ExpandWidth(false));
+                        }
+
+                        // Render the default value
+                        if (setting.DefaultValue != null)
+                        {
+                            GUILayout.Label($" Default: {setting.DefaultValue}", defaultValueStyle, GUILayout.ExpandWidth(false));
+                        }
+                    }
                     GUILayout.EndHorizontal();
                     // Render the description below the name
                     if (!string.IsNullOrEmpty(setting.Description))
@@ -1354,7 +1340,7 @@ namespace ConfigurationManager
             TexturePool.ClearAll();
             TexturePool.ClearCache();
             PluginSettingsDataPool.ClearAll();
-            System.GC.Collect(); // Force GC
+            GC.Collect(); // Force GC
         }
 
 
@@ -1381,23 +1367,12 @@ namespace ConfigurationManager
             public int Height;
             public string Website;
 
-            private bool _collapsed;
-
-            public bool Collapsed
-            {
-                get => _collapsed;
-                set
-                {
-                    _collapsed = value;
-                    Height = 0;
-                }
-            }
-
             public sealed class PluginSettingsGroupData
             {
                 public string Name;
                 public List<SettingEntryBase> Settings;
                 public float CalculatedHeight;
+                public bool Collapsed { get; set; } = true;
             }
         }
     }

@@ -33,6 +33,9 @@ namespace ConfigurationManager.Utilities
 // Black background for entire panel (#0D0D0D)
         public static readonly Color BlackPanelBackground = new Color(0.05f, 0.05f, 0.05f, 1f);
 
+// White background for entire panel (#0D0D0D)
+        public static readonly Color WhitePanelBackground = new Color(1f, 1f, 1f, 1f);
+
 // Medium black background for category section (#1F1F1F)
         public static readonly Color MediumBlackCategorySection = new Color(0.122f, 0.122f, 0.122f, 1f);
 
@@ -157,9 +160,9 @@ namespace ConfigurationManager.Utilities
         /// <returns></returns>
         public static bool CreateButtonWithColor(GUIContent content, GUIStyle style, Color color = default, params GUILayoutOption[] options)
         {
-           // BeginColor(color);
+            // BeginColor(color);
             bool value = style == null ? GUILayout.Button(content, options) : GUILayout.Button(content, style, options);
-           // EndColor();
+            // EndColor();
             return value;
         }
 
