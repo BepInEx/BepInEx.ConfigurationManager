@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UI;
 
 #if IL2CPP
 using BepInEx.Unity.IL2CPP;
@@ -27,7 +28,6 @@ namespace ConfigurationManager
     /// https://github.com/ManlyMarco/BepInEx.ConfigurationManager
     /// </summary>
     [BepInPlugin(GUID, "Configuration Manager", Version)]
-    [Browsable(false)]
     public class ConfigurationManager : BaseUnityPlugin
     {
         /// <summary>
@@ -51,6 +51,10 @@ namespace ConfigurationManager
         private string _searchString = string.Empty;
         private string _selectedPluginName = null;
 
+        private const string FileEditorName = "fileEditor";
+        private string _fileEditorString = string.Empty;
+        private bool _focusFileEditor;
+
         private enum Tab
         {
             Plugins,
@@ -59,10 +63,9 @@ namespace ConfigurationManager
 
         private Tab _selectedTab = Tab.Plugins;
 
-// Store recognized files
-        private List<string> _recognizedFiles = new List<string>();
         private string _selectedOtherFile;
 
+        private static HashSet<string> _pinnedPlugins = new HashSet<string>();
 
         /// <summary>
         /// Event fired every time the manager window is shown or hidden.
@@ -85,11 +88,6 @@ namespace ConfigurationManager
         internal Rect SettingWindowRect { get; private set; }
         private bool _windowWasMoved;
 
-        /// <summary>
-        /// Window is visible and is blocking the whole screen. This is true until the user moves the window, which lets it run while user interacts with the game.
-        /// </summary>
-        public bool IsWindowFullscreen => DisplayingWindow && !_windowWasMoved;
-
         private bool _tipsPluginHeaderWasClicked, _tipsWindowWasMoved;
 
         private Rect _screenRect;
@@ -105,13 +103,74 @@ namespace ConfigurationManager
         internal int LeftColumnWidth { get; private set; }
         internal int RightColumnWidth { get; private set; }
 
+        private GameObject _overlayCanvasObj;
+        private Canvas _overlayCanvas;
+        private CanvasScaler _overlayCanvasScaler;
+        private GraphicRaycaster _overlayRaycaster;
+        private Image _overlayBlocker;
+        private readonly Dictionary<string, string> _otherFileContents = new Dictionary<string, string>();
+
+
         private readonly ConfigEntry<bool> _showAdvanced;
         private readonly ConfigEntry<bool> _showKeybinds;
         private readonly ConfigEntry<bool> _showSettings;
+        private readonly ConfigEntry<bool> _showDefault;
         private readonly ConfigEntry<KeyboardShortcut> _keybind;
         private readonly ConfigEntry<bool> _hideSingleSection;
-        private readonly ConfigEntry<bool> _pluginConfigCollapsedDefault;
+        private readonly ConfigEntry<string> _pinnedPluginsConfig;
         private bool _showDebug;
+
+
+        /* Custom configurations*/
+        public static ConfigEntry<Vector2> _windowSize;
+        public static ConfigEntry<int> _textSize;
+        public static ConfigEntry<Color> _fontColor;
+        public static ConfigEntry<Color> _widgetBackgroundColor;
+        public static ConfigEntry<Color> _settingDescriptionColor;
+
+
+        // Red close button (#BF3030)
+        public static ConfigEntry<Color> _closeButtonColor;
+
+        // Darker red cancel button (#541B1B)
+        public static ConfigEntry<Color> _cancelButtonColor;
+
+        // Light green for setting text (#A7EDA7)
+        public static ConfigEntry<Color> _lightGreenSettingTextColor;
+
+        // Dark green for save button (#1C401B)
+        public static ConfigEntry<Color> _saveButtonColor;
+
+        // Dark grey for background of left panel (#262626)
+        public static ConfigEntry<Color> _leftPanelColor;
+
+        // Black background for entire panel (#0D0D0D)
+        public static ConfigEntry<Color> _panelBackgroundColor;
+
+        // Medium black background for category section (#1F1F1F)
+        public static ConfigEntry<Color> _categorySectionColor;
+
+        // Medium black background for category header (#121212)
+        public static ConfigEntry<Color> _categoryHeaderColor;
+
+        // Light grey for sliders (#4C4C4C)
+        public static ConfigEntry<Color> _lightGreySlidersColor;
+
+        // Medium grey for sliders (#404040)
+        public static ConfigEntry<Color> _mediumGreySlidersColor;
+
+        // Green for class/type name (#148B32)
+        public static ConfigEntry<Color> _classTypeColor;
+
+        // Yellow/tan for highlight (#989076)
+        public static ConfigEntry<Color> _highlightColor;
+
+        // Default Value label color ()
+        public static ConfigEntry<Color> _defaultValueColor;
+
+        // Range Value left color ()
+        public static ConfigEntry<Color> _rangeValueColor;
+
 
         /// <inheritdoc />
         public ConfigurationManager()
@@ -123,12 +182,36 @@ namespace ConfigurationManager
 #endif
             _fieldDrawer = new SettingFieldDrawer(this);
 
+            /* Custom configurations*/
+            _windowSize = Config.Bind("General", "Window Size", new Vector2(0.55f, 0.95f), "Window size. The x is the width and the y is the height. This is a percent of screen to take up. 0.5 in the x is 50% of the screen width.");
+            _textSize = Config.Bind("General", "Font Size", 14, "Font Size");
+            _fontColor = Config.Bind("Colors", "Font Color", new Color(1f, 1f, 1f, 1), "Font color");
+            _widgetBackgroundColor = Config.Bind("Colors", "Widget Color", GUIHelper.DarkGreenSaveButton, "Widget color");
+            _settingDescriptionColor = Config.Bind("Colors", "Description Color", GUIHelper.SettingDescription, "Description Color");
+            _closeButtonColor = Config.Bind("Colors", "Close Button Color", GUIHelper.RedCloseButton, "Color for the close button (#BF3030).");
+            _cancelButtonColor = Config.Bind("Colors", "Cancel Button Color", GUIHelper.DarkRedCancelButton, "Color for the cancel button (#541B1B).");
+            _lightGreenSettingTextColor = Config.Bind("Colors", "Light Green Setting Text Color", GUIHelper.LightGreenSettingText, "Light green color for setting text (#A7EDA7).");
+            _saveButtonColor = Config.Bind("Colors", "Save Button Color", GUIHelper.DarkGreenSaveButton, "Dark green color for save button (#1C401B).");
+            _leftPanelColor = Config.Bind("Colors", "Left Panel Color", GUIHelper.DarkGreyLeftPanel, "Dark grey background for the left panel (#262626).");
+            _panelBackgroundColor = Config.Bind("Colors", "Panel Background Color", GUIHelper.BlackPanelBackground, "Black background for the entire panel (#0D0D0D).");
+            _categorySectionColor = Config.Bind("Colors", "Category Section Color", GUIHelper.MediumBlackCategorySection, "Medium black background for category sections (#1F1F1F).");
+            _categoryHeaderColor = Config.Bind("Colors", "Category Header Color", GUIHelper.MediumBlackCategoryHeader, "Medium black background for category header (#121212).");
+            _lightGreySlidersColor = Config.Bind("Colors", "Light Grey Sliders Color", GUIHelper.LightGreySliders, "Light grey for sliders (#4C4C4C).");
+            _mediumGreySlidersColor = Config.Bind("Colors", "Medium Grey Sliders Color", GUIHelper.MediumGreySliders, "Medium grey for sliders (#404040).");
+            _classTypeColor = Config.Bind("Colors", "Class/Type Name Color", GUIHelper.GreenClassTypeName, "Green for class/type name (#148B32).");
+            _defaultValueColor = Config.Bind("Colors", "Default Value Label Color", GUIHelper.DefaultValueColor, "Default Value label color (#FFF4AC).");
+            _rangeValueColor = Config.Bind("Colors", "Range Value Label Color", GUIHelper.RangeValueColor, "Range Value label color.");
+            _highlightColor = Config.Bind("Colors", "Highlight Color", GUIHelper.YellowTanHighlight, "Yellow/tan highlight (#989076).");
+
+
             _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
             _showKeybinds = Config.Bind("Filtering", "Show keybinds", true);
             _showSettings = Config.Bind("Filtering", "Show settings", true);
+            _showDefault = Config.Bind("Filtering", "Show default", true);
             _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1), new ConfigDescription("The shortcut used to toggle the config manager window on and off.\nThe key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
             _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
-            _pluginConfigCollapsedDefault = Config.Bind("General", "Plugin collapsed default", true, new ConfigDescription("If set to true plugins will be collapsed when opening the configuration manager window"));
+
+            _pinnedPluginsConfig = Config.Bind("Pins", "Pinned plugins", "", new ConfigDescription("Comma-separated list of plugin GUIDs to pin to the top of the list. Use the GUID of the plugin to pin it, or use the configuration manager UI to pin it."));
         }
 
 #if IL2CPP
@@ -138,6 +221,7 @@ namespace ConfigurationManager
             ConfigurationManagerBehaviour.Plugin = this;
             AddComponent<ConfigurationManagerBehaviour>();
         }
+
         private class ConfigurationManagerBehaviour : MonoBehaviour
         {
             internal static ConfigurationManager Plugin;
@@ -145,6 +229,7 @@ namespace ConfigurationManager
             private void Update() => Plugin.Update();
             private void LateUpdate() => Plugin.LateUpdate();
             private void OnGUI() => Plugin.OnGUI();
+            private void OnDestroy() => Plugin.OnDestroy();
         }
 #endif
 
@@ -161,6 +246,9 @@ namespace ConfigurationManager
 
                 SettingFieldDrawer.ClearCache();
 
+
+                ImguiUtils.CreateBackgrounds();
+
                 if (_displayingWindow)
                 {
                     CalculateWindowRect();
@@ -168,6 +256,8 @@ namespace ConfigurationManager
                     BuildSettingList();
 
                     _focusSearchBox = true;
+
+                    ShowOverlayCanvas();
 
                     // Do through reflection for unity 4 compat
                     if (_curLockState != null)
@@ -178,6 +268,8 @@ namespace ConfigurationManager
                 }
                 else
                 {
+                    HideOverlayCanvas();
+
                     if (!_previousCursorVisible || _previousCursorLockState != 0) // 0 = CursorLockMode.None
                         SetUnlockCursor(_previousCursorLockState, _previousCursorVisible);
                 }
@@ -216,6 +308,15 @@ namespace ConfigurationManager
 
         private void BuildFilteredSettingList()
         {
+            // Release all old objects to the pool
+            for (int index = 0; index < _filteredSetings.Count; ++index)
+            {
+                PluginSettingsData oldPlugin = _filteredSetings[index];
+                PluginSettingsDataPool.Release(oldPlugin);
+            }
+
+            _filteredSetings.Clear();
+
             IEnumerable<SettingEntryBase> results = _allSettings;
 
             var searchStrings = SearchString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -232,20 +333,11 @@ namespace ConfigurationManager
                     results = results.Where(x => !IsKeyboardShortcut(x));
                 if (!_showSettings.Value)
                     results = results.Where(x => x.IsAdvanced == true || IsKeyboardShortcut(x));
+                if (!_showDefault.Value)
+                    results = results.Where(x => x.DefaultValue != null && (x.Get() != null && !x.Get().Equals(x.DefaultValue)));
             }
 
             const string shortcutsCatName = "Keyboard shortcuts";
-
-            var settingsAreCollapsed = _pluginConfigCollapsedDefault.Value;
-
-            var nonDefaultCollpasingStateByPluginName = new HashSet<string>();
-            foreach (var pluginSetting in _filteredSetings)
-            {
-                if (pluginSetting.Collapsed != settingsAreCollapsed)
-                {
-                    nonDefaultCollpasingStateByPluginName.Add(pluginSetting.Info.Name);
-                }
-            }
 
             _filteredSetings = results
                 .GroupBy(x => x.PluginInfo)
@@ -259,15 +351,17 @@ namespace ConfigurationManager
 
                     var website = Utils.GetWebsite(pluginSettings.First().PluginInstance);
 
-                    return new PluginSettingsData
-                    {
-                        Info = pluginSettings.Key,
-                        Categories = categories.ToList(),
-                        Collapsed = nonDefaultCollpasingStateByPluginName.Contains(pluginSettings.Key.Name) ? !settingsAreCollapsed : settingsAreCollapsed,
-                        Website = website
-                    };
+                    // Instead of `new PluginSettingsData`
+                    var data = PluginSettingsDataPool.Get(pluginSettings.Key, categories.ToList(), website);
+                    return data;
                 })
                 .OrderBy(x => x.Info.Name)
+                .ToList();
+
+            // 2) Then reorder so pinned appear on top
+            _filteredSetings = _filteredSetings
+                .OrderByDescending(p => IsPinned(p.Info.GUID)) // pinned = true => sort earlier
+                .ThenBy(p => p.Info.Name) // secondary sort by name if desired
                 .ToList();
         }
 
@@ -291,8 +385,8 @@ namespace ConfigurationManager
 
         private void CalculateWindowRect()
         {
-            float widthFactor = 0.50f; // 50% of the screen width
-            float heightFactor = 0.95f; // 95% of the screen height
+            float widthFactor = _windowSize.Value.x; // 55% of the screen width by default
+            float heightFactor = _windowSize.Value.y; // 95% of the screen height by default
 
             // Ensure the window size is within reasonable limits
             var width = Mathf.Clamp(Screen.width * widthFactor, 400, Screen.width * widthFactor);
@@ -314,8 +408,28 @@ namespace ConfigurationManager
 
         private void OnGUI()
         {
-            if (DisplayingWindow)
+            if (!DisplayingWindow) return;
+            if (Event.current.type == EventType.KeyUp && Event.current.keyCode == _keybind.Value.MainKey)
             {
+                DisplayingWindow = false;
+            }
+            else
+            {
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    Vector2 mousePos = Event.current.mousePosition;
+                    if (!SettingWindowRect.Contains(mousePos))
+                    {
+                        DisplayingWindow = false;
+                    }
+                }
+
+
+                if (_textSize.Value > 9 && _textSize.Value < 100)
+                    ImguiUtils.fontSize = Mathf.Clamp(_textSize.Value, 10, 30);
+
+                ImguiUtils.CreateStyles();
+
                 SetUnlockCursor(0, true);
 
 #if IL2CPP
@@ -326,20 +440,6 @@ namespace ConfigurationManager
                 mousePosition.y = Screen.height - mousePosition.y;
 
 
-                if (Event.current.type == EventType.mouseDown && SettingWindowRect.Contains(Event.current.mousePosition))
-                {
-                    Debug.Log("MouseDown inside the window");
-                    Event.current.Use(); // Prevent further propagation
-                }
-
-                if (Input.GetMouseButtonDown(0) && SettingWindowRect.Contains(Input.mousePosition))
-                {
-                    Debug.Log($"Mouse clicked at: {Input.mousePosition}");
-                    Debug.Log("Current: " + Event.current);
-                    Debug.Log("Current Type: " + Event.current.type);
-                    Event.current.Use(); // Prevent further propagation
-                }
-
                 // If the window hasn't been moved by the user yet, block the whole screen and use a solid background to make the window easier to see
                 if (!_windowWasMoved)
                 {
@@ -349,7 +449,7 @@ namespace ConfigurationManager
                     ImguiUtils.DrawWindowBackground(SettingWindowRect);
                 }
 
-                var newRect = GUILayout.Window(WindowId, SettingWindowRect, (GUI.WindowFunction)SettingsWindow, $"Configuration Manager {Version}");
+                var newRect = GUIHelper.CreateWindowWithColor(WindowId, SettingWindowRect, (GUI.WindowFunction)SettingsWindow, $"Configuration Manager {Version}", _panelBackgroundColor.Value);
                 GUI.FocusWindow(WindowId);
 
                 if (newRect != SettingWindowRect)
@@ -395,107 +495,27 @@ namespace ConfigurationManager
             }
         }
 
-        /*private void SettingsWindow(int id)
-        {
-            DrawWindowHeader();
-
-            _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, false, true);
-
-            var scrollPosition = _settingWindowScrollPos.y;
-            var scrollHeight = SettingWindowRect.height;
-
-            GUILayout.BeginVertical();
-            {
-                if (string.IsNullOrEmpty(SearchString))
-                {
-                    DrawTips();
-
-                    if (_tipsHeight == 0 && Event.current.type == EventType.Repaint)
-                        _tipsHeight = (int)GUILayoutUtility.GetLastRect().height;
-                }
-
-                var currentHeight = _tipsHeight;
-
-                foreach (var plugin in _filteredSetings)
-                {
-                    var visible = plugin.Height == 0 || currentHeight + plugin.Height >= scrollPosition && currentHeight <= scrollPosition + scrollHeight;
-
-                    if (visible)
-                    {
-                        try
-                        {
-                            DrawSinglePlugin(plugin);
-                        }
-#if IL2CPP
-                        catch (Il2CppException)
-#else
-                        catch (ArgumentException)
-#endif
-                        {
-                            // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
-                        }
-
-                        if (plugin.Height == 0 && Event.current.type == EventType.Repaint)
-                            plugin.Height = (int)GUILayoutUtility.GetLastRect().height;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            GUILayout.Space(plugin.Height);
-                        }
-#if IL2CPP
-                        catch (Il2CppException)
-#else
-                        catch (ArgumentException)
-#endif
-                        {
-                            // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
-                        }
-                    }
-
-                    currentHeight += plugin.Height;
-                }
-
-                if (_showDebug)
-                {
-                    GUILayout.Space(10);
-                    GUILayout.Label("Plugins with no options available: " + _modsWithoutSettings);
-                }
-                else
-                {
-                    // Always leave some space in case there's a dropdown box at the very bottom of the list
-                    GUILayout.Space(70);
-                }
-            }
-            GUILayout.EndVertical();
-            GUILayout.EndScrollView();
-
-            if (!SettingFieldDrawer.DrawCurrentDropdown())
-                DrawTooltip(SettingWindowRect);
-
-            GUI.DragWindow();
-        }*/
         private void SettingsWindow(int id)
         {
+            GUI.DragWindow(new Rect(0.0f, 0.0f, this.SettingWindowRect.width, 20f));
             DrawWindowHeader();
 
             // Define columns
-            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(true), GUILayout.MaxWidth(LeftColumnWidth + RightColumnWidth));
+            GUILayout.BeginHorizontal(GUILayout.MaxWidth(LeftColumnWidth + RightColumnWidth));
             {
                 // Left Column: Plugin List
-                GUILayout.BeginVertical(GUILayout.MaxWidth(LeftColumnWidth), GUILayout.ExpandWidth(true));
+                GUILayout.BeginVertical(GUILayout.MaxWidth(LeftColumnWidth), GUILayout.ExpandWidth(false));
                 {
                     GUILayout.BeginHorizontal(GUI.skin.box);
                     {
-                        if (GUILayout.Button("Plugins", GUILayout.ExpandWidth(true)))
+                        if (GUIHelper.CreateButtonWithColor("Plugins", default, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(true)))
                         {
                             _selectedTab = Tab.Plugins;
                             _selectedPluginName = null;
                             _selectedOtherFile = null;
                         }
 
-                        if (GUILayout.Button("Other Config Files", GUILayout.ExpandWidth(true)))
+                        if (GUIHelper.CreateButtonWithColor("Other Config Files", default, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(true)))
                         {
                             _selectedTab = Tab.OtherFiles;
                             _selectedPluginName = null;
@@ -507,9 +527,47 @@ namespace ConfigurationManager
                     _pluginWindowScrollPos = GUILayout.BeginScrollView(_pluginWindowScrollPos);
                     if (_selectedTab == Tab.Plugins)
                     {
-                        foreach (var plugin in _filteredSetings)
+                        var currentHeight = _tipsHeight;
+                        for (int index = 0; index < _filteredSetings.Count; ++index)
                         {
-                            DrawSinglePlugin(plugin);
+                            PluginSettingsData plugin = _filteredSetings[index];
+                            var visible = plugin.Height == 0 || currentHeight + plugin.Height >= _pluginWindowScrollPos.y && currentHeight <= _pluginWindowScrollPos.y + SettingWindowRect.height;
+                            if (visible)
+                            {
+                                try
+                                {
+                                    DrawSinglePlugin(plugin);
+                                }
+#if IL2CPP
+                                catch (Il2CppException)
+#else
+                                catch (ArgumentException)
+#endif
+                                {
+                                    // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
+                                }
+
+                                if (plugin.Height == 0 && Event.current.type == EventType.Repaint)
+                                    plugin.Height = (int)GUILayoutUtility.GetLastRect().height;
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    if (plugin.Height > 0)
+                                        GUILayout.Space(plugin.Height);
+                                }
+#if IL2CPP
+                                catch (Il2CppException)
+#else
+                                catch (ArgumentException)
+#endif
+                                {
+                                    // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
+                                }
+                            }
+
+                            currentHeight += plugin.Height + 1;
                         }
                     }
                     else if (_selectedTab == Tab.OtherFiles)
@@ -523,7 +581,9 @@ namespace ConfigurationManager
                     if (_showDebug)
                     {
                         GUILayout.Space(10);
+                        GUIHelper.BeginColor(_fontColor.Value);
                         GUILayout.Label("Plugins with no options available: " + _modsWithoutSettings);
+                        GUIHelper.EndColor();
                     }
                     else
                     {
@@ -538,63 +598,107 @@ namespace ConfigurationManager
 
                 // Add a vertical separator between columns
                 GUILayout.Box(GUIContent.none, GUILayout.Width(1), GUILayout.ExpandHeight(true));
-
+                Rect clipRect = GUILayoutUtility.GetRect(RightColumnWidth, SettingWindowRect.height);
 
                 // Right Column: Plugin Settings
-                GUILayout.BeginVertical(GUILayout.MaxWidth(RightColumnWidth), GUILayout.ExpandWidth(false));
+                GUILayout.BeginVertical(GUILayout.MaxWidth(RightColumnWidth), GUILayout.ExpandWidth(true));
                 {
-                    _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, GUILayout.ExpandWidth(false));
-
-                    if (_selectedTab == Tab.Plugins)
+                    // 1) Show instructions if nothing is selected
+                    if (_selectedTab == Tab.Plugins && string.IsNullOrEmpty(_selectedPluginName))
                     {
-                        if (string.IsNullOrEmpty(_selectedPluginName))
+                        GUIHelper.CreateLabelWithColor("Select a plugin from the left column to view settings.", _fontColor.Value, ImguiUtils.labelStyle);
+                    }
+                    else if (_selectedTab == Tab.OtherFiles && string.IsNullOrEmpty(_selectedOtherFile))
+                    {
+                        GUIHelper.CreateLabelWithColor("Select a file from the left column to edit.", _fontColor.Value, ImguiUtils.labelStyle);
+                    }
+
+                    // 2) Figure out the current item we're "Editing: ..."
+                    PluginSettingsData selectedPlugin = _filteredSetings.FirstOrDefault(p => p.Info.Name == _selectedPluginName);
+
+                    string fileName;
+                    if (selectedPlugin != null && !string.IsNullOrEmpty(_selectedPluginName))
+                    {
+                        fileName = selectedPlugin.Info.Name;
+                    }
+                    else if (selectedPlugin == null && !string.IsNullOrEmpty(_selectedOtherFile))
+                    {
+                        fileName = Path.GetFileName(_selectedOtherFile);
+                    }
+                    else
+                    {
+                        fileName = "Select a plugin or file to edit.";
+                    }
+
+                    GUIHelper.CreateLabelWithColor($"Editing: {fileName}", _fontColor.Value, ImguiUtils.labelStyle, GUILayout.ExpandWidth(false));
+
+                    // 3) If on Plugins tab, show 'Reset All Settings' button
+                    if (_selectedTab == Tab.Plugins && selectedPlugin != null)
+                    {
+                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
                         {
-                            GUILayout.Label("Select a plugin from the left column to view settings.");
-                        }
-                        else
-                        {
-                            var selectedPlugin = _filteredSetings.FirstOrDefault(p => p.Info.Name == _selectedPluginName);
-                            if (selectedPlugin != null)
+                            var buttonStyle = new GUIStyle(GUI.skin.button);
+                            string resetLabel = $"Reset All Settings For {selectedPlugin.Info.Name}";
+
+                            if (GUILayout.Button(resetLabel, buttonStyle, GUILayout.ExpandWidth(false)))
                             {
-                                GUILayout.Label($"Editing: {selectedPlugin.Info.Name}", GUILayout.ExpandWidth(false));
-                                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
-
-                                var buttonStyle = new GUIStyle(GUI.skin.button);
-
-                                if (GUILayout.Button($"Reset All Settings For {selectedPlugin.Info.Name}", buttonStyle, GUILayout.ExpandWidth(false)))
+                                foreach (var category in selectedPlugin.Categories)
                                 {
-                                    foreach (var category in selectedPlugin.Categories)
+                                    foreach (var setting in category.Settings)
                                     {
-                                        foreach (var setting in category.Settings)
-                                        {
-                                            setting.Set(setting.DefaultValue);
-                                        }
+                                        setting.Set(setting.DefaultValue);
                                     }
-
-                                    BuildFilteredSettingList();
                                 }
 
-                                GUILayout.EndHorizontal();
-                                DrawPluginSettings(selectedPlugin);
-                            }
-                            else
-                            {
-                                GUILayout.Label("Plugin not found.", GUILayout.MaxWidth(RightColumnWidth));
+                                BuildFilteredSettingList();
                             }
                         }
+                        GUILayout.EndHorizontal();
                     }
-                    else if (_selectedTab == Tab.OtherFiles)
+
+                    // 4) If on OtherFiles tab with a valid file, show Save/Open/Delete
+                    if (_selectedTab == Tab.OtherFiles && !string.IsNullOrEmpty(_selectedOtherFile))
                     {
-                        if (string.IsNullOrEmpty(_selectedOtherFile))
+                        GUILayout.BeginHorizontal();
                         {
-                            GUILayout.Label("Select a file from the left column to edit.");
+                            if (GUIHelper.CreateButtonWithColor("Save", _saveButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
+                            {
+                                File.WriteAllText(_selectedOtherFile, _otherFileContents[_selectedOtherFile]);
+                                Logger.LogInfo($"File saved: {_selectedOtherFile}");
+                            }
+
+                            if (GUIHelper.CreateButtonWithColor("Open File Location", _saveButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
+                            {
+                                Utils.OpenFileLocation(_selectedOtherFile);
+                            }
+
+                            GUILayout.FlexibleSpace();
+
+                            if (GUIHelper.CreateButtonWithColor("Delete File", _closeButtonColor.Value, ImguiUtils.redbuttonStyle, GUILayout.ExpandWidth(false)))
+                            {
+                                File.Delete(_selectedOtherFile);
+                                _otherFileContents.Remove(_selectedOtherFile);
+                                Logger.LogInfo($"File deleted: {_selectedOtherFile}");
+                                _selectedOtherFile = null;
+                            }
                         }
-                        else
+                        GUILayout.EndHorizontal();
+                    }
+
+                    // 5) Put everything else in a scroll area
+                    _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, false, true, GUILayout.Width(RightColumnWidth));
+                    {
+                        // Display plugin settings if on the Plugins tab and one is selected
+                        if (_selectedTab == Tab.Plugins && selectedPlugin != null && !string.IsNullOrEmpty(_selectedPluginName))
+                        {
+                            DrawPluginSettings(selectedPlugin);
+                        }
+                        // Display file editor if on OtherFiles tab
+                        else if (_selectedTab == Tab.OtherFiles && !string.IsNullOrEmpty(_selectedOtherFile))
                         {
                             DrawOtherFileEditor(_selectedOtherFile);
                         }
                     }
-
                     GUILayout.EndScrollView();
                 }
                 GUILayout.EndVertical();
@@ -603,9 +707,8 @@ namespace ConfigurationManager
 
             if (!SettingFieldDrawer.DrawCurrentDropdown())
                 DrawTooltip(SettingWindowRect);
-
-            GUI.DragWindow();
         }
+
 
         private void DrawTips()
         {
@@ -616,7 +719,9 @@ namespace ConfigurationManager
             {
                 GUILayout.BeginHorizontal();
                 {
+                    GUIHelper.BeginColor(_fontColor.Value);
                     GUILayout.Label(tip);
+                    GUIHelper.EndColor();
                 }
                 GUILayout.EndHorizontal();
             }
@@ -626,40 +731,30 @@ namespace ConfigurationManager
         {
             try
             {
-                GUILayout.Label($"Editing: {Path.GetFileName(filePath)}", GUILayout.ExpandWidth(false));
-
-                string content = File.ReadAllText(filePath);
-                string updatedContent = content;
-
-                // Place the Save button above the text editor
-                GUILayout.BeginHorizontal();
+                // Load the file content if not cached
+                if (!_otherFileContents.TryGetValue(filePath, out var fileContent))
                 {
-                    if (GUILayout.Button("Save", GUILayout.ExpandWidth(false)))
-                    {
-                        File.WriteAllText(filePath, updatedContent);
-                        Logger.LogInfo($"File saved: {filePath}");
-                    }
-
-                    if (GUILayout.Button("Delete File", GUILayout.ExpandWidth(false)))
-                    {
-                        File.Delete(filePath);
-                        Logger.LogInfo($"File deleted: {filePath}");
-                    }
-
-                    GUILayout.Space(10);
-                    if (GUILayout.Button("Open File Location", GUILayout.ExpandWidth(false)))
-                    {
-                        Utils.OpenFileLocation(filePath);
-                    }
+                    fileContent = File.ReadAllText(filePath);
+                    _otherFileContents[filePath] = fileContent; // Cache the content
                 }
-                GUILayout.EndHorizontal();
 
-                // Display content in a scrollable text area
-                updatedContent = GUILayout.TextArea(content, GUILayout.ExpandHeight(true));
+                GUI.SetNextControlName(FileEditorName);
+                // Display the file content in an editable text area
+                var updatedContent = GUILayout.TextArea(fileContent, GUILayout.ExpandHeight(true));
+                if (updatedContent != _otherFileContents[filePath])
+                {
+                    _otherFileContents[filePath] = updatedContent; // Update the cached content
+                }
+
+                if (GUI.GetNameOfFocusedControl() == FileEditorName)
+                {
+                    GUI.FocusWindow(WindowId);
+                    GUI.FocusControl(FileEditorName);
+                }
             }
             catch (Exception ex)
             {
-                GUILayout.Label($"Failed to load or edit file: {ex.Message}", GUILayout.ExpandWidth(false));
+                GUIHelper.CreateLabelWithColor($"Failed to load or edit file: {ex.Message}", _fontColor.Value, ImguiUtils.labelStyle, GUILayout.ExpandWidth(false));
             }
         }
 
@@ -670,43 +765,46 @@ namespace ConfigurationManager
             {
                 GUI.enabled = SearchString == string.Empty;
 
-                var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
+                var newVal = GUIHelper.CreateToggleWithColor(_showSettings.Value, " Normal settings", style: ImguiUtils.toggleStyle);
                 if (_showSettings.Value != newVal)
                 {
                     _showSettings.Value = newVal;
                     BuildFilteredSettingList();
                 }
 
-                newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
+                newVal = GUIHelper.CreateToggleWithColor(_showDefault.Value, " Show Default", style: ImguiUtils.toggleStyle);
+                if (_showDefault.Value != newVal)
+                {
+                    _showDefault.Value = newVal;
+                    BuildFilteredSettingList();
+                }
+
+                newVal = GUIHelper.CreateToggleWithColor(_showKeybinds.Value, " Keyboard shortcuts", style: ImguiUtils.toggleStyle);
                 if (_showKeybinds.Value != newVal)
                 {
                     _showKeybinds.Value = newVal;
                     BuildFilteredSettingList();
                 }
 
-                var origColor = GUI.color;
-                GUI.color = _advancedSettingColor;
-                newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
+                newVal = GUIHelper.CreateToggleWithColor(_showAdvanced.Value, " Advanced settings", _advancedSettingColor);
                 if (_showAdvanced.Value != newVal)
                 {
                     _showAdvanced.Value = newVal;
                     BuildFilteredSettingList();
                 }
 
-                GUI.color = origColor;
-
                 GUI.enabled = true;
 
                 GUILayout.Space(8);
 
-                newVal = GUILayout.Toggle(_showDebug, "Debug info");
+                newVal = GUIHelper.CreateToggleWithColor(_showDebug, " Debug info", style: ImguiUtils.toggleStyle);
                 if (_showDebug != newVal)
                 {
                     _showDebug = newVal;
                     BuildSettingList();
                 }
 
-                if (GUILayout.Button("Open BepInEx Log"))
+                if (GUIHelper.CreateButtonWithColor("Open BepInEx Log", style: ImguiUtils.buttonStyle))
                 {
                     try
                     {
@@ -718,7 +816,7 @@ namespace ConfigurationManager
                     }
                 }
 
-                if (GUILayout.Button("Open Player Log"))
+                if (GUIHelper.CreateButtonWithColor("Open Player Log", style: ImguiUtils.buttonStyle))
                 {
                     try
                     {
@@ -730,9 +828,8 @@ namespace ConfigurationManager
                     }
                 }
 
-                //GUILayout.Space(8);
-
-                if (GUILayout.Button("Close"))
+                GUILayout.Space(8);
+                if (GUIHelper.CreateButtonWithColor("Close", _closeButtonColor.Value, style: ImguiUtils.redbuttonStyle))
                 {
                     DisplayingWindow = false;
                 }
@@ -741,7 +838,8 @@ namespace ConfigurationManager
 
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.Label("Search: ", GUILayout.ExpandWidth(false));
+                GUIHelper.CreateLabelWithColor("Search: ", _fontColor.Value, ImguiUtils.labelStyle, GUILayout.ExpandWidth(false));
+
 
                 GUI.SetNextControlName(SearchBoxName);
                 SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
@@ -753,20 +851,8 @@ namespace ConfigurationManager
                     _focusSearchBox = false;
                 }
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUIHelper.CreateButtonWithColor("Clear", _widgetBackgroundColor.Value, ImguiUtils.redbuttonStyle, GUILayout.ExpandWidth(false)))
                     SearchString = string.Empty;
-
-                /*GUILayout.Space(8);
-
-                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All", GUILayout.ExpandWidth(false)))
-                {
-                    var newValue = !_pluginConfigCollapsedDefault.Value;
-                    _pluginConfigCollapsedDefault.Value = newValue;
-                    foreach (var plugin in _filteredSetings)
-                        plugin.Collapsed = newValue;
-
-                    _tipsPluginHeaderWasClicked = true;
-                }*/
             }
             GUILayout.EndHorizontal();
         }
@@ -793,15 +879,18 @@ namespace ConfigurationManager
 
         private void DrawSinglePlugin(PluginSettingsData plugin)
         {
-            GUIStyle style = new GUIStyle(GUI.skin.box)
-            {
-                normal = { background = GUI.skin.box.normal.background },
-                active = { background = GUI.skin.box.normal.background },
-                hover = { background = GUI.skin.button.hover.background }
-            };
+            GUIStyle style = GUI.skin.box.CreateCopy();
+            var pooledPluginTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+            pooledPluginTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
+            pooledPluginTex.Apply();
+            style.hover.background = pooledPluginTex;
+            //TexturePool.ReleaseTexture2D(pooledPluginTex);
+            style.fontSize = ImguiUtils.fontSize;
+
+
             GUILayout.BeginVertical(style);
 
-            var categoryHeader = _showDebug ? new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}", null, "GUID: " + plugin.Info.GUID) : new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}");
+            var categoryHeader = new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=grey>GUID: {plugin.Info.GUID}</color></size>", null, "GUID: " + plugin.Info.GUID);
 
             var isSearching = !string.IsNullOrEmpty(SearchString);
 
@@ -821,13 +910,34 @@ namespace ConfigurationManager
 
                 if (hasWebsite)
                 {
-                    var origColor = GUI.color;
-                    GUI.color = Color.gray;
-                    if (GUILayout.Button(new GUIContent("URL", null, plugin.Website), GUI.skin.label, GUILayout.ExpandWidth(false)))
+                    if (GUIHelper.CreateButtonWithColor(new GUIContent("URL", null, plugin.Website), GUI.skin.label, _settingDescriptionColor.Value, GUILayout.ExpandWidth(false)))
                         Utils.OpenWebsite(plugin.Website);
-                    GUI.color = origColor;
                     GUILayout.EndHorizontal();
                 }
+
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace(); // push it to the right
+                    if (IsPinned(plugin.Info.GUID))
+                    {
+                        // If pinned, show “Unpin” button
+                        if (GUIHelper.CreateButtonWithColor("Unpin", _closeButtonColor.Value, ImguiUtils.redbuttonStyle, GUILayout.ExpandWidth(false)))
+                        {
+                            UnpinPlugin(plugin.Info.GUID);
+                            BuildFilteredSettingList();
+                        }
+                    }
+                    else
+                    {
+                        // If not pinned, show “Pin” button
+                        if (GUIHelper.CreateButtonWithColor("Pin", _saveButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
+                        {
+                            PinPlugin(plugin.Info.GUID);
+                            BuildFilteredSettingList();
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
 
             GUILayout.EndVertical();
@@ -835,40 +945,94 @@ namespace ConfigurationManager
 
         private void DrawPluginSettings(PluginSettingsData selectedPlugin)
         {
+            // The top of the visible scroll area
+            float scrollY = _settingWindowScrollPos.y;
+
+            // How tall is the viewport (the portion of the scroll area we can see)
+            float visibleAreaHeight = SettingWindowRect.height;
+
+            // Tracks how far we've progressed vertically in our custom layout
+            float currentY = 0f;
+
+            // Loop over each category
             foreach (var category in selectedPlugin.Categories)
             {
-                GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandWidth(false));
-                if (!string.IsNullOrEmpty(category.Name))
+                // Grab the last measured height of this category
+                float catHeight = category.CalculatedHeight;
+
+                // Check if this category is potentially visible:
+                //   1) catHeight == 0 => we haven't measured it yet, so we should draw it at least once
+                //   2) Or the bounding rect intersects with the visible scroll window
+                bool isVisible = (catHeight == 0f) || ((currentY + catHeight) >= scrollY && currentY <= (scrollY + visibleAreaHeight));
+
+                // If the category is definitely off-screen, skip drawing
+                if (!isVisible)
                 {
-                    SettingFieldDrawer.DrawCategoryHeader(category.Name);
+                    // Just reserve the same vertical space so subsequent elements line up
+                    GUILayout.Space(catHeight);
+                    // Advance currentY by the category's height
+                    currentY += catHeight;
+                    continue;
                 }
 
-                foreach (var setting in category.Settings)
+                // If we reach here, the category is visible or unmeasured => we draw
+                GUILayout.Space(1);
+                // We'll measure how much space this category uses. 
+                // We do that by capturing the layout rect "before" we draw, 
+                // and again "after" we finish drawing. 
+                float startY = 0f;
+                if (Event.current.type == EventType.Repaint)
                 {
-                    DrawSingleSetting(setting);
-                    GUILayout.Space(2);
+                    // Get the bottom of the last drawn item
+                    startY = GUILayoutUtility.GetLastRect().yMax;
                 }
 
+                GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(RightColumnWidth));
+                {
+                    if (!string.IsNullOrEmpty(category.Name))
+                    {
+                        SettingFieldDrawer.DrawCategoryHeader(category.Name);
+                    }
+
+                    // Now iterate each setting
+                    foreach (var setting in category.Settings)
+                    {
+                        DrawSingleSetting(setting);
+                        GUILayout.FlexibleSpace();
+                    }
+                }
                 GUILayout.EndVertical();
+
+                // Now measure the new layout
+                if (Event.current.type == EventType.Repaint)
+                {
+                    float endY = GUILayoutUtility.GetLastRect().yMax;
+                    catHeight = endY - startY;
+                    category.CalculatedHeight = catHeight; // Store for next frame
+                }
+
+                // Advance our vertical offset
+                currentY += catHeight;
             }
         }
+
 
         private void DrawOtherFile(string file)
         {
             string fileType = Path.GetExtension(file).ToUpperInvariant().TrimStart('.');
+            var fileName = Path.GetFileNameWithoutExtension(file);
             var categoryHeader = _showDebug
-                ? new GUIContent($"{Path.GetFileName(file)} ({fileType})", null, "File Type: " + fileType)
-                : new GUIContent($"{Path.GetFileName(file)} ({fileType})");
+                ? new GUIContent($"{fileName} ({fileType})", null, "File Type: " + fileType)
+                : new GUIContent($"{fileName} ({fileType})");
 
             var isSearching = !string.IsNullOrEmpty(SearchString);
 
-            GUIStyle style = new GUIStyle(GUI.skin.box)
-            {
-                normal = { background = GUI.skin.box.normal.background },
-                active = { background = GUI.skin.box.normal.background },
-                hover = { background = GUI.skin.button.hover.background }
-            };
-
+            var style = GUI.skin.box.CreateCopy();
+            var pooledOtherFileTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+            pooledOtherFileTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
+            pooledOtherFileTex.Apply();
+            style.hover.background = pooledOtherFileTex;
+            //TexturePool.ReleaseTexture2D(pooledOtherFileTex);
 
             GUILayout.BeginVertical(style);
 
@@ -888,8 +1052,8 @@ namespace ConfigurationManager
         {
             var ligherBox = GUI.skin.box.CreateCopy();
             var isDefaultValue = setting.DefaultValue != null && (setting.Get() != null && setting.Get().Equals(setting.DefaultValue));
-            ligherBox.normal.background = ImguiUtils.MakeTexture(1, 1, isDefaultValue ? new Color(0.4f, 0.4f, 0.4f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f));
-            GUILayout.BeginHorizontal(ligherBox, GUILayout.ExpandWidth(false));
+            ligherBox.normal.background = ImguiUtils.MakeTexture(1, 1, isDefaultValue ? _categorySectionColor.Value : new Color(_categorySectionColor.Value.r / 2, _categorySectionColor.Value.g / 2, _categorySectionColor.Value.b / 2, _categorySectionColor.Value.a));
+            GUILayout.BeginHorizontal(ligherBox, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(RightColumnWidth));
             {
                 try
                 {
@@ -902,7 +1066,7 @@ namespace ConfigurationManager
                 catch (Exception ex)
                 {
                     Logger.Log(LogLevel.Error, $"Failed to draw setting {setting.DispName} - {ex}");
-                    GUILayout.Label("Failed to draw this field, check log for details.");
+                    GUIHelper.CreateLabelWithColor("Failed to draw this field, check log for details.", _fontColor.Value, style: ImguiUtils.labelStyle);
                 }
             }
             GUILayout.EndHorizontal();
@@ -912,42 +1076,47 @@ namespace ConfigurationManager
         {
             if (!setting.HideSettingName)
             {
-                var nameStyle = new GUIStyle(GUI.skin.label)
-                {
-                    wordWrap = true, // Ensure name doesn't wrap
-                    fontStyle = FontStyle.Bold,
-                    normal = { textColor = Color.white }
-                };
+                var nameStyle = GUI.skin.label.CreateCopy();
+                nameStyle.wordWrap = true;
+                nameStyle.fontStyle = FontStyle.Bold;
+                nameStyle.normal.textColor = _lightGreenSettingTextColor.Value;
 
-                var descriptionStyle = new GUIStyle(GUI.skin.label)
-                {
-                    wordWrap = true, // Enable word wrapping for the description
-                    fontStyle = FontStyle.Italic,
-                    normal = { textColor = Color.black }
-                };
+                var descriptionStyle = GUI.skin.label.CreateCopy();
+                descriptionStyle.wordWrap = true;
+                descriptionStyle.fontStyle = FontStyle.Italic;
+                descriptionStyle.normal.textColor = _settingDescriptionColor.Value;
 
-                var defaultValueStyle = new GUIStyle(GUI.skin.label)
-                {
-                    wordWrap = true, // Enable word wrapping for the description
-                    fontStyle = FontStyle.BoldAndItalic,
-                    normal = { textColor = _advancedSettingColor }
-                };
+                var settingTypeStyle = GUI.skin.label.CreateCopy();
+                settingTypeStyle.wordWrap = true;
+                settingTypeStyle.fontStyle = FontStyle.Italic;
+                settingTypeStyle.normal.textColor = _classTypeColor.Value;
 
-                GUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.MaxWidth(RightColumnWidth));
+                var settingRangeStyle = GUI.skin.label.CreateCopy();
+                settingRangeStyle.wordWrap = true;
+                settingRangeStyle.fontStyle = FontStyle.Italic;
+                settingRangeStyle.normal.textColor = _rangeValueColor.Value;
+
+                var defaultValueStyle = GUI.skin.label.CreateCopy();
+                defaultValueStyle.wordWrap = true;
+                defaultValueStyle.fontStyle = FontStyle.BoldAndItalic;
+                defaultValueStyle.normal.textColor = _defaultValueColor.Value;
+
+                GUILayout.BeginVertical();
                 {
-                    GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+                    // TODO: You changed the max width and expand width parts here.
+                    GUILayout.BeginHorizontal();
                     // Render the name
                     GUILayout.Label(setting.DispName.TrimStart('!'), nameStyle, GUILayout.ExpandWidth(false));
 
                     // Render the type of the setting
-                    GUILayout.Label($" ({setting.SettingType.Name})", descriptionStyle, GUILayout.ExpandWidth(false));
+                    GUILayout.Label($" ({setting.SettingType.Name})", settingTypeStyle, GUILayout.ExpandWidth(false));
 
                     // If the setting type is a range, render the min and max values like [min - max]
                     if (setting.AcceptableValueRange.Key != null)
                     {
                         var min = setting.AcceptableValueRange.Key;
                         var max = setting.AcceptableValueRange.Value;
-                        GUILayout.Label($" [{min} - {max}]", descriptionStyle, GUILayout.ExpandWidth(false));
+                        GUILayout.Label($" [{min} - {max}]", settingRangeStyle, GUILayout.ExpandWidth(false));
                     }
 
                     // Render the default value
@@ -964,6 +1133,7 @@ namespace ConfigurationManager
                     }
                 }
                 _fieldDrawer.DrawSettingValue(setting);
+
                 GUILayout.EndVertical();
             }
             else
@@ -976,17 +1146,103 @@ namespace ConfigurationManager
         {
             if (setting.HideDefaultButton) return;
 
+            GUIHelper.BeginColor(_widgetBackgroundColor.Value);
+
             object defaultValue = setting.DefaultValue;
             if (defaultValue != null || setting.SettingType.IsClass)
             {
                 GUILayout.Space(5);
-                if (GUILayout.Button("Reset", GUILayout.ExpandWidth(false)))
+                if (GUIHelper.CreateButtonWithColor("Reset", default, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
                     setting.Set(defaultValue);
+            }
+
+            GUIHelper.EndColor();
+        }
+
+        public static void PinPlugin(string pluginName)
+        {
+            if (!_pinnedPlugins.Contains(pluginName))
+                _pinnedPlugins.Add(pluginName);
+            UpdatePluginConfig();
+        }
+
+        public static void UnpinPlugin(string pluginName)
+        {
+            _pinnedPlugins.Remove(pluginName);
+            UpdatePluginConfig();
+        }
+
+        public static bool IsPinned(string pluginName)
+        {
+            return _pinnedPlugins.Contains(pluginName);
+        }
+
+        public static void UpdatePluginConfig()
+        {
+            var pinnedPluginsStr = string.Join(",", _pinnedPlugins.ToArray());
+            SettingFieldDrawer._instance._pinnedPluginsConfig.Value = pinnedPluginsStr;
+            SettingFieldDrawer._instance.Config.Save();
+        }
+
+        private void LoadPinnedPluginsFromConfig()
+        {
+            string pinnedFromConfig = _pinnedPluginsConfig.Value;
+            if (!string.IsNullOrEmpty(pinnedFromConfig))
+            {
+                _pinnedPlugins = new HashSet<string>(pinnedFromConfig.Split(','));
             }
         }
 
+        private void CreateOverlayCanvas()
+        {
+            if (_overlayCanvasObj != null) return;
+
+            // 1) Create an empty GameObject for our overlay
+            _overlayCanvasObj = new GameObject("ConfigurationManagerOverlayCanvas");
+            GameObject.DontDestroyOnLoad(_overlayCanvasObj);
+
+            // 2) Add components one by one
+            _overlayCanvas = _overlayCanvasObj.AddComponent<Canvas>();
+            _overlayCanvasScaler = _overlayCanvasObj.AddComponent<CanvasScaler>();
+            _overlayRaycaster = _overlayCanvasObj.AddComponent<GraphicRaycaster>();
+
+            // Make sure it's on top
+            _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _overlayCanvas.sortingOrder = 9999;
+
+            // 3) Add a child object with an Image that blocks clicks
+            var blockerObj = new GameObject("ConfigurationManagerBlockerImage");
+            blockerObj.transform.SetParent(_overlayCanvasObj.transform, false);
+
+            _overlayBlocker = blockerObj.AddComponent<Image>();
+            _overlayBlocker.color = new Color(0f, 0f, 0f, 0.5f); // Semi-transparent black
+            _overlayBlocker.raycastTarget = true; // IMPORTANT: blocks clicks
+
+            // Stretch the Image to cover the entire screen
+            RectTransform rt = _overlayBlocker.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        private void ShowOverlayCanvas()
+        {
+            if (_overlayCanvasObj == null) CreateOverlayCanvas();
+            _overlayCanvasObj.SetActive(true);
+        }
+
+        private void HideOverlayCanvas()
+        {
+            if (_overlayCanvasObj != null)
+                _overlayCanvasObj.SetActive(false);
+        }
+
+
         private void Start()
         {
+            LoadPinnedPluginsFromConfig();
+
             // Use reflection to keep compatibility with unity 4.x since it doesn't have Cursor
             var tCursor = typeof(Cursor);
             _curLockState = tCursor.GetProperty("lockState", BindingFlags.Static | BindingFlags.Public);
@@ -1017,17 +1273,74 @@ namespace ConfigurationManager
 
         private void Update()
         {
-            if (DisplayingWindow) SetUnlockCursor(0, true);
+            if (DisplayingWindow)
+            {
+                /*ImguiUtils.CreateBackgrounds();
+                ImguiUtils.CreateStyles();*/
+                SetUnlockCursor(0, true);
+                if (GUI.GetNameOfFocusedControl() == FileEditorName && (Event.current.type == EventType.KeyDown || Event.current.type == EventType.KeyUp) && Event.current.isKey)
+                {
+                    // Suppress all input to avoid triggering in-game actions
+                    Input.ResetInputAxes();
+
+                    // If the user presses escape, unfocus the text area
+                    if (Input.GetKeyDown(KeyCode.Escape))
+                    {
+                        GUI.FocusControl(null);
+                        Event.current.Use();
+                    }
+
+                    // If the user presses tab, we want to insert a tab character
+                    if (Event.current.keyCode == KeyCode.Tab)
+                    {
+                        if (Event.current.type == EventType.KeyUp)
+                        {
+                            GUIUtility.keyboardControl = 0;
+                            GUIUtility.hotControl = 0;
+                            Event.current.Use();
+                            GUIUtility.ExitGUI();
+                        }
+                    }
+
+                    // If the user presses enter, we want to insert a newline character
+                    if (Event.current.keyCode == KeyCode.Return)
+                    {
+                        if (Event.current.type == EventType.KeyUp)
+                        {
+                            GUIUtility.keyboardControl = 0;
+                            GUIUtility.hotControl = 0;
+                            Event.current.Use();
+                            GUIUtility.ExitGUI();
+                        }
+                    }
+
+                    return;
+                }
+            }
 
             if (OverrideHotkey) return;
 
-            if (_keybind.Value.IsDown()) DisplayingWindow = !DisplayingWindow;
+            //if (_keybind.Value.IsDown()) DisplayingWindow = !DisplayingWindow;
+            if (!DisplayingWindow && _keybind.Value.IsUp())
+            {
+                ImguiUtils.CreateBackgrounds();
+
+                DisplayingWindow = true;
+            }
         }
 
         private void LateUpdate()
         {
             if (DisplayingWindow) SetUnlockCursor(0, true);
         }
+
+        private void OnDestroy()
+        {
+            TexturePool.ClearAll();
+            PluginSettingsDataPool.ClearAll();
+            System.GC.Collect(); // Force GC
+        }
+
 
         private void SetUnlockCursor(int lockState, bool cursorVisible)
         {
@@ -1045,7 +1358,7 @@ namespace ConfigurationManager
             }
         }
 
-        private sealed class PluginSettingsData
+        internal sealed class PluginSettingsData
         {
             public BepInPlugin Info;
             public List<PluginSettingsGroupData> Categories;
@@ -1068,6 +1381,7 @@ namespace ConfigurationManager
             {
                 public string Name;
                 public List<SettingEntryBase> Settings;
+                public float CalculatedHeight;
             }
         }
     }

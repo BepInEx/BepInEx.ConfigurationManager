@@ -66,6 +66,7 @@ namespace ConfigurationManager.Utilities
                     forceToUnShow = true;
                     useControlID = controlID;
                 }
+
                 isClickedComboButton = true;
             }
 

@@ -16,7 +16,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)SettingEntryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SettingFieldDrawer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\ComboBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\GUIHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\ImguiUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\PluginSettingsDataPool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\TexturePool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\Utilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ValueChangedEventArgs.cs" />
   </ItemGroup>

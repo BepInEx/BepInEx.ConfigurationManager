@@ -21,8 +21,10 @@ namespace ConfigurationManager
 
         private static readonly Dictionary<SettingEntryBase, ComboBox> _comboBoxCache = new Dictionary<SettingEntryBase, ComboBox>();
         private static readonly Dictionary<SettingEntryBase, ColorCacheEntry> _colorCache = new Dictionary<SettingEntryBase, ColorCacheEntry>();
+        private static readonly Dictionary<SettingEntryBase, FloatConfigCacheEntry> _floatConfigCache = new Dictionary<SettingEntryBase, SettingFieldDrawer.FloatConfigCacheEntry>();
 
-        private static ConfigurationManager _instance;
+
+        internal static ConfigurationManager _instance;
 
         private static SettingEntryBase _currentKeyboardShortcutToSet;
         public static bool SettingKeyboardShortcut => _currentKeyboardShortcutToSet != null;
@@ -32,7 +34,8 @@ namespace ConfigurationManager
             SettingDrawHandlers = new Dictionary<Type, Action<SettingEntryBase>>
             {
                 { typeof(bool), DrawBoolField },
-                { typeof(KeyboardShortcut), DrawKeyboardShortcut},
+                { typeof(float), DrawFloatField },
+                { typeof(KeyboardShortcut), DrawKeyboardShortcut },
                 { typeof(KeyCode), DrawKeyCode },
                 { typeof(Color), DrawColor },
                 { typeof(Vector2), DrawVector2 },
@@ -50,7 +53,9 @@ namespace ConfigurationManager
         public void DrawSettingValue(SettingEntryBase setting)
         {
             if (setting.CustomDrawer != null)
+            {
                 setting.CustomDrawer(setting is ConfigSettingEntry newSetting ? newSetting.Entry : null);
+            }
             else if (setting.CustomHotkeyDrawer != null)
             {
                 var isBeingSet = _currentKeyboardShortcutToSet == setting;
@@ -62,23 +67,43 @@ namespace ConfigurationManager
                     _currentKeyboardShortcutToSet = isBeingSet ? setting : null;
             }
             else if (setting.ShowRangeAsPercent != null && setting.AcceptableValueRange.Key != null)
+            {
                 DrawRangeField(setting, _instance.RightColumnWidth);
+            }
             else if (setting.AcceptableValues != null)
+            {
                 DrawListField(setting);
+            }
             else if (DrawFieldBasedOnValueType(setting))
+            {
                 return;
+            }
             else if (setting.SettingType.IsEnum)
+            {
                 DrawEnumField(setting);
+            }
             else
+            {
+                GUILayout.BeginHorizontal(GUILayout.MaxWidth(_instance.RightColumnWidth - 50), GUILayout.ExpandWidth(false));
                 DrawUnknownField(setting, _instance.RightColumnWidth);
+                GUILayout.EndHorizontal();
+            }
         }
 
         public static void ClearCache()
         {
             _comboBoxCache.Clear();
 
-            foreach (var tex in _colorCache)
-                UnityEngine.Object.Destroy(tex.Value.Tex);
+            foreach (var kvp in _colorCache)
+            {
+                var entry = kvp.Value;
+                if (entry.Tex != null)
+                {
+                    // Return color texture to the pool instead of destroying
+                    TexturePool.ReleaseTexture2D(entry.Tex);
+                }
+            }
+
             _colorCache.Clear();
         }
 
@@ -95,7 +120,7 @@ namespace ConfigurationManager
 
         public static void DrawCategoryHeader(string text)
         {
-            if (_categoryHeaderSkin == null)
+            if (_categoryHeaderSkin == null || _categoryHeaderSkin != null && ConfigurationManager._categoryHeaderColor.Value != _categoryHeaderSkin.normal.background.GetPixel(0, 0))
             {
                 _categoryHeaderSkin = GUI.skin.box.CreateCopy();
                 _categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
@@ -103,9 +128,14 @@ namespace ConfigurationManager
                 _categoryHeaderSkin.stretchWidth = true;
                 _categoryHeaderSkin.fontSize = 16;
                 _categoryHeaderSkin.fontStyle = FontStyle.Bold;
+                var pooledHeaderTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+                pooledHeaderTex.SetPixel(0, 0, ConfigurationManager._categoryHeaderColor.Value);
+                pooledHeaderTex.Apply();
+                _categoryHeaderSkin.normal.background = pooledHeaderTex;
+                TexturePool.ReleaseTexture2D(pooledHeaderTex);
             }
 
-            GUILayout.Label(text, _categoryHeaderSkin);
+            GUIHelper.CreateLabelWithColor(text, style: _categoryHeaderSkin);
         }
 
         private static GUIStyle _pluginHeaderSkin;
@@ -121,7 +151,7 @@ namespace ConfigurationManager
                 _pluginHeaderSkin.fontSize = 15;
             }
 
-            return GUILayout.Button(content, _pluginHeaderSkin, GUILayout.ExpandWidth(true));
+            return GUIHelper.CreateButtonWithColor(content, _pluginHeaderSkin, default, GUILayout.ExpandWidth(true));
         }
 
         public static bool DrawCurrentDropdown()
@@ -165,9 +195,74 @@ namespace ConfigurationManager
         private static void DrawBoolField(SettingEntryBase setting)
         {
             var boolVal = (bool)setting.Get();
-            var result = GUILayout.Toggle(boolVal, boolVal ? " Enabled" : " Disabled", GUILayout.ExpandWidth(false), GUILayout.MaxWidth(_instance.RightColumnWidth));
+            var result = GUIHelper.CreateToggleWithColor(boolVal, boolVal ? "Enabled" : "Disabled", boolVal ? Color.green : Color.red, new GUIStyle(GUI.skin.button) { normal = { textColor = ConfigurationManager._fontColor.Value } }, GUILayout.ExpandWidth(false));
             if (result != boolVal)
                 setting.Set(result);
+        }
+
+        public static void DrawFloatField(SettingEntryBase configEntry)
+        {
+            float num = (float)configEntry.Get();
+            SettingFieldDrawer.FloatConfigCacheEntry configCacheEntry;
+            if (!SettingFieldDrawer._floatConfigCache.TryGetValue(configEntry, out configCacheEntry))
+            {
+                configCacheEntry = new SettingFieldDrawer.FloatConfigCacheEntry()
+                {
+                    Value = num,
+                    FieldColor = GUI.color
+                };
+                SettingFieldDrawer._floatConfigCache[configEntry] = configCacheEntry;
+            }
+
+            if (GUIHelper.HasChanged() || GUIHelper.IsEnterPressed() || (double)configCacheEntry.Value != (double)num)
+            {
+                configCacheEntry.Value = num;
+                configCacheEntry.FieldText = num.ToString((IFormatProvider)NumberFormatInfo.InvariantInfo);
+                configCacheEntry.FieldColor = GUI.color;
+            }
+
+
+            string str = GUIHelper.CreateTextFieldWithColor(configCacheEntry.FieldText, configCacheEntry.FieldColor, GUILayout.ExpandWidth(true));
+
+            if (str == configCacheEntry.FieldText)
+                return;
+            configCacheEntry.FieldText = str;
+            float result;
+            if (SettingFieldDrawer.ShouldParse(str) && float.TryParse(str, NumberStyles.Float, (IFormatProvider)NumberFormatInfo.InvariantInfo, out result))
+            {
+                configEntry.Set((object)result);
+                configCacheEntry.Value = (float)configEntry.Get();
+                configCacheEntry.FieldText = configCacheEntry.Value.ToString((IFormatProvider)NumberFormatInfo.InvariantInfo);
+                if (configCacheEntry.FieldText == str)
+                {
+                    configCacheEntry.FieldColor = GUI.color;
+                }
+                else
+                {
+                    configCacheEntry.FieldColor = Color.yellow;
+                    configCacheEntry.FieldText = str;
+                }
+            }
+            else
+                configCacheEntry.FieldColor = Color.red;
+        }
+
+        private static bool ShouldParse(string text)
+        {
+            if (text == null || text.Length <= 0)
+                return false;
+            switch (text[text.Length - 1])
+            {
+                case '+':
+                case ',':
+                case '-':
+                case '.':
+                case 'E':
+                case 'e':
+                    return false;
+                default:
+                    return true;
+            }
         }
 
         private static void DrawEnumField(SettingEntryBase setting)
@@ -227,7 +322,7 @@ namespace ConfigurationManager
         private static void DrawComboboxField(SettingEntryBase setting, IList list, float windowYmax, int rightColumnWidth)
         {
             var buttonText = ObjectToGuiContent($"{setting.Get()}");
-            var dispRect = GUILayoutUtility.GetRect(buttonText, GUI.skin.button, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(_instance.RightColumnWidth/4f));
+            var dispRect = GUILayoutUtility.GetRect(buttonText, GUI.skin.button, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(_instance.RightColumnWidth / 4f));
 
             if (!_comboBoxCache.TryGetValue(setting, out var box))
             {
@@ -379,7 +474,7 @@ namespace ConfigurationManager
                     }
                 }
 #endif
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                if (GUIHelper.CreateButtonWithColor("Cancel", ConfigurationManager._cancelButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -387,7 +482,8 @@ namespace ConfigurationManager
                 var acceptableValues = setting.AcceptableValues?.Length > 1 ? setting.AcceptableValues : Enum.GetValues(setting.SettingType);
                 DrawComboboxField(setting, acceptableValues, _instance.SettingWindowRect.yMax, _instance.RightColumnWidth);
 
-                if (GUILayout.Button(new GUIContent("Set...", null, "Set the key by pressing any key on your keyboard."), GUILayout.ExpandWidth(false)))
+
+                if (GUIHelper.CreateButtonWithColor(new GUIContent("Set...", null, "Set the key by pressing any key on your keyboard."), ImguiUtils.buttonStyle, default, GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = setting;
             }
         }
@@ -396,7 +492,7 @@ namespace ConfigurationManager
         {
             if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
             {
-                GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
+                GUIHelper.CreateLabelWithColor("Press any key combination", default, ImguiUtils.textStyle, GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
 #if IL2CPP
@@ -419,7 +515,8 @@ namespace ConfigurationManager
                     }
                 }
 #endif
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+
+                if (GUIHelper.CreateButtonWithColor("Cancel", ConfigurationManager._cancelButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -483,75 +580,190 @@ namespace ConfigurationManager
             return x;
         }
 
-        private static bool _drawColorHex;
 
+        /// <summary>
+        /// Draws a color setting with:
+        ///  - Hex field
+        ///  - Sliders for R/G/B/A
+        ///  - Cached texture preview
+        ///  - "Pick Color..." button to open popup
+        /// </summary>
         private static void DrawColor(SettingEntryBase obj)
         {
-            var colorValue = (Color)obj.Get();
-
-            GUI.changed = false;
-
-            if (!_colorCache.TryGetValue(obj, out var cacheEntry))
+            Color settingColor = (Color)obj.Get();
+            GUILayout.BeginVertical(GUI.skin.box);
             {
-                var tex = new Texture2D(100, 20, TextureFormat.ARGB32, false);
-                cacheEntry = new ColorCacheEntry { Tex = tex, Last = colorValue };
-                FillTex(colorValue, tex);
-                _colorCache[obj] = cacheEntry;
-            }
-
-            GUILayout.BeginVertical();
-            {
+                SettingFieldDrawer.ColorCacheEntry colorCacheEntry;
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
+                    DrawHexField(ref settingColor);
+                    GUILayout.Space(3f);
+                    GUIHelper.BeginColor(settingColor);
+                    GUILayout.Label(string.Empty, GUILayout.ExpandWidth(true));
 
-                    var colorStr = _drawColorHex ? "#" + ColorUtility.ToHtmlStringRGBA(colorValue) : $"{colorValue.r:F2} {colorValue.g:F2} {colorValue.b:F2} {colorValue.a:F2}";
-                    var newColorStr = GUILayout.TextField(colorStr, GUILayout.ExpandWidth(true));
-                    if (GUI.changed && colorStr != newColorStr)
+                    if (!_colorCache.TryGetValue(obj, out colorCacheEntry))
                     {
-                        if (_drawColorHex)
+                        colorCacheEntry = new ColorCacheEntry()
                         {
-                            if (ColorUtility.TryParseHtmlString(newColorStr, out var parsedColor))
-                                colorValue = parsedColor;
-                        }
-                        else
-                        {
-                            var split = newColorStr.Split(' ');
-                            if (split.Length == 4 && float.TryParse(split[0], out var r) && float.TryParse(split[1], out var g) && float.TryParse(split[2], out var b) && float.TryParse(split[3], out var a))
-                                colorValue = new Color(r, g, b, a);
-                        }
+                            Tex = new Texture2D(40, 10, TextureFormat.ARGB32, false),
+                            Last = settingColor
+                        };
+                        colorCacheEntry.Tex.FillTexture(settingColor);
+                        _colorCache[obj] = colorCacheEntry;
                     }
 
-                    _drawColorHex = GUILayout.Toggle(_drawColorHex, "Hex", GUILayout.ExpandWidth(false));
+                    if (Event.current.type == EventType.Repaint)
+                        GUI.DrawTexture(GUILayoutUtility.GetLastRect(), (Texture)colorCacheEntry.Tex);
+                    GUIHelper.EndColor();
+                    GUILayout.Space(3f);
                 }
                 GUILayout.EndHorizontal();
+                GUILayout.Space(4f);
+                /*GUILayout.BeginHorizontal();
+                {
+                    /*if (GUILayout.Button("Pick Color...", GUILayout.ExpandWidth(false)))
+                    {
+                        _tempPickedColor = settingColor;
+                        _currentColorPickerSetting = obj;
+                        _colorPickerWindowRect.position = new Vector2(Screen.width / 2f - _colorPickerWindowRect.width / 2f, Screen.height / 2f - _colorPickerWindowRect.height / 2f);
+                    }#1#
+                    GUILayout.Space(3f);
+                    if (GUILayout.Button("Reset", GUILayout.ExpandWidth(false)))
+                    {
+                        settingColor = Color.white;
+                        obj.Set((object)settingColor);
+                        colorCacheEntry.Tex.FillTexture(settingColor);
+                        colorCacheEntry.Last = settingColor;
+                    }
+                }
+                GUILayout.EndHorizontal();*/
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label("R", GUILayout.ExpandWidth(false));
-                    colorValue.r = GUILayout.HorizontalSlider(colorValue.r, 0f, 1f, GUILayout.ExpandWidth(true));
-                    GUILayout.Label("G", GUILayout.ExpandWidth(false));
-                    colorValue.g = GUILayout.HorizontalSlider(colorValue.g, 0f, 1f, GUILayout.ExpandWidth(true));
-                    GUILayout.Label("B", GUILayout.ExpandWidth(false));
-                    colorValue.b = GUILayout.HorizontalSlider(colorValue.b, 0f, 1f, GUILayout.ExpandWidth(true));
-                    GUILayout.Label("A", GUILayout.ExpandWidth(false));
-                    colorValue.a = GUILayout.HorizontalSlider(colorValue.a, 0f, 1f, GUILayout.ExpandWidth(true));
+                    DrawColorField("Red", ref settingColor, ref settingColor.r);
+                    GUILayout.Space(3f);
+                    DrawColorField("Green", ref settingColor, ref settingColor.g);
+                    GUILayout.Space(3f);
+                    DrawColorField("Blue", ref settingColor, ref settingColor.b);
+                    GUILayout.Space(3f);
+                    DrawColorField("Alpha", ref settingColor, ref settingColor.a);
+                    if (settingColor != colorCacheEntry.Last)
+                    {
+                        obj.Set((object)settingColor);
+                        colorCacheEntry.Tex.FillTexture(settingColor);
+                        colorCacheEntry.Last = settingColor;
+                    }
                 }
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
+        }
 
-            if (colorValue != cacheEntry.Last)
+        /// <summary>Ensure we have a 128×128 hue-sat texture allocated.</summary>
+        private static void EnsureHueSatTexture()
+        {
+            if (_hueSatTex == null)
             {
-                obj.Set(colorValue);
-                FillTex(colorValue, cacheEntry.Tex);
-                cacheEntry.Last = colorValue;
+                _hueSatTex = new Texture2D(128, 128, TextureFormat.RGBA32, false);
+                _hueSatTex.wrapMode = TextureWrapMode.Clamp;
+            }
+        }
+
+        /// <summary>
+        /// Fill _hueSatTex so horizontally is Hue, vertically is Sat (top = S=1, bottom = S=0),
+        /// at a fixed brightness = V param. E.g. V=1 means top row goes from H=0..1 with S=1
+        /// </summary>
+        private static void RecolorHueSatTexture(float V)
+        {
+            if (_hueSatTex == null) return;
+            var width = _hueSatTex.width;
+            var height = _hueSatTex.height;
+            Color32[] pixels = new Color32[width * height];
+
+            // row 0 => S=1, row (height-1) => S=0
+            for (int y = 0; y < height; y++)
+            {
+                float s = 1f - (float)y / (height - 1);
+                for (int x = 0; x < width; x++)
+                {
+                    float h = (float)x / (width - 1);
+                    // convert H,S,V to color
+                    Color c = Color.HSVToRGB(h, s, V);
+                    pixels[y * width + x] = c;
+                }
             }
 
-            void FillTex(Color color, Texture2D tex)
+            _hueSatTex.SetPixels32(pixels);
+            _hueSatTex.Apply(false);
+        }
+
+
+        private static Texture2D _hueSatTex;
+        private static bool _isDraggingHSRect = false;
+        private static Vector2 _hsDragPos; // Where user is dragging in the hue-sat rect
+        
+
+
+        /// <summary>
+        /// Renders label + textfield + slider for the given color component (R/G/B/A).
+        /// </summary>
+        private static void DrawColorField(string fieldLabel, ref Color settingColor, ref float settingValue)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUIHelper.BeginColor(ConfigurationManager._fontColor.Value);
+            GUILayout.Label(fieldLabel, GUILayout.ExpandWidth(true));
+            GUIHelper.EndColor();
+            GUILayout.TextField(settingValue.ToString((IFormatProvider)CultureInfo.CurrentCulture), GUILayout.MaxWidth(45f), GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2f);
+            GUIHelper.BeginColor(ConfigurationManager._lightGreySlidersColor.Value);
+            switch (fieldLabel)
             {
-                if (color.a < 1f) tex.FillTextureCheckerboard();
-                tex.FillTexture(color);
+                case "Red":
+                    settingColor.r = GUILayout.HorizontalSlider(settingValue, 0.0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+                case "Green":
+                    settingColor.g = GUILayout.HorizontalSlider(settingValue, 0.0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+                case "Blue":
+                    settingColor.b = GUILayout.HorizontalSlider(settingValue, 0.0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
+                case "Alpha":
+                    settingColor.a = GUILayout.HorizontalSlider(settingValue, 0.0f, 1f, GUILayout.ExpandWidth(true));
+                    break;
             }
+
+            GUIHelper.EndColor();
+            GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Allows editing via hex, like #RRGGBB or #RRGGBBAA
+        /// </summary>
+        private static void DrawHexField(ref Color value)
+        {
+            string text = "#" + ColorUtility.ToHtmlStringRGBA(value);
+            string htmlString = GUILayout.TextField(text, GUILayout.Width(90f), GUILayout.ExpandWidth(false));
+            if (htmlString == text || !ColorUtility.TryParseHtmlString(htmlString, out Color color))
+                return;
+            value = color;
+        }
+
+        /// <summary>
+        /// Fill the texture with the given color, showing a checkerboard if alpha < 1.
+        /// (Port of Code2's FillTex logic)
+        /// </summary>
+        private static void FillTextureWithColor(Color color, Texture2D tex)
+        {
+            if (color.a < 1f) tex.FillTextureCheckerboard();
+            tex.FillTexture(color);
+        }
+
+        private sealed class FloatConfigCacheEntry
+        {
+            public float Value = 0.0f;
+            public string FieldText = string.Empty;
+            public Color FieldColor = Color.clear;
         }
 
         private sealed class ColorCacheEntry

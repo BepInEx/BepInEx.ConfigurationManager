@@ -7,6 +7,25 @@ namespace ConfigurationManager.Utilities
     internal static class ImguiUtils
     {
 #if IL2CPP
+        internal static Texture2D WindowBackground { get; private set; }
+        internal static Texture2D CategorySectionBackground { get; private set; }
+        internal static Texture2D WidgetBackground { get; private set; }
+
+        public static GUIStyle windowStyle;
+        public static GUIStyle headerStyle;
+        public static GUIStyle entryStyle;
+        public static GUIStyle labelStyle;
+        public static GUIStyle textStyle;
+        public static GUIStyle toggleStyle;
+        public static GUIStyle buttonStyle;
+        public static GUIStyle redbuttonStyle;
+        public static GUIStyle boxStyle;
+        public static GUIStyle sliderStyle;
+        public static GUIStyle thumbStyle;
+        public static GUIStyle categoryHeaderSkin;
+        public static GUIStyle pluginHeaderSkin;
+        public static int fontSize = 14;
+
         private static Dictionary<ulong, Texture2D> _texCache = new Dictionary<ulong, Texture2D>();
 
         public static void DrawWindowBackground(Rect position, Color? color = null)
@@ -43,7 +62,8 @@ namespace ConfigurationManager.Utilities
                     start = colors.Length - start - length;
                     colors.Fill(start, length, clear);
                 }
-                texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+
+                texture = TexturePool.GetTexture2D(width, height, TextureFormat.RGBA32, false);
                 texture.SetPixels32(colors);
                 texture.Apply();
 
@@ -63,8 +83,118 @@ namespace ConfigurationManager.Utilities
                     texture.SetPixel(x, y, color);
                 }
             }
+
             texture.Apply();
             return texture;
+        }
+
+        public static void CreateBackgrounds()
+        {
+            if (WindowBackground == null)
+            {
+                var background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+                background.SetPixel(0, 0, ConfigurationManager._panelBackgroundColor.Value);
+                background.Apply();
+                WindowBackground = background;
+            }
+
+            if (CategorySectionBackground == null)
+            {
+                var entryBackground = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+                entryBackground.SetPixel(0, 0, ConfigurationManager._categorySectionColor.Value);
+                entryBackground.Apply();
+                CategorySectionBackground = entryBackground;
+            }
+        }
+
+        public static void CreateStyles()
+        {
+            if (windowStyle == null)
+            {
+                windowStyle = GUI.skin.window.CreateCopy();
+                windowStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                windowStyle.fontSize = fontSize;
+                windowStyle.active.textColor = ConfigurationManager._fontColor.Value;
+            }
+
+            if (labelStyle == null)
+            {
+                labelStyle = GUI.skin.label.CreateCopy();
+                labelStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                labelStyle.fontSize = fontSize;
+            }
+
+            if (textStyle == null)
+            {
+                textStyle = GUI.skin.textArea.CreateCopy();
+                textStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                textStyle.fontSize = fontSize;
+            }
+
+            if (buttonStyle == null)
+            {
+                buttonStyle = GUI.skin.button.CreateCopy();
+                buttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                var pooledPluginTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+                pooledPluginTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
+                pooledPluginTex.Apply();
+                buttonStyle.hover.background = pooledPluginTex;
+                buttonStyle.normal.background = pooledPluginTex;
+                TexturePool.ReleaseTexture2D(pooledPluginTex);
+                ///buttonStyle.normal.background = ConfigurationManager._widgetBackgroundColor.Value;
+                buttonStyle.fontSize = fontSize;
+            }
+            
+            if (redbuttonStyle == null)
+            {
+                redbuttonStyle = GUI.skin.button.CreateCopy();
+                redbuttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                var pooledPluginTex = TexturePool.GetTexture2D(2, 2, TextureFormat.RGBA32, false);
+                pooledPluginTex.SetPixel(0, 0, ConfigurationManager._closeButtonColor.Value);
+                pooledPluginTex.Apply();
+                buttonStyle.hover.background = pooledPluginTex;
+                buttonStyle.normal.background = pooledPluginTex;
+                TexturePool.ReleaseTexture2D(pooledPluginTex);
+                buttonStyle.fontSize = fontSize;
+            }
+
+
+            if (categoryHeaderSkin == null)
+            {
+                categoryHeaderSkin = labelStyle.CreateCopy();
+                categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
+                categoryHeaderSkin.wordWrap = true;
+                categoryHeaderSkin.stretchWidth = true;
+            }
+
+            if (pluginHeaderSkin == null)
+            {
+                pluginHeaderSkin = categoryHeaderSkin.CreateCopy();
+            }
+
+            if (toggleStyle == null)
+            {
+                toggleStyle = GUI.skin.toggle.CreateCopy();
+                toggleStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                toggleStyle.fontSize = fontSize;
+            }
+
+            if (boxStyle == null)
+            {
+                boxStyle = GUI.skin.box.CreateCopy();
+                boxStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                boxStyle.fontSize = fontSize;
+            }
+
+            if (sliderStyle == null)
+            {
+                sliderStyle = GUI.skin.horizontalSlider.CreateCopy();
+            }
+
+            if (thumbStyle == null)
+            {
+                thumbStyle = GUI.skin.horizontalSliderThumb.CreateCopy();
+            }
         }
 
 #if NETSTANDARD || NETCOREAPP
@@ -90,41 +220,61 @@ namespace ConfigurationManager.Utilities
 #endif
 
 #else
-        private static Texture2D _tooltipBg;
-        private static Texture2D _windowBackground;
+        internal static Texture2D TooltipBg { get; private set; }
+        internal static Texture2D WindowBackground { get; private set; }
+        internal static Texture2D CategorySectionBackground { get; private set; }
+        internal static Texture2D WidgetBackground { get; private set; }
+
+        public static GUIStyle windowStyle;
+        public static GUIStyle headerStyle;
+        public static GUIStyle entryStyle;
+        public static GUIStyle labelStyle;
+        public static GUIStyle textStyle;
+        public static GUIStyle toggleStyle;
+        public static GUIStyle buttonStyle;
+        public static GUIStyle redbuttonStyle;
+        public static GUIStyle boxStyle;
+        public static GUIStyle sliderStyle;
+        public static GUIStyle thumbStyle;
+        public static GUIStyle categoryHeaderSkin;
+        public static GUIStyle pluginHeaderSkin;
+        public static int fontSize = 14;
 
         public static void DrawWindowBackground(Rect position)
         {
-            if (!_windowBackground)
+            if (!WindowBackground)
             {
-                var windowBackground = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-                windowBackground.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f, 1));
-                windowBackground.Apply();
-                _windowBackground = windowBackground;
+                var pooledTex = TexturePool.GetTexture2D(1, 1, TextureFormat.ARGB32, false);
+                pooledTex.SetPixel(0, 0, new Color(0.5f, 0.5f, 0.5f, 1));
+                pooledTex.Apply();
+
+                WindowBackground = pooledTex;
+                TexturePool.ReleaseTexture2D(pooledTex);
             }
 
-            GUI.Box(position, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = _windowBackground } });
+            GUI.Box(position, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
         }
 
         public static void DrawControlBackground(Rect position, Color color = default)
         {
-            if (!_tooltipBg)
+            if (!TooltipBg)
             {
-                var background = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+                var background = TexturePool.GetTexture2D(1, 1, TextureFormat.ARGB32, false);
                 background.SetPixel(0, 0, Color.black);
                 background.Apply();
-                _tooltipBg = background;
+                TooltipBg = background;
+                TexturePool.ReleaseTexture2D(background);
             }
 
-            GUI.Box(position, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = _tooltipBg } });
+            GUI.Box(position, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = TooltipBg } });
         }
 
         internal static Texture2D MakeTexture(int width, int height, Color color)
         {
             var texture = new Texture2D(width, height);
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height; ++y)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < width; ++x)
                 {
                     texture.SetPixel(x, y, color);
                 }
@@ -132,6 +282,116 @@ namespace ConfigurationManager.Utilities
 
             texture.Apply();
             return texture;
+        }
+
+        public static void CreateBackgrounds()
+        {
+            if (WindowBackground == null)
+            {
+                var background = TexturePool.GetTexture2D(1, 1, TextureFormat.ARGB32, false);
+                background.SetPixel(0, 0, ConfigurationManager._panelBackgroundColor.Value);
+                background.Apply();
+                WindowBackground = background;
+                TexturePool.ReleaseTexture2D(background);
+            }
+
+            if (CategorySectionBackground == null)
+            {
+                var entryBackground = TexturePool.GetTexture2D(1, 1, TextureFormat.ARGB32, false);
+                entryBackground.SetPixel(0, 0, ConfigurationManager._categorySectionColor.Value);
+                entryBackground.Apply();
+                CategorySectionBackground = entryBackground;
+                TexturePool.ReleaseTexture2D(entryBackground);
+            }
+        }
+
+        public static void CreateStyles()
+        {
+            if (windowStyle == null)
+            {
+                windowStyle = GUI.skin.window.CreateCopy();
+                windowStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                windowStyle.fontSize = fontSize;
+                windowStyle.active.textColor = ConfigurationManager._fontColor.Value;
+            }
+
+            if (labelStyle == null)
+            {
+                labelStyle = GUI.skin.label.CreateCopy();
+                labelStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                labelStyle.fontSize = fontSize;
+            }
+
+            if (textStyle == null)
+            {
+                textStyle = GUI.skin.textArea.CreateCopy();
+                textStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                textStyle.fontSize = fontSize;
+            }
+
+            if (buttonStyle == null)
+            {
+                buttonStyle = GUI.skin.button.CreateCopy();
+                buttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                var pooledBackgroundTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+                pooledBackgroundTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
+                pooledBackgroundTex.Apply();
+                buttonStyle.hover.background = pooledBackgroundTex;
+                TexturePool.ReleaseTexture2D(pooledBackgroundTex);
+                ///buttonStyle.normal.background = ConfigurationManager._widgetBackgroundColor.Value;
+                buttonStyle.fontSize = fontSize;
+            }
+
+            if (redbuttonStyle == null)
+            {
+                redbuttonStyle = GUI.skin.button.CreateCopy();
+                redbuttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                var pooledBackgroundTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
+                pooledBackgroundTex.SetPixel(0, 0, ConfigurationManager._closeButtonColor.Value);
+                pooledBackgroundTex.Apply();
+                redbuttonStyle.hover.background = pooledBackgroundTex;
+                redbuttonStyle.normal.background = pooledBackgroundTex;
+                TexturePool.ReleaseTexture2D(pooledBackgroundTex);
+                redbuttonStyle.fontSize = fontSize;
+            }
+
+
+            if (categoryHeaderSkin == null)
+            {
+                categoryHeaderSkin = labelStyle.CreateCopy();
+                categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
+                categoryHeaderSkin.wordWrap = true;
+                categoryHeaderSkin.stretchWidth = true;
+            }
+
+            if (pluginHeaderSkin == null)
+            {
+                pluginHeaderSkin = categoryHeaderSkin.CreateCopy();
+            }
+
+            if (toggleStyle == null)
+            {
+                toggleStyle = GUI.skin.toggle.CreateCopy();
+                toggleStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                toggleStyle.fontSize = fontSize;
+            }
+
+            if (boxStyle == null)
+            {
+                boxStyle = GUI.skin.box.CreateCopy();
+                boxStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+                boxStyle.fontSize = fontSize;
+            }
+
+            if (sliderStyle == null)
+            {
+                sliderStyle = GUI.skin.horizontalSlider.CreateCopy();
+            }
+
+            if (thumbStyle == null)
+            {
+                thumbStyle = GUI.skin.horizontalSliderThumb.CreateCopy();
+            }
         }
 
 #endif

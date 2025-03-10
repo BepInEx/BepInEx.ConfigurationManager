@@ -41,6 +41,9 @@ namespace BepInEx.Configuration
         public static readonly IEnumerable<KeyCode> AllKeyCodes = Enum.GetValues(typeof(KeyCode)) as KeyCode[];
 
         // Don't block hotkeys if mouse is being pressed, e.g. when shooting and trying to strafe
+        /// <summary>
+        /// All KeyCode values that can be used in a keyboard shortcut, except mouse buttons.
+        /// </summary>
         public static readonly KeyCode[] ModifierBlockKeyCodes = AllKeyCodes.Except(new KeyCode[] {
             KeyCode.Mouse0, KeyCode.Mouse1, KeyCode.Mouse2, KeyCode.Mouse3,
             KeyCode.Mouse4, KeyCode.Mouse5, KeyCode.Mouse6, KeyCode.None }).ToArray();
