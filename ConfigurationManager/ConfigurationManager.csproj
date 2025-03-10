@@ -57,6 +57,7 @@
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Unity3D.UnityEngine.UI" Version="2018.3.5.1" />
   </ItemGroup>
 
   <ItemGroup>
