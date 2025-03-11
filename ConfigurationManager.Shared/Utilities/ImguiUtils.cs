@@ -12,6 +12,7 @@ namespace ConfigurationManager.Utilities
         internal static Texture2D WidgetBackground { get; private set; }
 
         public static GUIStyle windowStyle;
+        public static GUIStyle leftPanelStyle;
         public static GUIStyle headerStyle;
         public static GUIStyle entryStyle;
         public static GUIStyle labelStyle;
@@ -111,90 +112,59 @@ namespace ConfigurationManager.Utilities
         {
             if (windowStyle == null)
             {
-                windowStyle = GUI.skin.window.CreateCopy();
-                windowStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                windowStyle.fontSize = fontSize;
-                windowStyle.active.textColor = ConfigurationManager._fontColor.Value;
+                RecreateStyles();
             }
+        }
 
-            if (labelStyle == null)
-            {
-                labelStyle = GUI.skin.label.CreateCopy();
-                labelStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                labelStyle.fontSize = fontSize;
-            }
+        public static void RecreateStyles()
+        {
+            windowStyle = GUI.skin.window.CreateCopy();
+            windowStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            windowStyle.fontSize = fontSize;
+            windowStyle.active.textColor = ConfigurationManager._fontColor.Value;
 
-            if (textStyle == null)
-            {
-                textStyle = GUI.skin.textArea.CreateCopy();
-                textStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                textStyle.fontSize = fontSize;
-            }
+            leftPanelStyle = GUI.skin.box.CreateCopy();
+            leftPanelStyle.normal.background = TexturePool.GetColorTexture(ConfigurationManager._leftPanelColor.Value);
+            leftPanelStyle.active.background = TexturePool.GetColorTexture(ConfigurationManager._leftPanelColor.Value);
 
-            if (buttonStyle == null)
-            {
-                buttonStyle = GUI.skin.button.CreateCopy();
-                buttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                var pooledPluginTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-                pooledPluginTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
-                pooledPluginTex.Apply();
-                buttonStyle.hover.background = pooledPluginTex;
-                buttonStyle.normal.background = pooledPluginTex;
-                TexturePool.ReleaseTexture2D(pooledPluginTex);
-                ///buttonStyle.normal.background = ConfigurationManager._widgetBackgroundColor.Value;
-                buttonStyle.fontSize = fontSize;
-            }
-            
-            if (redbuttonStyle == null)
-            {
-                redbuttonStyle = GUI.skin.button.CreateCopy();
-                redbuttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                var pooledPluginTex = TexturePool.GetTexture2D(2, 2, TextureFormat.RGBA32, false);
-                pooledPluginTex.SetPixel(0, 0, ConfigurationManager._closeButtonColor.Value);
-                pooledPluginTex.Apply();
-                buttonStyle.hover.background = pooledPluginTex;
-                //buttonStyle.normal.background = pooledPluginTex;
-                TexturePool.ReleaseTexture2D(pooledPluginTex);
-                buttonStyle.fontSize = fontSize;
-            }
+            labelStyle = GUI.skin.label.CreateCopy();
+            labelStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            labelStyle.fontSize = fontSize;
 
+            textStyle = GUI.skin.textArea.CreateCopy();
+            textStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            textStyle.fontSize = fontSize;
 
-            if (categoryHeaderSkin == null)
-            {
-                categoryHeaderSkin = labelStyle.CreateCopy();
-                categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
-                categoryHeaderSkin.wordWrap = true;
-                categoryHeaderSkin.stretchWidth = true;
-            }
+            buttonStyle = GUI.skin.button.CreateCopy();
+            buttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            buttonStyle.hover.background = TexturePool.GetColorTexture(ConfigurationManager._highlightColor.Value);
+            ///buttonStyle.normal.background = ConfigurationManager._widgetBackgroundColor.Value;
+            buttonStyle.fontSize = fontSize;
 
-            if (pluginHeaderSkin == null)
-            {
-                pluginHeaderSkin = categoryHeaderSkin.CreateCopy();
-            }
+            redbuttonStyle = GUI.skin.button.CreateCopy();
+            redbuttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            redbuttonStyle.hover.background = TexturePool.GetColorTexture(ConfigurationManager._closeButtonColor.Value);
+            redbuttonStyle.normal.background = TexturePool.GetColorTexture(ConfigurationManager._closeButtonColor.Value * 1.25f);
+            redbuttonStyle.fontSize = fontSize;
 
-            if (toggleStyle == null)
-            {
-                toggleStyle = GUI.skin.toggle.CreateCopy();
-                toggleStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                toggleStyle.fontSize = fontSize;
-            }
+            categoryHeaderSkin = labelStyle.CreateCopy();
+            categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
+            categoryHeaderSkin.wordWrap = true;
+            categoryHeaderSkin.stretchWidth = true;
 
-            if (boxStyle == null)
-            {
-                boxStyle = GUI.skin.box.CreateCopy();
-                boxStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                boxStyle.fontSize = fontSize;
-            }
+            pluginHeaderSkin = categoryHeaderSkin.CreateCopy();
 
-            if (sliderStyle == null)
-            {
-                sliderStyle = GUI.skin.horizontalSlider.CreateCopy();
-            }
+            toggleStyle = GUI.skin.toggle.CreateCopy();
+            toggleStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            toggleStyle.fontSize = fontSize;
 
-            if (thumbStyle == null)
-            {
-                thumbStyle = GUI.skin.horizontalSliderThumb.CreateCopy();
-            }
+            boxStyle = GUI.skin.box.CreateCopy();
+            boxStyle.normal.textColor = ConfigurationManager._fontColor.Value;
+            boxStyle.fontSize = fontSize;
+
+            sliderStyle = GUI.skin.horizontalSlider.CreateCopy();
+
+            thumbStyle = GUI.skin.horizontalSliderThumb.CreateCopy();
         }
 
 #if NETSTANDARD || NETCOREAPP

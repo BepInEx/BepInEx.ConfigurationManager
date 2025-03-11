@@ -124,6 +124,7 @@ namespace ConfigurationManager
         public static ConfigEntry<Vector2> _windowSize;
         public static ConfigEntry<int> _textSize;
         public static ConfigEntry<Color> _fontColor;
+        public static ConfigEntry<Color> _guidfontColor;
         public static ConfigEntry<Color> _widgetBackgroundColor;
         public static ConfigEntry<Color> _settingDescriptionColor;
 
@@ -153,7 +154,7 @@ namespace ConfigurationManager
         public static ConfigEntry<Color> _categoryHeaderColor;
 
         // Light grey for sliders (#4C4C4C)
-        public static ConfigEntry<Color> _lightGreySlidersColor;
+        public static ConfigEntry<Color> _slidersColor;
 
         // Medium grey for sliders (#404040)
         public static ConfigEntry<Color> _mediumGreySlidersColor;
@@ -186,25 +187,25 @@ namespace ConfigurationManager
             _textSize = Config.Bind("General", "Font Size", 14, "Font Size");
             _textSize.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _fontColor = Config.Bind("Colors", "Font Color", new Color(1f, 1f, 1f, 1), "Font color");
+            _guidfontColor = Config.Bind("Colors", "GUID Font Color", Color.gray, "GUID Font color");
             _fontColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _widgetBackgroundColor = Config.Bind("Colors", "Widget Color", GUIHelper.DarkGreenSaveButton, "Widget color");
             _settingDescriptionColor = Config.Bind("Colors", "Description Color", GUIHelper.SettingDescription, "Description Color");
             _closeButtonColor = Config.Bind("Colors", "Close Button Color", GUIHelper.RedCloseButton, "Color for the close button (#BF3030).");
             _closeButtonColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _cancelButtonColor = Config.Bind("Colors", "Cancel Button Color", GUIHelper.DarkRedCancelButton, "Color for the cancel button (#541B1B).");
-            _lightGreenSettingTextColor = Config.Bind("Colors", "Light Green Setting Text Color", GUIHelper.LightGreenSettingText, "Light green color for setting text (#A7EDA7).");
-            _saveButtonColor = Config.Bind("Colors", "Save Button Color", GUIHelper.DarkGreenSaveButton, "Dark green color for save button (#1C401B).");
+            _lightGreenSettingTextColor = Config.Bind("Colors", "Setting Text Color", GUIHelper.LightGreenSettingText, "Setting text color (#A7EDA7).");
+            _saveButtonColor = Config.Bind("Colors", "Save Button Color", GUIHelper.DarkGreenSaveButton, "Save button color (#1C401B).");
             _leftPanelColor = Config.Bind("Colors", "Left Panel Color", GUIHelper.DarkGreyLeftPanel, "Dark grey background for the left panel (#262626).");
             _leftPanelColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _panelBackgroundColor = Config.Bind("Colors", "Panel Background Color", GUIHelper.WhitePanelBackground, "Black background for the entire panel (#0D0D0D).");
             _categorySectionColor = Config.Bind("Colors", "Category Section Color", GUIHelper.MediumBlackCategorySection, "Medium black background for category sections (#1F1F1F).");
             _categoryHeaderColor = Config.Bind("Colors", "Category Header Color", GUIHelper.MediumBlackCategoryHeader, "Medium black background for category header (#121212).");
-            _lightGreySlidersColor = Config.Bind("Colors", "Light Grey Sliders Color", GUIHelper.LightGreySliders, "Light grey for sliders (#4C4C4C).");
-            _mediumGreySlidersColor = Config.Bind("Colors", "Medium Grey Sliders Color", GUIHelper.MediumGreySliders, "Medium grey for sliders (#404040).");
+            _slidersColor = Config.Bind("Colors", "Sliders Color", GUIHelper.LightGreySliders, "Sliders color (#4C4C4C).");
             _classTypeColor = Config.Bind("Colors", "Class/Type Name Color", GUIHelper.GreenClassTypeName, "Green for class/type name (#148B32).");
             _defaultValueColor = Config.Bind("Colors", "Default Value Label Color", GUIHelper.DefaultValueColor, "Default Value label color (#FFF4AC).");
             _rangeValueColor = Config.Bind("Colors", "Range Value Label Color", GUIHelper.RangeValueColor, "Range Value label color.");
-            _highlightColor = Config.Bind("Colors", "Highlight Color", GUIHelper.YellowTanHighlight, "Yellow/tan highlight (#989076).");
+            _highlightColor = Config.Bind("Colors", "Highlight Color", GUIHelper.YellowTanHighlight, "Highlight of buttons and sections (#989076).");
             _highlightColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
 
 
@@ -680,7 +681,7 @@ namespace ConfigurationManager
                                 Logger.LogInfo($"File saved: {_selectedOtherFile}");
                             }
 
-                            if (GUIHelper.CreateButtonWithColor("Open File Location", _saveButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
+                            if (GUIHelper.CreateButtonWithColor("Open File at Location", _saveButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
                             {
                                 Utils.OpenFileLocation(_selectedOtherFile);
                             }
@@ -882,8 +883,7 @@ namespace ConfigurationManager
 
             GUILayout.BeginVertical(style);
 
-            var categoryHeader = new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=grey>GUID: {plugin.Info.GUID}</color></size>", null, "GUID: " + plugin.Info.GUID);
-
+            var categoryHeader = new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=#{ColorUtility.ToHtmlStringRGBA(_guidfontColor.Value)}>GUID: {plugin.Info.GUID}</color></size>", null, "GUID: " + plugin.Info.GUID);
 
             {
                 var hasWebsite = plugin.Website != null;
@@ -1113,11 +1113,11 @@ namespace ConfigurationManager
                     {
                         string displayName = setting.DispName.TrimStart('!');
                         bool isSynced = setting.Description.Contains("[Synced with Server]");
-                        bool isReadOnly = setting.ReadOnly != null && setting.ReadOnly.Value;
-                        string syncedIndicator = isSynced ? " <size=20><color=#FF0000>⇅</color></size>" : "";
-                        string readOnlyIndicator = isReadOnly ? " <size=20><color=#FF0000>🔒</color></size>" : "";
+                        //bool isReadOnly = setting.ReadOnly != null && setting.ReadOnly.Value;
+                        string syncedIndicator = isSynced ? " <size=20><color=#FF0000>⇅</color></size>" : " <size=20><color=#FF0000>ℹ</color></size>";
+                        //string readOnlyIndicator = isReadOnly ? " <size=20><color=#FF0000>🔒</color></size>" : "";
                         displayName += syncedIndicator;
-                        displayName += readOnlyIndicator;
+                        //displayName += readOnlyIndicator;
 
                         GUILayout.Label(displayName, nameStyle, GUILayout.ExpandWidth(false));
 

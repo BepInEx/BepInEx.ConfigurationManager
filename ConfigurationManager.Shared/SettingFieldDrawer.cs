@@ -21,6 +21,7 @@ namespace ConfigurationManager
 
         private static readonly Dictionary<SettingEntryBase, ComboBox> _comboBoxCache = new Dictionary<SettingEntryBase, ComboBox>();
         private static readonly Dictionary<SettingEntryBase, ColorCacheEntry> _colorCache = new Dictionary<SettingEntryBase, ColorCacheEntry>();
+
         private static readonly Dictionary<SettingEntryBase, FloatConfigCacheEntry> _floatConfigCache = new Dictionary<SettingEntryBase, SettingFieldDrawer.FloatConfigCacheEntry>();
 
 
@@ -601,83 +602,6 @@ namespace ConfigurationManager
         }
 
 
-        /// <summary>
-        /// Draws a color setting with:
-        ///  - Hex field
-        ///  - Sliders for R/G/B/A
-        ///  - Cached texture preview
-        ///  - "Pick Color..." button to open popup
-        /// </summary>
-        private static void DrawColor(SettingEntryBase obj)
-        {
-            Color settingColor = (Color)obj.Get();
-            GUILayout.BeginVertical(GUI.skin.box);
-            {
-                SettingFieldDrawer.ColorCacheEntry colorCacheEntry;
-                GUILayout.BeginHorizontal();
-                {
-                    DrawHexField(ref settingColor);
-                    GUILayout.Space(3f);
-                    GUIHelper.BeginColor(settingColor);
-                    GUILayout.Label(string.Empty, GUILayout.ExpandWidth(true));
-
-                    if (!_colorCache.TryGetValue(obj, out colorCacheEntry))
-                    {
-                        colorCacheEntry = new ColorCacheEntry()
-                        {
-                            Tex = new Texture2D(40, 10, TextureFormat.ARGB32, false),
-                            Last = settingColor,
-                        };
-                        colorCacheEntry.Tex.FillTexture(settingColor);
-                        _colorCache[obj] = colorCacheEntry;
-                    }
-
-                    if (Event.current.type == EventType.Repaint)
-                        GUI.DrawTexture(GUILayoutUtility.GetLastRect(), (Texture)colorCacheEntry.Tex);
-                    GUIHelper.EndColor();
-                    GUILayout.Space(3f);
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.Space(4f);
-                /*GUILayout.BeginHorizontal();
-                {
-                    /*if (GUILayout.Button("Pick Color...", GUILayout.ExpandWidth(false)))
-                    {
-                        _tempPickedColor = settingColor;
-                        _currentColorPickerSetting = obj;
-                        _colorPickerWindowRect.position = new Vector2(Screen.width / 2f - _colorPickerWindowRect.width / 2f, Screen.height / 2f - _colorPickerWindowRect.height / 2f);
-                    }#1#
-                    GUILayout.Space(3f);
-                    if (GUILayout.Button("Reset", GUILayout.ExpandWidth(false)))
-                    {
-                        settingColor = Color.white;
-                        obj.Set((object)settingColor);
-                        colorCacheEntry.Tex.FillTexture(settingColor);
-                        colorCacheEntry.Last = settingColor;
-                    }
-                }
-                GUILayout.EndHorizontal();*/
-                GUILayout.BeginHorizontal();
-                {
-                    DrawColorField("Red", ref settingColor, ref settingColor.r);
-                    GUILayout.Space(3f);
-                    DrawColorField("Green", ref settingColor, ref settingColor.g);
-                    GUILayout.Space(3f);
-                    DrawColorField("Blue", ref settingColor, ref settingColor.b);
-                    GUILayout.Space(3f);
-                    DrawColorField("Alpha", ref settingColor, ref settingColor.a);
-                    if (settingColor != colorCacheEntry.Last)
-                    {
-                        obj.Set((object)settingColor);
-                        colorCacheEntry.Tex.FillTexture(settingColor);
-                        colorCacheEntry.Last = settingColor;
-                    }
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndVertical();
-        }
-
         /// <summary>Ensure we have a 128×128 hue-sat texture allocated.</summary>
         private static void EnsureHueSatTexture()
         {
@@ -721,6 +645,144 @@ namespace ConfigurationManager
         private static bool _isDraggingHSRect = false;
         private static Vector2 _hsDragPos; // Where user is dragging in the hue-sat rect
 
+        /// <summary>
+        /// Integrated color picker using a Hue-Sat rectangle + Value slider + Alpha slider,
+        /// plus existing R/G/B/A textfields and a hex field.
+        /// </summary>
+        private static void DrawColor(SettingEntryBase obj)
+        {
+            // A. Prepare local color from the setting
+            Color settingColor = (Color)obj.Get();
+            if (!_colorCache.TryGetValue(obj, out var cacheEntry))
+            {
+                var tex = new Texture2D(40, 10, TextureFormat.ARGB32, false);
+                cacheEntry = new ColorCacheEntry { Tex = tex, Last = settingColor };
+                FillTextureWithColor(settingColor, tex);
+                _colorCache[obj] = cacheEntry;
+            }
+
+            // Convert the color to HSV so we can manipulate easily
+            Color.RGBToHSV(settingColor, out float H, out float S, out float V);
+            float A = settingColor.a; // store alpha separately
+
+            GUILayout.BeginVertical(GUI.skin.box);
+            {
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.BeginVertical();
+
+                    // (2) Hue-Sat rect
+                    EnsureHueSatTexture(); // create or reuse a 128×128 texture that goes from H=0..1, S=0..1 at full brightness
+                    Rect hsRect = GUILayoutUtility.GetRect(128, 128, GUILayout.ExpandWidth(false));
+
+                    // Re-fills _hueSatTex using V=1.0 (maximum brightness).
+                    if (Event.current.type == EventType.Repaint)
+                        RecolorHueSatTexture(1f); // full brightness
+
+                    // Draw the hue-sat texture
+                    GUI.DrawTexture(hsRect, _hueSatTex);
+
+                    // Draw a small "handle" where user’s S/H are
+                    // H is horizontal → x
+                    // S is vertical   → y
+                    // The texture “Hues horizontally” and “Sats vertically” in RecolorHueSatTexture
+                    Vector2 handlePos = new Vector2(hsRect.x + H * hsRect.width, hsRect.y + (S) * hsRect.height);
+                    float handleSize = 5f;
+                    Rect handleRect = new Rect(handlePos.x - handleSize / 2, handlePos.y - handleSize / 2, handleSize, handleSize);
+                    GUIHelper.BeginColor(Color.black);
+                    GUI.DrawTexture(handleRect, Texture2D.whiteTexture);
+                    GUIHelper.EndColor();
+
+                    // Check if user is clicking or dragging in the hue-sat rect
+                    Event e = Event.current;
+                    if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && hsRect.Contains(e.mousePosition))
+                    {
+                        if (e.type == EventType.MouseDown)
+                            _isDraggingHSRect = true;
+                        if (_isDraggingHSRect)
+                        {
+                            e.Use(); // consume event
+
+                            // Convert mouse pos in hsRect to hue, sat
+                            float relativeX = (e.mousePosition.x - hsRect.x) / hsRect.width;
+                            float relativeY = (e.mousePosition.y - hsRect.y) / hsRect.height;
+                            // clamp
+                            relativeX = Mathf.Clamp01(relativeX);
+                            relativeY = Mathf.Clamp01(relativeY);
+
+                            // “H” as x, “S” as 1 - y
+                            H = relativeX;
+                            S = relativeY;
+                        }
+                    }
+                    else if (e.type == EventType.MouseUp)
+                    {
+                        _isDraggingHSRect = false;
+                    }
+
+                    GUILayout.Space(5f);
+                    //GUILayout.FlexibleSpace();
+                    /*// 40x10 color preview
+                    GUIHelper.BeginColor(settingColor);
+                    GUILayout.Label("", GUILayout.ExpandWidth(false), GUILayout.Width(128), GUILayout.Height(30));
+                    if (Event.current.type == EventType.Repaint)
+                    {
+                        GUI.DrawTexture(GUILayoutUtility.GetLastRect(), cacheEntry.Tex, ScaleMode.StretchToFill);
+                    }*/
+                    Rect previewRect = GUILayoutUtility.GetRect(128, 30, GUILayout.ExpandWidth(false));
+                    previewRect.x = Mathf.Floor(previewRect.x);
+                    previewRect.y = Mathf.Floor(previewRect.y);
+                    if (Event.current.type == EventType.Repaint)
+                    {
+                        GUI.DrawTexture(previewRect, cacheEntry.Tex, ScaleMode.StretchToFill);
+                    }
+
+                    GUIHelper.EndColor();
+
+                    GUILayout.EndVertical();
+                    
+                    GUILayout.FlexibleSpace();
+                    
+                    GUILayout.BeginVertical();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("Brightness ", GUILayout.ExpandWidth(false));
+                    GUIHelper.BeginColor(ConfigurationManager._slidersColor.Value);
+                    float newV = GUILayout.HorizontalSlider(V, 0f, 1f, GUILayout.Width(128));
+                    if (!Mathf.Approximately(newV, V))
+                        V = newV;
+                    GUIHelper.EndColor();
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label("Hex: ", GUILayout.ExpandWidth(false));
+                    DrawHexField(ref settingColor);
+                    GUILayout.EndHorizontal();
+
+                    // Convert H,S,V back to an actual color
+                    Color newHsvColor = Color.HSVToRGB(H, S, V);
+                    newHsvColor.a = A;
+
+                    DrawColorField("Red", ref newHsvColor, ref newHsvColor.r);
+                    GUILayout.Space(5f);
+                    DrawColorField("Green", ref newHsvColor, ref newHsvColor.g);
+                    GUILayout.Space(5f);
+                    DrawColorField("Blue", ref newHsvColor, ref newHsvColor.b);
+                    GUILayout.Space(5f);
+                    DrawColorField("Alpha", ref newHsvColor, ref newHsvColor.a);
+
+                    // If final color changed, update your setting and the texture cache
+                    /*if (newHsvColor != cacheEntry.Last)
+                    {*/
+                    obj.Set(newHsvColor);
+                    FillTextureWithColor(newHsvColor, cacheEntry.Tex);
+                    cacheEntry.Last = newHsvColor;
+                    /*}*/
+
+                    GUILayout.EndVertical();
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+        }
+
 
         /// <summary>
         /// Renders label + textfield + slider for the given color component (R/G/B/A).
@@ -735,7 +797,7 @@ namespace ConfigurationManager
             GUILayout.TextField(settingValue.ToString((IFormatProvider)CultureInfo.CurrentCulture), GUILayout.MaxWidth(45f), GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
             GUILayout.Space(2f);
-            GUIHelper.BeginColor(ConfigurationManager._lightGreySlidersColor.Value);
+            GUIHelper.BeginColor(ConfigurationManager._slidersColor.Value);
             switch (fieldLabel)
             {
                 case "Red":
