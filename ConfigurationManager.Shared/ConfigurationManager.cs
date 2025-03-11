@@ -646,7 +646,7 @@ namespace ConfigurationManager
                         }
 
                         // Now draw the filtered files.
-                        for (int i = 0; i < _cachedOtherFiles.Count; i++)
+                        for (int i = 0; i < _cachedOtherFiles.Count; ++i)
                         {
                             DrawOtherFile(_cachedOtherFiles[i]);
                         }
@@ -1178,12 +1178,9 @@ namespace ConfigurationManager
                     GUILayout.BeginHorizontal();
                     {
                         string displayName = setting.DispName.TrimStart('!');
-                        bool isSynced = setting.Description.Contains("[Synced with Server]");
-                        //bool isReadOnly = setting.ReadOnly != null && setting.ReadOnly.Value;
-                        string syncedIndicator = isSynced ? " <size=20><color=#FF0000>⇅</color></size>" : " <size=20><color=#FF0000>ℹ</color></size>";
-                        //string readOnlyIndicator = isReadOnly ? " <size=20><color=#FF0000>🔒</color></size>" : "";
+                        bool isSynced = setting.Description.Contains("[Synced with Server]") || setting.ReadOnly != null && setting.ReadOnly.Value;
+                        string syncedIndicator = isSynced ? " <size=20><color=#FF0000>⇅</color></size>" : string.Empty;
                         displayName += syncedIndicator;
-                        //displayName += readOnlyIndicator;
 
                         GUILayout.Label(displayName, nameStyle, GUILayout.ExpandWidth(false));
 
