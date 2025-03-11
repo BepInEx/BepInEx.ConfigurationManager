@@ -333,11 +333,8 @@ namespace ConfigurationManager.Utilities
             {
                 buttonStyle = GUI.skin.button.CreateCopy();
                 buttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                var pooledBackgroundTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-                pooledBackgroundTex.SetPixel(0, 0, ConfigurationManager._highlightColor.Value);
-                pooledBackgroundTex.Apply();
+                var pooledBackgroundTex = TexturePool.GetColorTexture(ConfigurationManager._highlightColor.Value);
                 buttonStyle.hover.background = pooledBackgroundTex;
-                TexturePool.ReleaseTexture2D(pooledBackgroundTex);
                 ///buttonStyle.normal.background = ConfigurationManager._widgetBackgroundColor.Value;
                 buttonStyle.fontSize = fontSize;
             }
@@ -346,12 +343,10 @@ namespace ConfigurationManager.Utilities
             {
                 redbuttonStyle = GUI.skin.button.CreateCopy();
                 redbuttonStyle.normal.textColor = ConfigurationManager._fontColor.Value;
-                var pooledBackgroundTex = TexturePool.GetTexture2D(1, 1, TextureFormat.RGBA32, false);
-                pooledBackgroundTex.SetPixel(0, 0, ConfigurationManager._closeButtonColor.Value);
-                pooledBackgroundTex.Apply();
+                var pooledBackgroundTex = TexturePool.GetColorTexture(ConfigurationManager._closeButtonColor.Value);
+                var pooledBackgroundTex2 = TexturePool.GetColorTexture(ConfigurationManager._closeButtonColor.Value * 1.25f);
                 redbuttonStyle.hover.background = pooledBackgroundTex;
-                redbuttonStyle.normal.background = pooledBackgroundTex;
-                TexturePool.ReleaseTexture2D(pooledBackgroundTex);
+                redbuttonStyle.normal.background = pooledBackgroundTex2;
                 redbuttonStyle.fontSize = fontSize;
             }
 

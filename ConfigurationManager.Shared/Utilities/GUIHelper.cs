@@ -177,9 +177,9 @@ namespace ConfigurationManager.Utilities
         /// <returns></returns>
         public static bool CreateToggleWithColor(bool value, string text, Color color = default, GUIStyle style = null, params GUILayoutOption[] options)
         {
-            BeginColor(color);
+            //BeginColor(color);
             bool newValue = style == null ? GUILayout.Toggle(value, text, options) : GUILayout.Toggle(value, text, style, options);
-            EndColor();
+            //EndColor();
             return newValue;
         }
 

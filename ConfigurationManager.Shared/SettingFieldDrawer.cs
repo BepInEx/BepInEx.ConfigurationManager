@@ -140,7 +140,7 @@ namespace ConfigurationManager
 
             GUIHelper.CreateLabelWithColor(text, style: _categoryHeaderSkin);
         }
-        
+
         public static bool DrawCollapsibleCategoryHeader(string text, bool collapsed)
         {
             if (_categoryHeaderSkin == null || _categoryHeaderSkin != null && ConfigurationManager._categoryHeaderColor.Value != _categoryHeaderSkin.normal.background.GetPixel(0, 0))
@@ -153,7 +153,7 @@ namespace ConfigurationManager
                 _categoryHeaderSkin.fontStyle = FontStyle.Bold;
                 _categoryHeaderSkin.normal.background = TexturePool.GetColorTexture(ConfigurationManager._categoryHeaderColor.Value);
             }
-            
+
             string label = collapsed ? "► " + text : "▼ " + text;
             return GUILayout.Button(label, _categoryHeaderSkin, GUILayout.ExpandWidth(true));
         }
@@ -720,7 +720,6 @@ namespace ConfigurationManager
         private static Texture2D _hueSatTex;
         private static bool _isDraggingHSRect = false;
         private static Vector2 _hsDragPos; // Where user is dragging in the hue-sat rect
-        
 
 
         /// <summary>

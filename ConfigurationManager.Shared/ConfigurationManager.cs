@@ -1080,6 +1080,7 @@ namespace ConfigurationManager
                 nameStyle.wordWrap = true;
                 nameStyle.fontStyle = FontStyle.Bold;
                 nameStyle.normal.textColor = _lightGreenSettingTextColor.Value;
+                nameStyle.richText = true;
 
                 var descriptionStyle = GUI.skin.label.CreateCopy();
                 descriptionStyle.wordWrap = true;
@@ -1103,16 +1104,22 @@ namespace ConfigurationManager
 
                 GUILayout.BeginVertical();
                 {
-                    // TODO: You changed the max width and expand width parts here.
                     GUILayout.BeginHorizontal();
                     {
-                        // Render the name
-                        GUILayout.Label(setting.DispName.TrimStart('!'), nameStyle, GUILayout.ExpandWidth(false));
+                        string displayName = setting.DispName.TrimStart('!');
+                        bool isSynced = setting.Description.Contains("[Synced with Server]");
+                        bool isReadOnly = setting.ReadOnly != null && setting.ReadOnly.Value;
+                        string syncedIndicator = isSynced ? " <size=20><color=#FF0000>⇅</color></size>" : "";
+                        string readOnlyIndicator = isReadOnly ? " <size=20><color=#FF0000>🔒</color></size>" : "";
+                        displayName += syncedIndicator;
+                        displayName += readOnlyIndicator;
+
+                        GUILayout.Label(displayName, nameStyle, GUILayout.ExpandWidth(false));
 
                         // Render the type of the setting
                         GUILayout.Label($" ({setting.SettingType.Name})", settingTypeStyle, GUILayout.ExpandWidth(false));
 
-                        // If the setting type is a range, render the min and max values like [min - max]
+                        // If a range is defined, render min and max
                         if (setting.AcceptableValueRange.Key != null)
                         {
                             var min = setting.AcceptableValueRange.Key;
@@ -1120,7 +1127,7 @@ namespace ConfigurationManager
                             GUILayout.Label($" [{min} - {max}]", settingRangeStyle, GUILayout.ExpandWidth(false));
                         }
 
-                        // Render the default value
+                        // Render the default value if present.
                         if (setting.DefaultValue != null)
                         {
                             GUILayout.Label($" Default: {setting.DefaultValue}", defaultValueStyle, GUILayout.ExpandWidth(false));
@@ -1134,7 +1141,6 @@ namespace ConfigurationManager
                     }
                 }
                 _fieldDrawer.DrawSettingValue(setting);
-
                 GUILayout.EndVertical();
             }
             else
@@ -1142,6 +1148,7 @@ namespace ConfigurationManager
                 _fieldDrawer.DrawSettingValue(setting);
             }
         }
+
 
         private static void DrawDefaultButton(SettingEntryBase setting)
         {

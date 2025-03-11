@@ -60,8 +60,8 @@
 		<WriteLinesToFile Lines="$(GeneratedText)" File="$(GeneratedFilePath)" WriteOnlyWhenDifferent="true" Overwrite="true" />
 	</Target>
 
-<!--	<Target Name="CopyOutputDLL" AfterTargets="AfterBuild">
+	<Target Name="CopyOutputDLL" AfterTargets="AfterBuild">
 		<Error Text="DLL not found in target directory." Condition="!Exists('$(TargetDir)$(AssemblyName).dll')"/>
-		<Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="C:\Users\crypt\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\Bog witch mod updates\BepInEx\plugins\Azumatt-Official_BepInEx_ConfigurationManager\ConfigurationManager" OverwriteReadOnlyFiles="true"/>
-	</Target>-->
+		<Copy SourceFiles="C:\Users\crypt\RiderProjects\BepInEx.ConfigurationManager\ConfigurationManager\obj\Debug\ConfigurationManager.dll" DestinationFolder="C:\Users\crypt\AppData\Roaming\com.kesomannen.gale\valheim\profiles\test\BepInEx\scripts" OverwriteReadOnlyFiles="true"/>
+	</Target>
 </Project>
