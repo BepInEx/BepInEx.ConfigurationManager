@@ -55,6 +55,9 @@ namespace ConfigurationManager
         private string _fileEditorString = string.Empty;
         private bool _focusFileEditor;
         private string _otherFileTypeFilter = "all";
+        private List<string> _cachedOtherFiles;
+        private string _cachedOtherFileTypeFilter;
+
 
         private enum Tab
         {
@@ -532,8 +535,7 @@ namespace ConfigurationManager
                     }
                     GUILayout.EndHorizontal();
 
-                    //TODO: Speed this up
-                    /*if (_selectedTab == Tab.OtherFiles)
+                    if (_selectedTab == Tab.OtherFiles)
                     {
                         GUILayout.BeginHorizontal(GUI.skin.box);
                         if (GUILayout.Button("All", GUILayout.ExpandWidth(false)))
@@ -545,7 +547,7 @@ namespace ConfigurationManager
                         if (GUILayout.Button("YAML", GUILayout.ExpandWidth(false)))
                             _otherFileTypeFilter = "yaml";
                         GUILayout.EndHorizontal();
-                    }*/
+                    }
 
                     _pluginWindowScrollPos = GUILayout.BeginScrollView(_pluginWindowScrollPos);
                     if (_selectedTab == Tab.Plugins)
@@ -595,36 +597,59 @@ namespace ConfigurationManager
                     }
                     else if (_selectedTab == Tab.OtherFiles)
                     {
-                        foreach (var file in SettingSearcher.OtherConfigFiles)
-                        {
-                            DrawOtherFile(file);
-                        }
-
-                        // TODO: Speed this up
-                        // Filter the files based on the selected type
-                        /*var filesToShow = SettingSearcher.OtherConfigFiles;
-                        if (!string.IsNullOrEmpty(_otherFileTypeFilter) && _otherFileTypeFilter != "all")
-                        {
-                            string filter = _otherFileTypeFilter.ToLowerInvariant();
-                            if (filter == "yaml")
-                            {
-                                filesToShow = new List<string>(filesToShow.Where(file =>
-                                {
-                                    var ext = Path.GetExtension(file).TrimStart('.').ToLowerInvariant();
-                                    return ext == "yaml" || ext == "yml";
-                                }).ToArray());
-                            }
-                            else
-                            {
-                                filesToShow = new List<string>(filesToShow.Where(file =>
-                                    Path.GetExtension(file).TrimStart('.').ToLowerInvariant() == filter).ToArray());
-                            }
-                        }
-
-                        foreach (var file in filesToShow)
+                        /*foreach (var file in SettingSearcher.OtherConfigFiles)
                         {
                             DrawOtherFile(file);
                         }*/
+
+                        // If the filter has changed (or cache is null), rebuild the cache.
+                        if (_cachedOtherFiles == null || _cachedOtherFileTypeFilter != _otherFileTypeFilter)
+                        {
+                            var allFiles = SettingSearcher.OtherConfigFiles;
+                            _cachedOtherFiles = new List<string>();
+                            if (string.IsNullOrEmpty(_otherFileTypeFilter) || _otherFileTypeFilter == "all")
+                            {
+                                _cachedOtherFiles.AddRange(allFiles);
+                            }
+                            else
+                            {
+                                string filter = _otherFileTypeFilter.ToLowerInvariant();
+                                if (filter == "yaml")
+                                {
+                                    foreach (var file in allFiles)
+                                    {
+                                        string ext = Path.GetExtension(file);
+                                        if (!string.IsNullOrEmpty(ext))
+                                        {
+                                            ext = ext.Substring(1).ToLowerInvariant();
+                                            if (ext == "yaml" || ext == "yml")
+                                                _cachedOtherFiles.Add(file);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    foreach (var file in allFiles)
+                                    {
+                                        string ext = Path.GetExtension(file);
+                                        if (!string.IsNullOrEmpty(ext))
+                                        {
+                                            ext = ext.Substring(1).ToLowerInvariant();
+                                            if (ext == filter)
+                                                _cachedOtherFiles.Add(file);
+                                        }
+                                    }
+                                }
+                            }
+
+                            _cachedOtherFileTypeFilter = _otherFileTypeFilter;
+                        }
+
+                        // Now draw the filtered files.
+                        for (int i = 0; i < _cachedOtherFiles.Count; i++)
+                        {
+                            DrawOtherFile(_cachedOtherFiles[i]);
+                        }
                     }
 
                     if (_showDebug)
