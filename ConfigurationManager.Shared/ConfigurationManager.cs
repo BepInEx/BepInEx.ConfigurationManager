@@ -772,7 +772,14 @@ namespace ConfigurationManager
                         // Display plugin settings if on the Plugins tab and one is selected
                         if (_selectedTab == Tab.Plugins && selectedPlugin != null && !string.IsNullOrEmpty(_selectedPluginName))
                         {
-                            DrawPluginSettings(selectedPlugin);
+                            // TODO: DON'T Mask this
+                            try
+                            {
+                                DrawPluginSettings(selectedPlugin);
+                            }
+                            catch (Exception ex)
+                            {
+                            }
                         }
                         // Display file editor if on OtherFiles tab
                         else if (_selectedTab == Tab.OtherFiles && !string.IsNullOrEmpty(_selectedOtherFile))
@@ -835,7 +842,7 @@ namespace ConfigurationManager
                     BuildFilteredSettingList();
                 }
 
-                newVal = GUIHelper.CreateToggleWithColor(_showDefault.Value, " Show Default", style: ImguiUtils.toggleStyle);
+                newVal = GUIHelper.CreateToggleWithColor(_showDefault.Value, " Show Default Configs", style: ImguiUtils.toggleStyle);
                 if (_showDefault.Value != newVal)
                 {
                     _showDefault.Value = newVal;
