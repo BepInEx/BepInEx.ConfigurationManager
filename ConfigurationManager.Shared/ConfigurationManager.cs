@@ -54,6 +54,7 @@ namespace ConfigurationManager
         private const string FileEditorName = "fileEditor";
         private string _fileEditorString = string.Empty;
         private bool _focusFileEditor;
+        private string _otherFileTypeFilter = "all";
 
         private enum Tab
         {
@@ -531,6 +532,21 @@ namespace ConfigurationManager
                     }
                     GUILayout.EndHorizontal();
 
+                    //TODO: Speed this up
+                    /*if (_selectedTab == Tab.OtherFiles)
+                    {
+                        GUILayout.BeginHorizontal(GUI.skin.box);
+                        if (GUILayout.Button("All", GUILayout.ExpandWidth(false)))
+                            _otherFileTypeFilter = "all";
+                        if (GUILayout.Button("CFG", GUILayout.ExpandWidth(false)))
+                            _otherFileTypeFilter = "cfg";
+                        if (GUILayout.Button("JSON", GUILayout.ExpandWidth(false)))
+                            _otherFileTypeFilter = "json";
+                        if (GUILayout.Button("YAML", GUILayout.ExpandWidth(false)))
+                            _otherFileTypeFilter = "yaml";
+                        GUILayout.EndHorizontal();
+                    }*/
+
                     _pluginWindowScrollPos = GUILayout.BeginScrollView(_pluginWindowScrollPos);
                     if (_selectedTab == Tab.Plugins)
                     {
@@ -583,6 +599,32 @@ namespace ConfigurationManager
                         {
                             DrawOtherFile(file);
                         }
+
+                        // TODO: Speed this up
+                        // Filter the files based on the selected type
+                        /*var filesToShow = SettingSearcher.OtherConfigFiles;
+                        if (!string.IsNullOrEmpty(_otherFileTypeFilter) && _otherFileTypeFilter != "all")
+                        {
+                            string filter = _otherFileTypeFilter.ToLowerInvariant();
+                            if (filter == "yaml")
+                            {
+                                filesToShow = new List<string>(filesToShow.Where(file =>
+                                {
+                                    var ext = Path.GetExtension(file).TrimStart('.').ToLowerInvariant();
+                                    return ext == "yaml" || ext == "yml";
+                                }).ToArray());
+                            }
+                            else
+                            {
+                                filesToShow = new List<string>(filesToShow.Where(file =>
+                                    Path.GetExtension(file).TrimStart('.').ToLowerInvariant() == filter).ToArray());
+                            }
+                        }
+
+                        foreach (var file in filesToShow)
+                        {
+                            DrawOtherFile(file);
+                        }*/
                     }
 
                     if (_showDebug)
@@ -1018,9 +1060,8 @@ namespace ConfigurationManager
         {
             string fileType = Path.GetExtension(file).ToUpperInvariant().TrimStart('.');
             var fileName = Path.GetFileNameWithoutExtension(file);
-            var categoryHeader = _showDebug
-                ? new GUIContent($"{fileName} ({fileType})", null, "File Type: " + fileType)
-                : new GUIContent($"{fileName} ({fileType})");
+            var categoryHeader = new GUIContent($"{fileName} {Environment.NewLine}<size=10><color=#{ColorUtility.ToHtmlStringRGBA(_guidfontColor.Value)}>[{fileType}]</color></size>", null,
+                $"File Type: {fileType}");
 
             var isSearching = !string.IsNullOrEmpty(SearchString);
 
