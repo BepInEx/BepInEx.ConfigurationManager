@@ -58,7 +58,7 @@ namespace ConfigurationManager
         private enum Tab
         {
             Plugins,
-            OtherFiles
+            OtherFiles,
         }
 
         private Tab _selectedTab = Tab.Plugins;
@@ -184,14 +184,18 @@ namespace ConfigurationManager
             /* Custom configurations*/
             _windowSize = Config.Bind("General", "Window Size", new Vector2(0.55f, 0.95f), "Window size. The x is the width and the y is the height. This is a percent of screen to take up. 0.5 in the x is 50% of the screen width.");
             _textSize = Config.Bind("General", "Font Size", 14, "Font Size");
+            _textSize.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _fontColor = Config.Bind("Colors", "Font Color", new Color(1f, 1f, 1f, 1), "Font color");
+            _fontColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _widgetBackgroundColor = Config.Bind("Colors", "Widget Color", GUIHelper.DarkGreenSaveButton, "Widget color");
             _settingDescriptionColor = Config.Bind("Colors", "Description Color", GUIHelper.SettingDescription, "Description Color");
             _closeButtonColor = Config.Bind("Colors", "Close Button Color", GUIHelper.RedCloseButton, "Color for the close button (#BF3030).");
+            _closeButtonColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _cancelButtonColor = Config.Bind("Colors", "Cancel Button Color", GUIHelper.DarkRedCancelButton, "Color for the cancel button (#541B1B).");
             _lightGreenSettingTextColor = Config.Bind("Colors", "Light Green Setting Text Color", GUIHelper.LightGreenSettingText, "Light green color for setting text (#A7EDA7).");
             _saveButtonColor = Config.Bind("Colors", "Save Button Color", GUIHelper.DarkGreenSaveButton, "Dark green color for save button (#1C401B).");
             _leftPanelColor = Config.Bind("Colors", "Left Panel Color", GUIHelper.DarkGreyLeftPanel, "Dark grey background for the left panel (#262626).");
+            _leftPanelColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
             _panelBackgroundColor = Config.Bind("Colors", "Panel Background Color", GUIHelper.WhitePanelBackground, "Black background for the entire panel (#0D0D0D).");
             _categorySectionColor = Config.Bind("Colors", "Category Section Color", GUIHelper.MediumBlackCategorySection, "Medium black background for category sections (#1F1F1F).");
             _categoryHeaderColor = Config.Bind("Colors", "Category Header Color", GUIHelper.MediumBlackCategoryHeader, "Medium black background for category header (#121212).");
@@ -201,6 +205,7 @@ namespace ConfigurationManager
             _defaultValueColor = Config.Bind("Colors", "Default Value Label Color", GUIHelper.DefaultValueColor, "Default Value label color (#FFF4AC).");
             _rangeValueColor = Config.Bind("Colors", "Range Value Label Color", GUIHelper.RangeValueColor, "Range Value label color.");
             _highlightColor = Config.Bind("Colors", "Highlight Color", GUIHelper.YellowTanHighlight, "Yellow/tan highlight (#989076).");
+            _highlightColor.SettingChanged += (_, _) => ImguiUtils.RecreateStyles();
 
 
             _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
@@ -505,7 +510,7 @@ namespace ConfigurationManager
             GUILayout.BeginHorizontal(GUILayout.MaxWidth(LeftColumnWidth + RightColumnWidth));
             {
                 // Left Column: Plugin List
-                GUILayout.BeginVertical(GUILayout.MaxWidth(LeftColumnWidth), GUILayout.ExpandWidth(false));
+                GUILayout.BeginVertical(ImguiUtils.leftPanelStyle, GUILayout.MaxWidth(LeftColumnWidth), GUILayout.ExpandWidth(false));
                 {
                     GUILayout.BeginHorizontal(GUI.skin.box);
                     {

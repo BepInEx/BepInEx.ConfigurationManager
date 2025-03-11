@@ -229,7 +229,7 @@ namespace ConfigurationManager
                 configCacheEntry = new SettingFieldDrawer.FloatConfigCacheEntry()
                 {
                     Value = num,
-                    FieldColor = GUI.color
+                    FieldColor = GUI.color,
                 };
                 SettingFieldDrawer._floatConfigCache[configEntry] = configCacheEntry;
             }
@@ -626,7 +626,7 @@ namespace ConfigurationManager
                         colorCacheEntry = new ColorCacheEntry()
                         {
                             Tex = new Texture2D(40, 10, TextureFormat.ARGB32, false),
-                            Last = settingColor
+                            Last = settingColor,
                         };
                         colorCacheEntry.Tex.FillTexture(settingColor);
                         _colorCache[obj] = colorCacheEntry;

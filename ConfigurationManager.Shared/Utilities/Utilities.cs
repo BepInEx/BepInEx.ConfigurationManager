@@ -191,7 +191,7 @@ namespace ConfigurationManager.Utilities
                     fi.FileDescription,
                     fi.Comments,
                     fi.LegalCopyright,
-                    fi.LegalTrademarks
+                    fi.LegalTrademarks,
                 }.FirstOrDefault(x => Uri.IsWellFormedUriString(x, UriKind.Absolute));
             }
             catch (Exception e)

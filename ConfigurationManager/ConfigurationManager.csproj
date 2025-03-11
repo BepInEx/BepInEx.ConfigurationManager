@@ -15,6 +15,8 @@
     <DefineConstants>$(DefineConstants);Mono</DefineConstants>
 
     <ZipPostfix>_BepInEx5</ZipPostfix>
+
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

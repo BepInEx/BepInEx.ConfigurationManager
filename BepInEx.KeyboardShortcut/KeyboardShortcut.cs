@@ -30,7 +30,7 @@ namespace BepInEx.Configuration
                 new TypeConverter
                 {
                     ConvertToString = (o, type) => ((KeyboardShortcut)o).Serialize(),
-                    ConvertToObject = (s, type) => Deserialize(s)
+                    ConvertToObject = (s, type) => Deserialize(s),
                 });
         }
 

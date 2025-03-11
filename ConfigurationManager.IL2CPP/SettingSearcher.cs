@@ -18,7 +18,7 @@ namespace ConfigurationManager
             "Update",
             "FixedUpdate",
             "LateUpdate",
-            "OnGUI"
+            "OnGUI",
         };
 
         public static HashSet<string> recognizedFiles = new HashSet<string>();
