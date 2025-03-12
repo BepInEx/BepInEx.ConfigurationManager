@@ -492,7 +492,7 @@ namespace ConfigurationManager
                         setting.Set(key);
                         _currentKeyboardShortcutToSet = null;
                         break;
-                    }
+                    } 
                 }
 #endif
                 if (GUIHelper.CreateButtonWithColor("Cancel", ConfigurationManager._cancelButtonColor.Value, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
@@ -721,14 +721,6 @@ namespace ConfigurationManager
                     }
 
                     GUILayout.Space(5f);
-                    //GUILayout.FlexibleSpace();
-                    /*// 40x10 color preview
-                    GUIHelper.BeginColor(settingColor);
-                    GUILayout.Label("", GUILayout.ExpandWidth(false), GUILayout.Width(128), GUILayout.Height(30));
-                    if (Event.current.type == EventType.Repaint)
-                    {
-                        GUI.DrawTexture(GUILayoutUtility.GetLastRect(), cacheEntry.Tex, ScaleMode.StretchToFill);
-                    }*/
                     Rect previewRect = GUILayoutUtility.GetRect(128, 30, GUILayout.ExpandWidth(false));
                     previewRect.x = Mathf.Floor(previewRect.x);
                     previewRect.y = Mathf.Floor(previewRect.y);
@@ -740,9 +732,9 @@ namespace ConfigurationManager
                     GUIHelper.EndColor();
 
                     GUILayout.EndVertical();
-                    
+
                     GUILayout.FlexibleSpace();
-                    
+
                     GUILayout.BeginVertical();
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Brightness ", GUILayout.ExpandWidth(false));

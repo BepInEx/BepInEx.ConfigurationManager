@@ -121,7 +121,7 @@ namespace ConfigurationManager
         private readonly ConfigEntry<KeyboardShortcut> _keybind;
         private readonly ConfigEntry<bool> _hideSingleSection;
         private readonly ConfigEntry<string> _pinnedPluginsConfig;
-        private bool _showDebug;
+        private bool _showAdditionalInfo;
 
 
         /* Custom configurations*/
@@ -307,7 +307,7 @@ namespace ConfigurationManager
         /// </summary>
         public void BuildSettingList()
         {
-            SettingSearcher.CollectSettings(out var results, out var modsWithoutSettings, _showDebug);
+            SettingSearcher.CollectSettings(out var results, out var modsWithoutSettings, _showAdditionalInfo);
 
             _modsWithoutSettings = string.Join(", ", modsWithoutSettings.Select(x => x.TrimStart('!')).OrderBy(x => x).ToArray());
             _allSettings = results.ToList();
@@ -652,7 +652,7 @@ namespace ConfigurationManager
                         }
                     }
 
-                    if (_showDebug)
+                    if (_showAdditionalInfo)
                     {
                         GUILayout.Space(10);
                         GUIHelper.BeginColor(_fontColor.Value);
@@ -867,10 +867,10 @@ namespace ConfigurationManager
 
                 GUILayout.Space(8);
 
-                newVal = GUIHelper.CreateToggleWithColor(_showDebug, " Debug info", style: ImguiUtils.toggleStyle);
-                if (_showDebug != newVal)
+                newVal = GUIHelper.CreateToggleWithColor(_showAdditionalInfo, " Additional info", style: ImguiUtils.toggleStyle);
+                if (_showAdditionalInfo != newVal)
                 {
-                    _showDebug = newVal;
+                    _showAdditionalInfo = newVal;
                     BuildSettingList();
                 }
 
@@ -957,7 +957,9 @@ namespace ConfigurationManager
 
             GUILayout.BeginVertical(style);
 
-            var categoryHeader = new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=#{ColorUtility.ToHtmlStringRGBA(_guidfontColor.Value)}>GUID: {plugin.Info.GUID}</color></size>", null, "GUID: " + plugin.Info.GUID);
+            var categoryHeader = _showAdditionalInfo
+                ? new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=#{ColorUtility.ToHtmlStringRGBA(_guidfontColor.Value)}>GUID: {plugin.Info.GUID}</color></size>", null, "GUID: " + plugin.Info.GUID)
+                : new GUIContent($"{plugin.Info.Name.TrimStart('!')} {plugin.Info.Version}\n<size=10><color=#{ColorUtility.ToHtmlStringRGBA(_guidfontColor.Value)}>GUID: {plugin.Info.GUID}</color></size>");
 
             {
                 var hasWebsite = plugin.Website != null;
@@ -1234,8 +1236,9 @@ namespace ConfigurationManager
             object defaultValue = setting.DefaultValue;
             if (defaultValue != null || setting.SettingType.IsClass)
             {
-                GUILayout.Space(5);
-                if (GUIHelper.CreateButtonWithColor("Reset", default, ImguiUtils.buttonStyle, GUILayout.ExpandWidth(false)))
+                Rect thisRect = GUILayoutUtility.GetLastRect();
+                Rect resetButtonTopRight = new Rect(thisRect.x + thisRect.width - 65, thisRect.y, 60, 20);
+                if (GUIHelper.CreateButtonWithColor("Reset", resetButtonTopRight, ImguiUtils.buttonStyle))
                     setting.Set(defaultValue);
             }
 

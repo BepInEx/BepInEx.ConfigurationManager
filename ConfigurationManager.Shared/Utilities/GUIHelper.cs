@@ -149,6 +149,18 @@ namespace ConfigurationManager.Utilities
             //EndColor();
             return value;
         }
+        
+        /// <summary>
+        /// Creates a button with a specified color. Optionally a style can be specified.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="r"></param>
+        /// <param name="style"></param>
+        /// <returns></returns>
+        public static bool CreateButtonWithColor(string text, Rect r, GUIStyle style = null)
+        {
+            return style == null ? GUI.Button(r, text) : GUI.Button(r, text, style);
+        }
 
         /// <summary>
         /// Creates a button with a specified color. Optionally a style can be specified.
