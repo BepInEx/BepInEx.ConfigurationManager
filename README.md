@@ -1,116 +1,112 @@
-## Plugin / mod configuration manager for BepInEx
-An easy way to let user configure how a plugin behaves without the need to make your own GUI. The user can change any of the settings you expose, even keyboard shortcuts.
+- `Warning: At least BepInEx v5.4.20 is required as of v17.1!`
 
-The configuration manager can be accessed in-game by pressing the hotkey (by default F1). Hover over the setting names to see their descriptions, if any.
+### Please NOTE:
 
-![Configuration manager](Screenshot.PNG)
+The mod was created and hosted by the BepInEx team https://github.com/BepInEx
 
-## How to use
-There are two versions of this plugin, for BepInEx 5 (version 5.4.20 or newer, mono only) and BepInEx 6 (nightly build 664 or newer, IL2CPP only).
+I do not own the base code, I only own my customizations to it (layout changes, caching, dragging, colors, and custom
+drawers/input) all credits go to the BepInEx team. I just uploaded it for ease of access to the latest version.
 
-- Install and configure the correct BepInEx version for your game (see above).
-- Download latest release for your BepInEx from the [Releases](https://github.com/BepInEx/BepInEx.ConfigurationManager/releases).
-- Extract the plugin directly into your game directory, where the BepInEx folder is (the .dll should end up inside your BepInEx\Plugins folder).
-- Start the game and press F1.
+`This is my UnOfficial version of the Configuration Manager. I will keep it updated with anything the BepInEx developers do to it, but I wanted extra features :P`
 
-Note: The .xml file include in the release zip is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
+Find my version's code here: https://github.com/AzumattDev/BepInEx.ConfigurationManager
 
-### Known issues
-- If no text is visible anywhere in RUE windows, most likely the `Arial.ttf` font is missing from the system (Unity UI default font, may be different in some games). This can happen when running a game on Linux with [misconfigured wine](https://github.com/ManlyMarco/RuntimeUnityEditor/issues/55).
-- The IL2CPP version currently only works in some games that have unstripped `UnityEngine.IMGUIModule.dll` (support for some of the games can be added with a patcher that restores missing members, [example](https://github.com/IllusionMods/BepisPlugins/tree/fe2c5e14c8bcb14602ba5380226aee3ddd20b2f8/src/IMGUIModule.Il2Cpp.CoreCLR.Patcher)).
+My version complies with the license of the original repo.
 
-## How to make my mod compatible?
-ConfigurationManager will automatically display all settings from your plugin's `Config`. All metadata (e.g. description, value range) will be used by ConfigurationManager to display the settings to the user.
+Check the mod out:
+https://github.com/BepInEx/BepInEx.ConfigurationManager
 
-In most cases you don't have to reference ConfigurationManager.dll or do anything special with your settings. Simply make sure to add as much metadata as possible (doing so will help all users, even if they use the config files directly). Always add descriptive section and key names, descriptions, and acceptable value lists or ranges (wherever applicable).
+## Plugin / mod configuration manager for BepInEx 5
 
-### How to make my setting into a slider?
-Specify `AcceptableValueRange` when creating your setting. If the range is 0f - 1f or 0 - 100 the slider will be shown as % (this can be overridden below).
-```c#
-CaptureWidth = Config.Bind("Section", "Key", 1, new ConfigDescription("Description", new AcceptableValueRange<int>(0, 100)));
-```
+An easy way to let user configure how a plugin behaves without the need to make your own GUI. The user can change any of
+the settings you expose, even keyboard shortcuts.
 
-### How to make my setting into a drop-down list?
-Specify `AcceptableValueList` when creating your setting. If you use an enum you don't need to specify AcceptableValueList, all of the enum values will be shown. If you want to hide some values, you will have to use the attribute.
+The Configuration Manager is designed to simplify mod configuration for both developers and end‑users. Whether you’re a
+plugin developer wanting to expose rich configuration options or an end‑user wanting to tweak settings in-game, this
+tool aims to provide a smooth and integrated experience.
 
-Note: You can add `System.ComponentModel.DescriptionAttribute` to your enum's items to override their displayed names. For example:
-```c#
-public enum MyEnum
-{
-    // Entry1 will be shown in the combo box as Entry1
-    Entry1,
-    [Description("Entry2 will be shown in the combo box as this string")]
-    Entry2
-}
-```
+The configuration manager can be accessed in-game by pressing the hotkey (by default F1). Hover over the setting names
+to see their descriptions, if any.
 
-### How to allow user to change my keyboard shorcuts / How to easily check for key presses?
-Add a setting of type KeyboardShortcut. Use the value of this setting to check for inputs (recommend using IsDown) inside of your Update method.
+# Notable changes from the official version:
 
-The KeyboardShortcut class supports modifier keys - Shift, Control and Alt. They are properly handled, preventing common problems like K+Shift+Control triggering K+Shift when it shouldn't have.
-```c#
-private ConfigEntry<KeyboardShortcut> ShowCounter { get; set; }
+- Caching of settings to improve performance.
+- Custom color drawers for colors. Majorly improves the color selection experience.
+- Custom layout for better usability. Two columns instead of one long one.
+- Custom pinning of plugins for quick access.
+- Custom overlay canvas to block game input when the configuration window is active. (The config manager still remains
+  game
+  agnostic. Meaning it will work with any game that uses BepInEx. Not just Valheim)
+- Custom keyboard shortcuts for changing keybinds.
+- Custom search functionality.
+- Display for read-only settings. Usually used for synced settings (ServerSynced configurations). Noted by the red up
+  and down arrows.
+- Custom display for other config files.
+- Dynamic layout for different resolutions.
+- Custom dragging of the configuration window.
+- Ability to delete config files from the configuration manager.
+- Ability to open config files from the configuration manager (uses default file editor on your machine). The
+  recommendation is at least Notepad++, but VSCode is one of the better choices.
+- Ability to change various settings in the configuration manager itself. Colors, font size, etc.
+- Probably more that I forgot to mention!
 
-public Constructor()
-{
-    ShowCounter = Config.Bind("Hotkeys", "Show FPS counter", new KeyboardShortcut(KeyCode.U, KeyCode.LeftShift));
-}
+# Using the Manager:
 
-private void Update()
-{
-    if (ShowCounter.Value.IsDown())
-    {
-        // Handle the key press
-    }
-}
-```
+- Navigation: The left column lists all plugins (or additional configuration files) and the right column displays the
+  settings for the selected item (or content of the file).
+- Search: Use the search bar at the top to quickly filter settings.
+- Keyboard Shortcuts: The configuration manager even supports changing keybindings; simply click on a keybind setting
+  and press the new key combination.
 
-## Overriding default Configuration Manager behavior
-You can change how a setting is shown inside the configuration manager window by passing an instance of a special class as a tag of the setting. The special class code can be downloaded [here](ConfigurationManagerAttributes.cs). Simply download the .cs file and drag it into your project.
-- You do not have to reference ConfigurationManager.dll for this to work.
-- The class will work as long as name of the class and declarations of its fields remain unchanged. 
-- Avoid making the class public to prevent conflicts with other plugins. If you want to share it between your plugins either give each a copy, or move it to your custom namespace.
-- If the ConfigurationManager plugin is not installed in the game, this class will be safely ignored and your plugin will work as normal.
+# Features
 
-Here's an example of overriding order of settings and marking one of the settings as advanced:
-```c#
-// Override IsAdvanced and Order
-Config.Bind("X", "1", 1, new ConfigDescription("", null, new ConfigurationManagerAttributes { IsAdvanced = true, Order = 3 }));
-// Override only Order, IsAdvanced stays as the default value assigned by ConfigManager
-Config.Bind("X", "2", 2, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 1 }));
-Config.Bind("X", "3", 3, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 2 }));
-```
+- Automatic Detection:
+    - Reads and displays all settings from your plugin’s Config without any extra work from the plugin developer.
 
-### How to make a custom editor for my setting?
-If you are using a setting type that is not supported by ConfigurationManager, you can add a drawer Action for it. The Action will be executed inside OnGUI, use GUILayout to draw your setting as shown in the example below.
+- Rich Metadata Support:
+    - Uses descriptions, acceptable ranges, and lists (or enums) to render settings as text, sliders, or dropdown menus.
 
-To use a custom seting drawer for an individual setting, use the `CustomDrawer` field in the attribute class. See above for more info on the attribute class.
-```c#
-void Start()
-{
-    // Add the drawer as a tag to this setting.
-    Config.Bind("Section", "Key", "Some value" 
-        new ConfigDescription("Desc", null, new ConfigurationManagerAttributes{ CustomDrawer = MyDrawer });
-}
+- Keybind Support:
+    - Special handling for keyboard shortcuts. The manager properly supports modifier keys (Shift, Control, Alt) so that
+      you can assign combinations without conflicts.
 
-static void MyDrawer(BepInEx.Configuration.ConfigEntryBase entry)
-{
-    // Make sure to use GUILayout.ExpandWidth(true) to use all available space
-    GUILayout.Label(entry.BoxedValue, GUILayout.ExpandWidth(true));
-}
-```
-#### Add a custom editor globally
-You can specify a drawer for all settings of a setting type. Do this by using `ConfigurationManager.RegisterCustomSettingDrawer(Type, Action<SettingEntryBase>)`.
+- Advanced Customization:
+    - Developers can override the default UI for a setting by tagging it with a custom attribute. A separate
+      ConfigurationManagerAttributes.cs file (included in the release) lets you define custom drawer behavior for
+      individual settings or entire types.
 
-**Warning:** This requires you to reference ConfigurationManager.dll in your project and is not recommended unless you are sure all users will have it installed. It's usually better to use the above method to add the custom drawer to each setting individually instead.
-```c#
-void Start()
-{
-    ConfigurationManager.RegisterCustomSettingDrawer(typeof(MyType), CustomDrawer);
-}
+- Performance Optimization:
+    - For large configuration lists, off‑screen items are skipped to improve FPS. This is drastically better than the
+      original version.
 
-static void CustomDrawer(SettingEntryBase entry)
-{
-    GUILayout.Label((MyType)entry.Get(), GUILayout.ExpandWidth(true));
-}
-```
+- Pinning:
+    - Easily pin favorite plugins to the top of the list for quicker access.
+
+- Overlay Canvas:
+    - When the configuration window is active, an overlay blocks game input so that accidental clicks are avoided.
+
+# Screenshots
+
+## Color Drawer
+
+![Configuration manager Color Drawer](https://raw.githubusercontent.com/AzumattDev/BepInEx.ConfigurationManager/master/ConfigurationManager_color.PNG)
+
+## Mod Selected View
+
+![Configuration manager Mod Selected View](https://raw.githubusercontent.com/AzumattDev/BepInEx.ConfigurationManager/master/ConfigurationManager_modselected.PNG)
+
+## No Selection View
+
+![Configuration manager No Selection View](https://raw.githubusercontent.com/AzumattDev/BepInEx.ConfigurationManager/master/ConfigurationManager_noselection.PNG)
+
+## Other Config Files
+
+![Configuration manager Other Config Files](https://raw.githubusercontent.com/AzumattDev/BepInEx.ConfigurationManager/master/ConfigurationManager_otherconfigfiles.PNG)
+
+## Synced/Read Only configuration (Red Arrows)
+
+![Configuration manager Synced Read Only](https://raw.githubusercontent.com/AzumattDev/BepInEx.ConfigurationManager/master/ConfigurationManager_syncedreadonly.PNG)
+
+## Pinning
+
+![Configuration manager Pinned](https://raw.githubusercontent.com/AzumattDev/BepInEx.ConfigurationManager/master/ConfigurationManager_pinned.PNG)
