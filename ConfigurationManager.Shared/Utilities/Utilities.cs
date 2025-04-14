@@ -39,6 +39,8 @@ namespace ConfigurationManager.Utilities
 
         public static string AppendZero(this string s)
         {
+            // Scandinavian and some other regions use Comma (,) instead of Period (.) for decimal places. This causes some issues, so this fixes it.
+            s = s.Replace(",", ".");
             return !s.Contains(".") ? s + ".0" : s;
         }
 
