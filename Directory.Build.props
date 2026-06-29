@@ -1,7 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<!-- This is the master version, only change this one -->
-		<Version>18.4.1</Version>
+		<Version>19.0</Version>
 
 		<!-- Sets the 'Product name' field on the dll file -->
 		<Product>BepInEx.ConfigurationManager</Product>
