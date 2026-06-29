@@ -21,6 +21,7 @@ namespace BepInEx.Configuration
     ///
     /// How to use: Use <see cref="IsDown"/> in this class instead of <see cref="Input.GetKeyDown(KeyCode)"/> in the Update loop.
     /// </summary>
+    [Obsolete("Update to BepInEx.Unity.IL2CPP 6.0.0-be.785 and use Unity.IL2CPP.Configuration.KeyboardShortcut instead")]
     public struct KeyboardShortcut
     {
         static KeyboardShortcut()
@@ -129,7 +130,7 @@ namespace BepInEx.Configuration
         public bool IsDown()
         {
             KeyCode mainKey = MainKey;
-            return mainKey != KeyCode.None && Input.GetKeyDown(mainKey) && ModifierKeyTest();
+            return mainKey != KeyCode.None && UnityInput.Current.GetKeyDown(mainKey) && ModifierKeyTest();
         }
 
         /// <summary>
@@ -138,7 +139,7 @@ namespace BepInEx.Configuration
         public bool IsPressed()
         {
             KeyCode mainKey = MainKey;
-            return mainKey != KeyCode.None && Input.GetKey(mainKey) && ModifierKeyTest();
+            return mainKey != KeyCode.None && UnityInput.Current.GetKey(mainKey) && ModifierKeyTest();
         }
 
         /// <summary>
@@ -147,15 +148,15 @@ namespace BepInEx.Configuration
         public bool IsUp()
         {
             KeyCode mainKey = MainKey;
-            return mainKey != KeyCode.None && Input.GetKeyUp(mainKey) && ModifierKeyTest();
+            return mainKey != KeyCode.None && UnityInput.Current.GetKeyUp(mainKey) && ModifierKeyTest();
         }
 
         private bool ModifierKeyTest()
         {
             KeyCode mainKey = MainKey;
             return
-                _allKeys.All(key => key == mainKey || Input.GetKey(key)) &&
-                ModifierBlockKeyCodes.Except(_allKeys).All(key => !Input.GetKey(key));
+                _allKeys.All(key => key == mainKey || UnityInput.Current.GetKey(key)) &&
+                ModifierBlockKeyCodes.Except(_allKeys).All(key => !UnityInput.Current.GetKey(key));
         }
 
         /// <inheritdoc />

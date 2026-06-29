@@ -23,7 +23,7 @@
   </PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.664">
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.785">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
     <PackageReference Include="IllusionLibs.HoneyCome.Il2Cppmscorlib" Version="2023.99.12.15">

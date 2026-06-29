@@ -9,7 +9,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using BepInEx;
+#if IL2CPP
+using BepInEx.Unity.IL2CPP.Configuration;
+#else
 using BepInEx.Configuration;
+#endif
 using UnityEngine;
 
 namespace ConfigurationManager
@@ -32,6 +36,9 @@ namespace ConfigurationManager
             SettingDrawHandlers = new Dictionary<Type, Action<SettingEntryBase>>
             {
                 { typeof(bool), DrawBoolField },
+#if IL2CPP
+                { typeof(BepInEx.Configuration.KeyboardShortcut), DrawKeyboardShortcutObsolete},
+#endif
                 { typeof(KeyboardShortcut), DrawKeyboardShortcut},
                 { typeof(KeyCode), DrawKeyCode },
                 { typeof(Color), DrawColor },
@@ -357,14 +364,6 @@ namespace ConfigurationManager
                 GUILayout.Label("Press any key", GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
-#if IL2CPP
-                KeyCode key = KeyboardShortcut.ModifierBlockKeyCodes.FirstOrDefault(Input.GetKeyUp);
-                if (key != KeyCode.None)
-                {
-                    setting.Set(key);
-                    _currentKeyboardShortcutToSet = null;
-                }
-#else
                 var input = UnityInput.Current;
                 if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
                 foreach (var key in _keysToCheck)
@@ -376,7 +375,6 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-#endif
                 if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
@@ -397,14 +395,41 @@ namespace ConfigurationManager
                 GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
-#if IL2CPP
-                KeyCode key = KeyboardShortcut.ModifierBlockKeyCodes.FirstOrDefault(Input.GetKeyUp);
-                if (key != KeyCode.None)
+                var input = UnityInput.Current;
+                if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
+                foreach (var key in _keysToCheck)
                 {
-                    setting.Set(new KeyboardShortcut(key, KeyboardShortcut.ModifierBlockKeyCodes.Where(Input.GetKey).ToArray()));
+                    if (input.GetKeyUp(key))
+                    {
+                        setting.Set(new KeyboardShortcut(key, _keysToCheck.Where(input.GetKey).ToArray()));
+                        _currentKeyboardShortcutToSet = null;
+                        break;
+                    }
+                }
+                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                    _currentKeyboardShortcutToSet = null;
+            }
+            else
+            {
+                if (GUILayout.Button(setting.Get().ToString(), GUILayout.ExpandWidth(true)))
+                    _currentKeyboardShortcutToSet = setting;
+
+                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                {
+                    setting.Set(KeyboardShortcut.Empty);
                     _currentKeyboardShortcutToSet = null;
                 }
-#else
+            }
+        }
+
+#if IL2CPP
+        private static void DrawKeyboardShortcutObsolete(SettingEntryBase setting)
+        {
+            if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
+            {
+                GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
+                GUIUtility.keyboardControl = -1;
+
                 var input = UnityInput.Current;
                 if (_keysToCheck == null) _keysToCheck = input.SupportedKeyCodes.Except(new[] { KeyCode.Mouse0, KeyCode.None }).ToArray();
                 foreach (var key in _keysToCheck)
@@ -416,7 +441,6 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-#endif
                 if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
@@ -432,6 +456,7 @@ namespace ConfigurationManager
                 }
             }
         }
+#endif
 
         private static void DrawVector2(SettingEntryBase obj)
         {

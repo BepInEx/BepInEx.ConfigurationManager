@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.664">
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.785">
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
     <PackageReference Include="IllusionLibs.HoneyCome.Il2Cppmscorlib" Version="2023.99.12.15">
@@ -60,7 +60,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BepInEx.KeyboardShortcut\BepInEx.KeyboardShortcut.IL2CPP.csproj" />
+    <ProjectReference Include="..\BepInEx.KeyboardShortcut\BepInEx.KeyboardShortcut.IL2CPP.csproj">
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <Import Project="..\ConfigurationManager.Shared\ConfigurationManager.Shared.projitems" Label="Shared" />

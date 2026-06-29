@@ -300,11 +300,7 @@ namespace ConfigurationManager
             {
                 SetUnlockCursor(0, true);
 
-#if IL2CPP
-                Vector2 mousePosition = Input.mousePosition; //todo move to UnityInput whenever it is added
-#else
                 Vector2 mousePosition = UnityInput.Current.mousePosition;
-#endif
                 mousePosition.y = Screen.height - mousePosition.y;
 
                 // If the window hasn't been moved by the user yet, block the whole screen and use a solid background to make the window easier to see
@@ -327,7 +323,7 @@ namespace ConfigurationManager
                 }
 
                 if (!SettingFieldDrawer.SettingKeyboardShortcut && (!_windowWasMoved || SettingWindowRect.Contains(mousePosition)))
-                    Input.ResetInputAxes();
+                    UnityInput.Current.ResetInputAxes();
             }
         }
 
