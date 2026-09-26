@@ -76,6 +76,32 @@ namespace ConfigurationManager
         /// </summary>
         public bool IsWindowFullscreen => DisplayingWindow && !_windowWasMoved;
 
+        private static ConfigurationManager _instance;
+
+        /// <summary>
+        /// True while the window is open and using keyboard and mouse input (the whole time it is fullscreen; once it was moved, only while the mouse is over it
+        /// or a keyboard shortcut is being set), and the user has left "Block game input" enabled in the window.
+        /// <para>
+        /// The config manager can't stop a game from reading input on its own. Games and plugins that want to ignore gameplay input while the window is open
+        /// have to check this value themselves, e.g. from a patch on the method that decides if the player can take input. Values are read live, so
+        /// keys that are still held when the window is closed are seen by the game again as soon as this becomes false.
+        /// </para>
+        /// </summary>
+        public static bool IsBlockingGameInput => _instance != null && _instance._blockGameInput.Value && _instance.IsCapturingInput;
+
+        private bool IsCapturingInput
+        {
+            get
+            {
+                if (!DisplayingWindow) return false;
+                if (!_windowWasMoved || SettingFieldDrawer.SettingKeyboardShortcut) return true;
+
+                var mousePosition = (Vector2)UnityInput.Current.mousePosition;
+                mousePosition.y = Screen.height - mousePosition.y;
+                return SettingWindowRect.Contains(mousePosition);
+            }
+        }
+
         private bool _tipsPluginHeaderWasClicked, _tipsWindowWasMoved;
 
         private Rect _screenRect;
@@ -94,9 +120,11 @@ namespace ConfigurationManager
         private readonly ConfigEntry<bool> _showKeybinds;
         private readonly ConfigEntry<bool> _showSettings;
         private readonly ConfigEntry<KeyboardShortcut> _keybind;
+        private readonly ConfigEntry<bool> _blockGameInput;
         private readonly ConfigEntry<bool> _hideSingleSection;
         private readonly ConfigEntry<bool> _pluginConfigCollapsedDefault;
         private bool _showDebug;
+        private bool _showOptions;
 
         /// <inheritdoc />
         public ConfigurationManager()
@@ -107,6 +135,7 @@ namespace ConfigurationManager
             Logger = base.Logger;
 #endif
             _fieldDrawer = new SettingFieldDrawer(this);
+            _instance = this;
 
             _showAdvanced = Config.Bind("Filtering", "Show advanced", false);
             _showKeybinds = Config.Bind("Filtering", "Show keybinds", true);
@@ -114,6 +143,9 @@ namespace ConfigurationManager
             _keybind = Config.Bind("General", "Show config manager", new KeyboardShortcut(KeyCode.F1),
                 new ConfigDescription("The shortcut used to toggle the config manager window on and off.\n" +
                                       "The key can be overridden by a game-specific plugin if necessary, in that case this setting is ignored."));
+            _blockGameInput = Config.Bind("General", "Block game input", true,
+                new ConfigDescription("Ask the game to ignore keyboard and mouse input while the config manager window is open, so that using the window doesn't also trigger gameplay actions.\n" +
+                                      "This only has an effect in games (or with plugins) that check ConfigurationManager.IsBlockingGameInput, the config manager can't stop a game from reading input on its own."));
             _hideSingleSection = Config.Bind("General", "Hide single sections", false, new ConfigDescription("Show section title for plugins with only one section"));
             _pluginConfigCollapsedDefault = Config.Bind("General", "Plugin collapsed default", true, new ConfigDescription("If set to true plugins will be collapsed when opening the configuration manager window"));
         }
@@ -488,12 +520,7 @@ namespace ConfigurationManager
 
                 GUILayout.Space(8);
 
-                newVal = GUILayout.Toggle(_showDebug, "Debug info");
-                if (_showDebug != newVal)
-                {
-                    _showDebug = newVal;
-                    BuildSettingList();
-                }
+                _showOptions = GUILayout.Toggle(_showOptions, "Options", GUI.skin.button);
 
                 if (GUILayout.Button("Open Log"))
                 {
@@ -509,6 +536,31 @@ namespace ConfigurationManager
                 }
             }
             GUILayout.EndHorizontal();
+
+            if (_showOptions)
+            {
+                GUILayout.BeginVertical(GUI.skin.box);
+                {
+                    GUILayout.BeginHorizontal();
+                    {
+                        var debugInfo = GUILayout.Toggle(_showDebug, "Debug info");
+                        if (_showDebug != debugInfo)
+                        {
+                            _showDebug = debugInfo;
+                            BuildSettingList();
+                        }
+
+                        var blockInput = GUILayout.Toggle(_blockGameInput.Value, "Block game input");
+                        if (_blockGameInput.Value != blockInput)
+                            _blockGameInput.Value = blockInput;
+                    }
+                    GUILayout.EndHorizontal();
+
+                    // Shown as text instead of a tooltip because IMGUI keeps showing the tooltip of a clicked toggle
+                    GUILayout.Label("Block game input asks the game to ignore keyboard and mouse input while this window is open. It only works in games and with plugins that support it.");
+                }
+                GUILayout.EndVertical();
+            }
 
             GUILayout.BeginHorizontal(GUI.skin.box);
             {

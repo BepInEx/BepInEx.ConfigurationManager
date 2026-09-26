@@ -65,6 +65,32 @@ private void Update()
 }
 ```
 
+### How to make my game / mod ignore input while the window is open?
+The configuration manager can't stop a game from reading keyboard and mouse input, so when the window is open the game may still react to it (walking, attacking, etc.). The window has a "Block game input" checkbox under "Options" (on by default, also available as the `Block game input` setting) that exposes the state through `ConfigurationManager.IsBlockingGameInput`. Nothing happens by itself: a game-specific plugin has to check the value and ignore gameplay input while it is `true`. It does not pause the game.
+
+The value is `true` while the window is open and using input (always when it fills the screen; once the user has moved it, only while the mouse is over it or a shortcut is being set) and the checkbox is enabled. It is read live, so keys that are still held when the window closes reach the game again right away.
+
+With Harmony this is usually a postfix on the game's own "can the player take input" method. Reference ConfigurationManager.dll and add a soft dependency, or read the static property through reflection as in the example below (works with no reference and with older versions, where the property doesn't exist):
+```c#
+[BepInDependency("com.bepis.bepinex.configurationmanager", BepInDependency.DependencyFlags.SoftDependency)]
+public class MyPlugin : BaseUnityPlugin
+{
+    internal static Func<bool> IsBlocking = () => false;
+
+    void Awake()
+    {
+        if (Chainloader.PluginInfos.TryGetValue("com.bepis.bepinex.configurationmanager", out var cm))
+        {
+            var getter = cm.Instance.GetType().GetProperty("IsBlockingGameInput", BindingFlags.Public | BindingFlags.Static)?.GetGetMethod();
+            if (getter != null) IsBlocking = (Func<bool>)Delegate.CreateDelegate(typeof(Func<bool>), getter);
+        }
+    }
+}
+
+// Postfix on whatever your game uses to decide if gameplay input is accepted
+static void Postfix(ref bool __result) { if (MyPlugin.IsBlocking()) __result = false; }
+```
+
 ## Overriding default Configuration Manager behavior
 You can change how a setting is shown inside the configuration manager window by passing an instance of a special class as a tag of the setting. The special class code can be downloaded [here](ConfigurationManagerAttributes.cs). Simply download the .cs file and drag it into your project.
 - You do not have to reference ConfigurationManager.dll for this to work.
