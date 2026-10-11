@@ -169,7 +169,7 @@ namespace ConfigurationManager
         private static void DrawBoolField(SettingEntryBase setting)
         {
             var boolVal = (bool)setting.Get();
-            var result = GUILayout.Toggle(boolVal, boolVal ? "Enabled" : "Disabled", GUILayout.ExpandWidth(true));
+            var result = GUILayout.Toggle(boolVal, ImguiUtils.Content(boolVal ? "Enabled" : "Disabled"), GUILayout.ExpandWidth(true));
             if (result != boolVal)
                 setting.Set(result);
         }
@@ -361,7 +361,7 @@ namespace ConfigurationManager
         {
             if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
             {
-                GUILayout.Label("Press any key", GUILayout.ExpandWidth(true));
+                GUILayout.Label(ImguiUtils.Content("Press any key"), GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
                 var input = UnityInput.Current;
@@ -375,7 +375,7 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Cancel"), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -392,7 +392,7 @@ namespace ConfigurationManager
         {
             if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
             {
-                GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
+                GUILayout.Label(ImguiUtils.Content("Press any key combination"), GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
                 var input = UnityInput.Current;
@@ -406,7 +406,7 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Cancel"), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -414,7 +414,7 @@ namespace ConfigurationManager
                 if (GUILayout.Button(setting.Get().ToString(), GUILayout.ExpandWidth(true)))
                     _currentKeyboardShortcutToSet = setting;
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Clear"), GUILayout.ExpandWidth(false)))
                 {
                     setting.Set(KeyboardShortcut.Empty);
                     _currentKeyboardShortcutToSet = null;
@@ -427,7 +427,7 @@ namespace ConfigurationManager
         {
             if (ReferenceEquals(_currentKeyboardShortcutToSet, setting))
             {
-                GUILayout.Label("Press any key combination", GUILayout.ExpandWidth(true));
+                GUILayout.Label(ImguiUtils.Content("Press any key combination"), GUILayout.ExpandWidth(true));
                 GUIUtility.keyboardControl = -1;
 
                 var input = UnityInput.Current;
@@ -441,7 +441,7 @@ namespace ConfigurationManager
                         break;
                     }
                 }
-                if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Cancel"), GUILayout.ExpandWidth(false)))
                     _currentKeyboardShortcutToSet = null;
             }
             else
@@ -449,7 +449,7 @@ namespace ConfigurationManager
                 if (GUILayout.Button(setting.Get().ToString(), GUILayout.ExpandWidth(true)))
                     _currentKeyboardShortcutToSet = setting;
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Clear"), GUILayout.ExpandWidth(false)))
                 {
                     setting.Set(BepInEx.Configuration.KeyboardShortcut.Empty);
                     _currentKeyboardShortcutToSet = null;
