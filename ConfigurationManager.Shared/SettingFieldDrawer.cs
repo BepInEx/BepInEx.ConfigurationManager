@@ -99,32 +99,41 @@ namespace ConfigurationManager
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// Header style of the current skin: its custom style with the given name if it has one, otherwise a centered copy of its label.
+        /// Rebuilt only when the skin changes, so the default look builds it once as before.
+        /// </summary>
+        private static GUIStyle GetHeaderStyle(string customStyleName, int fontSize, ref GUIStyle style, ref GUISkin styleSkin)
+        {
+            var skin = GUI.skin;
+            if (style == null || styleSkin != skin)
+            {
+                style = skin.FindStyle(customStyleName);
+                if (style == null)
+                {
+                    style = skin.label.CreateCopy();
+                    style.alignment = TextAnchor.UpperCenter;
+                    style.wordWrap = true;
+                    style.stretchWidth = true;
+                    style.fontSize = fontSize;
+                }
+                styleSkin = skin;
+            }
+            return style;
+        }
+
         private static GUIStyle _categoryHeaderSkin;
+        private static GUISkin _categoryHeaderSkinFor;
         public static void DrawCategoryHeader(string text)
         {
-            if (_categoryHeaderSkin == null)
-            {
-                _categoryHeaderSkin = GUI.skin.label.CreateCopy();
-                _categoryHeaderSkin.alignment = TextAnchor.UpperCenter;
-                _categoryHeaderSkin.wordWrap = true;
-                _categoryHeaderSkin.stretchWidth = true;
-                _categoryHeaderSkin.fontSize = 14;
-            }
-
-            GUILayout.Label(text, _categoryHeaderSkin);
+            GUILayout.Label(text, GetHeaderStyle(ConfigurationManager.CategoryHeaderStyleName, 14, ref _categoryHeaderSkin, ref _categoryHeaderSkinFor));
         }
 
         private static GUIStyle _pluginHeaderSkin;
+        private static GUISkin _pluginHeaderSkinFor;
         public static bool DrawPluginHeader(GUIContent content, bool isCollapsed)
         {
-            if (_pluginHeaderSkin == null)
-            {
-                _pluginHeaderSkin = GUI.skin.label.CreateCopy();
-                _pluginHeaderSkin.alignment = TextAnchor.UpperCenter;
-                _pluginHeaderSkin.wordWrap = true;
-                _pluginHeaderSkin.stretchWidth = true;
-                _pluginHeaderSkin.fontSize = 15;
-            }
+            GetHeaderStyle(ConfigurationManager.PluginHeaderStyleName, 15, ref _pluginHeaderSkin, ref _pluginHeaderSkinFor);
 
             if (isCollapsed) content.text += "\n...";
             return GUILayout.Button(content, _pluginHeaderSkin, GUILayout.ExpandWidth(true));
