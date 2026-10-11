@@ -84,6 +84,7 @@ namespace ConfigurationManager
         public static void ClearCache()
         {
             _comboBoxCache.Clear();
+            _rangeValueWidth = 0;
 
             foreach (var tex in _colorCache)
                 UnityEngine.Object.Destroy(tex.Value.Tex);
@@ -276,9 +277,19 @@ namespace ConfigurationManager
         }
 
         /// <summary>
-        /// Width of the value box next to a slider: fits the longest of the given texts in the current style (so a bigger font or a
-        /// custom skin does not clip the number), never narrower than the old fixed 50. Measured on a sample of zeros of that length,
-        /// not on the value itself, so the box does not change width while the slider is dragged.
+        /// Width shared by every value box and percent label next to a slider, so they line up in one column. It only grows: a value
+        /// that needs more room bumps it for all of them, up to <see cref="RangeValueMaxChars"/> characters. Reset when the window
+        /// opens or closes (<see cref="ClearCache"/>), so a font or skin change is picked up on the next open.
+        /// </summary>
+        private static float _rangeValueWidth;
+
+        private const float RangeValueMinWidth = 50f;
+        private const int RangeValueMaxChars = 10;
+
+        /// <summary>
+        /// Fits the longest of the given texts in the current style (so a bigger font or a custom skin does not clip the number) and
+        /// returns the shared width, never narrower than the old fixed 50. Measured on a sample of zeros of that length, not on the
+        /// value itself, so the box does not change width while the slider is dragged.
         /// </summary>
         private static float RangeValueWidth(GUIStyle style, params string[] texts)
         {
@@ -290,9 +301,12 @@ namespace ConfigurationManager
                 length = Math.Max(length, text.Length);
                 negative |= text.StartsWith("-");
             }
+            length = Math.Min(length, RangeValueMaxChars);
             var sample = (negative ? "-" : "") + new string('0', Math.Max(1, length - (negative ? 1 : 0)));
             // The style's margin is added too: the percent label sits inside a horizontal group, and without it "100%" wrapped.
-            return Mathf.Max(50, style.CalcSize(ImguiUtils.Content(sample)).x + style.margin.horizontal);
+            var fit = style.CalcSize(ImguiUtils.Content(sample)).x + style.margin.horizontal;
+            _rangeValueWidth = Mathf.Max(_rangeValueWidth, RangeValueMinWidth, fit);
+            return _rangeValueWidth;
         }
 
         private static void DrawRangeField(SettingEntryBase setting)
