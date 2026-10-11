@@ -28,10 +28,13 @@
 		</PropertyGroup>
 		<ItemGroup>
 			<BuildFiles Include="$(OutputPath)\*"/>
+			<TranslationFiles Include="$(SolutionDir)\Translations\**\*"/>
 		</ItemGroup>
 
 		<RemoveDir Directories="$(CopyDir)" />
 		<Copy DestinationFolder="$(CopyDir)\BepInEx\plugins\ConfigurationManager" SourceFiles="@(BuildFiles)" />
+		<Copy DestinationFolder="$(CopyDir)\BepInEx\Translation\%(RecursiveDir)" SourceFiles="@(TranslationFiles)" />
+
 		<!-- https://learn.microsoft.com/en-us/visualstudio/msbuild/zipdirectory-task?view=vs-2022 -->
 		<ZipDirectory SourceDirectory="$(CopyDir)" DestinationFile="$(OutputPath)\..\BepInEx.ConfigurationManager$(ZipPostfix)_v$(Version).zip" Overwrite="true" />
 		<RemoveDir Directories="$(CopyDir)" />
