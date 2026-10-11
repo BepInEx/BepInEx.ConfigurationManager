@@ -6,6 +6,22 @@ namespace ConfigurationManager.Utilities
 {
     internal static class ImguiUtils
     {
+        private static readonly Dictionary<string, GUIContent> _contentCache = new Dictionary<string, GUIContent>();
+
+        /// <summary>
+        /// Get a persistent GUIContent for a fixed interface string.
+        /// IMGUI translators (e.g. XUnity.AutoTranslator) replace the text of the GUIContent passed to GUI.Button/Label/Toggle
+        /// at draw time, after GUILayout has already measured the control. A string argument becomes a temporary GUIContent that
+        /// is reset to the original text on every call, so translated labels are always measured by the original text and get
+        /// clipped. A persistent GUIContent keeps the replaced text, so it is measured correctly from the next frame on.
+        /// </summary>
+        public static GUIContent Content(string text)
+        {
+            if (!_contentCache.TryGetValue(text, out var content))
+                _contentCache[text] = content = new GUIContent(text);
+            return content;
+        }
+
 #if IL2CPP
         private static Dictionary<ulong, Texture2D> _texCache = new Dictionary<ulong, Texture2D>();
 

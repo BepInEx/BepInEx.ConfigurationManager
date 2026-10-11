@@ -441,8 +441,8 @@ namespace ConfigurationManager
 
         private void DrawTips()
         {
-            var tip = !_tipsPluginHeaderWasClicked ? "Tip: Click plugin names to expand. Click setting and group names to see their descriptions." :
-                !_tipsWindowWasMoved ? "Tip: You can drag this window to move it. It will stay open while you interact with the game." : null;
+            var tip = !_tipsPluginHeaderWasClicked ? ImguiUtils.Content("Tip: Click plugin names to expand. Click setting and group names to see their descriptions.") :
+                !_tipsWindowWasMoved ? ImguiUtils.Content("Tip: You can drag this window to move it. It will stay open while you interact with the game.") : null;
 
             if (tip != null)
             {
@@ -460,14 +460,14 @@ namespace ConfigurationManager
             {
                 GUI.enabled = SearchString == string.Empty;
 
-                var newVal = GUILayout.Toggle(_showSettings.Value, "Normal settings");
+                var newVal = GUILayout.Toggle(_showSettings.Value, ImguiUtils.Content("Normal settings"));
                 if (_showSettings.Value != newVal)
                 {
                     _showSettings.Value = newVal;
                     BuildFilteredSettingList();
                 }
 
-                newVal = GUILayout.Toggle(_showKeybinds.Value, "Keyboard shortcuts");
+                newVal = GUILayout.Toggle(_showKeybinds.Value, ImguiUtils.Content("Keyboard shortcuts"));
                 if (_showKeybinds.Value != newVal)
                 {
                     _showKeybinds.Value = newVal;
@@ -476,7 +476,7 @@ namespace ConfigurationManager
 
                 var origColor = GUI.color;
                 GUI.color = _advancedSettingColor;
-                newVal = GUILayout.Toggle(_showAdvanced.Value, "Advanced settings");
+                newVal = GUILayout.Toggle(_showAdvanced.Value, ImguiUtils.Content("Advanced settings"));
                 if (_showAdvanced.Value != newVal)
                 {
                     _showAdvanced.Value = newVal;
@@ -488,14 +488,14 @@ namespace ConfigurationManager
 
                 GUILayout.Space(8);
 
-                newVal = GUILayout.Toggle(_showDebug, "Debug info");
+                newVal = GUILayout.Toggle(_showDebug, ImguiUtils.Content("Debug info"));
                 if (_showDebug != newVal)
                 {
                     _showDebug = newVal;
                     BuildSettingList();
                 }
 
-                if (GUILayout.Button("Open Log"))
+                if (GUILayout.Button(ImguiUtils.Content("Open Log")))
                 {
                     try { Utils.OpenLog(); }
                     catch (SystemException ex) { Logger.Log(LogLevel.Message | LogLevel.Error, ex.Message); }
@@ -503,7 +503,7 @@ namespace ConfigurationManager
 
                 GUILayout.Space(8);
 
-                if (GUILayout.Button("Close"))
+                if (GUILayout.Button(ImguiUtils.Content("Close")))
                 {
                     DisplayingWindow = false;
                 }
@@ -512,7 +512,7 @@ namespace ConfigurationManager
 
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.Label("Search: ", GUILayout.ExpandWidth(false));
+                GUILayout.Label(ImguiUtils.Content("Search: "), GUILayout.ExpandWidth(false));
 
                 GUI.SetNextControlName(SearchBoxName);
                 SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
@@ -524,12 +524,12 @@ namespace ConfigurationManager
                     _focusSearchBox = false;
                 }
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Clear"), GUILayout.ExpandWidth(false)))
                     SearchString = string.Empty;
 
                 GUILayout.Space(8);
 
-                if (GUILayout.Button(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content(_pluginConfigCollapsedDefault.Value ? "Expand All" : "Collapse All"), GUILayout.ExpandWidth(false)))
                 {
                     var newValue = !_pluginConfigCollapsedDefault.Value;
                     _pluginConfigCollapsedDefault.Value = newValue;
@@ -659,7 +659,7 @@ namespace ConfigurationManager
             if (defaultValue != null || setting.SettingType.IsClass)
             {
                 GUILayout.Space(5);
-                if (GUILayout.Button("Reset", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(ImguiUtils.Content("Reset"), GUILayout.ExpandWidth(false)))
                     setting.Set(defaultValue);
             }
         }
