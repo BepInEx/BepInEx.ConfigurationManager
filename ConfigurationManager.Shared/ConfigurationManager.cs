@@ -51,6 +51,25 @@ namespace ConfigurationManager
         private string _searchString = string.Empty;
 
         /// <summary>
+        /// Skin to draw the settings window with, for example to match the look of the game. Null (the default) keeps the default look.
+        /// The window, its controls and tooltips are drawn with this skin, and its window style draws the window background.
+        /// The dimmed backdrop behind a window that has not been moved yet keeps the default skin.
+        /// Plugin and category headers use the custom styles named <see cref="PluginHeaderStyleName"/> and <see cref="CategoryHeaderStyleName"/>
+        /// if the skin has them.
+        /// </summary>
+        public GUISkin WindowSkin { get; set; }
+
+        /// <summary>
+        /// Name of the custom style in <see cref="WindowSkin"/> used for plugin headers, if present.
+        /// </summary>
+        public const string PluginHeaderStyleName = "ConfigurationManager.PluginHeader";
+
+        /// <summary>
+        /// Name of the custom style in <see cref="WindowSkin"/> used for category headers, if present.
+        /// </summary>
+        public const string CategoryHeaderStyleName = "ConfigurationManager.CategoryHeader";
+
+        /// <summary>
         /// Event fired every time the manager window is shown or hidden.
         /// </summary>
         public event EventHandler<ValueChangedEventArgs<bool>> DisplayingWindowChanged;
@@ -309,10 +328,15 @@ namespace ConfigurationManager
                     if (GUI.Button(_screenRect, string.Empty, GUI.skin.box) && !SettingWindowRect.Contains(mousePosition))
                         DisplayingWindow = false;
 
-                    ImguiUtils.DrawWindowBackground(SettingWindowRect);
+                    // A custom skin draws the window background with its own window style
+                    if (WindowSkin == null)
+                        ImguiUtils.DrawWindowBackground(SettingWindowRect);
                 }
 
+                var defaultSkin = GUI.skin;
+                if (WindowSkin != null) GUI.skin = WindowSkin;
                 var newRect = GUILayout.Window(WindowId, SettingWindowRect, (GUI.WindowFunction)SettingsWindow, "Plugin / mod settings");
+                GUI.skin = defaultSkin;
 
                 if (newRect != SettingWindowRect)
                 {
