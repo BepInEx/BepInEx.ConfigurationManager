@@ -1,4 +1,6 @@
-// Arabic translation of the Configuration Manager window
+// Arabic translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
 Plugin / mod settings=إعدادات المودات
 Normal settings=الإعدادات العادية
 Keyboard shortcuts=اختصارات لوحة المفاتيح
@@ -8,16 +10,18 @@ Open Log=فتح السجل
 Close=إغلاق
 Search:=البحث:
 Clear=مسح
+URL=الرابط
 Expand All=توسيع الكل
 Collapse All=طي الكل
 Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=نصيحة: انقر فوق اسم المود لعرض إعداداته، أو انقر فوق اسم الإعداد لقراءة وصفه.
 Tip: You can drag this window to move it. It will stay open while you interact with the game.=نصيحة: يمكنك سحب هذه النافذة لتحريكها. وستظل مفتوحة أثناء تفاعلك مع اللعبة.
+r:"^Plugins with no options available: (.+)$"="المودات بدون إعدادات: $1"
 Reset=إعادة تعيين
 Cancel=إلغاء
 Press any key=اضغط على أي مفتاح
-Press any key combination=اضغط على مجموعة مفتاحية
+Press any key combination=اضغط على تركيبة مفاتيح
 Set...=تعيين...
 Set the key by pressing any key on your keyboard.=اضغط على أي مفتاح في لوحة المفاتيح لتعيينه.
 Enabled=مفعل
 Disabled=معطل
-Failed to darw this field, check log for details.=فشل في عرض هذا الحقل، تحقق من السجل لمزيد من التفاصيل.
+Failed to draw this field, check log for details.=فشل في عرض هذا الحقل، تحقق من السجل لمزيد من التفاصيل.
