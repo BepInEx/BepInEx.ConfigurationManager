@@ -1,0 +1,26 @@
+// Indonesian translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Pengaturan plugin / mod
+Normal settings=Biasa
+Keyboard shortcuts=Pintasan
+Advanced settings=Lanjutan
+Debug info=Info debug
+Open Log=Buka log
+Close=Tutup
+Search:=Cari:
+Clear=Hapus
+Expand All=Bentangkan semua
+Collapse All=Ciutkan semua
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Tips: klik nama plugin untuk melihat pengaturannya. Klik nama pengaturan atau grup untuk membaca deskripsinya.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Tips: seret jendela ini untuk memindahkannya. Jendela tetap terbuka selama Anda bermain.
+r:"^Plugins with no options available: (.+)$"="Plugin tanpa pengaturan: $1"
+Reset=Atur ulang
+Cancel=Batal
+Press any key=Tekan tombol apa saja
+Press any key combination=Tekan kombinasi tombol
+Set...=Atur…
+Set the key by pressing any key on your keyboard.=Tekan tombol apa saja pada keyboard untuk mengaturnya.
+Enabled=Aktif
+Disabled=Nonaktif
+Failed to draw this field, check log for details.=Gagal menampilkan bidang ini, lihat log untuk detailnya.

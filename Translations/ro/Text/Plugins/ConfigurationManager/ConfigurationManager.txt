@@ -1,0 +1,26 @@
+// Romanian translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Setări pentru pluginuri / moduri
+Normal settings=Normale
+Keyboard shortcuts=Comenzi rapide
+Advanced settings=Avansate
+Debug info=Depanare
+Open Log=Deschide jurnalul
+Close=Închide
+Search:=Caută:
+Clear=Șterge
+Expand All=Extinde tot
+Collapse All=Restrânge tot
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Sfat: dă clic pe numele unui plugin pentru a-i vedea setările. Dă clic pe o setare sau un grup pentru a citi descrierea.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Sfat: poți trage această fereastră pentru a o muta. Rămâne deschisă cât timp joci.
+r:"^Plugins with no options available: (.+)$"="Pluginuri fără setări: $1"
+Reset=Resetează
+Cancel=Anulează
+Press any key=Apasă o tastă
+Press any key combination=Apasă o combinație de taste
+Set...=Setează…
+Set the key by pressing any key on your keyboard.=Apasă orice tastă de pe tastatură pentru a o seta.
+Enabled=Activat
+Disabled=Dezactivat
+Failed to draw this field, check log for details.=Câmpul nu a putut fi afișat, verifică jurnalul pentru detalii.

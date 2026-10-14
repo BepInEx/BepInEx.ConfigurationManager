@@ -1,0 +1,26 @@
+// Filipino (Tagalog) translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Mga setting ng plugin / mod
+Normal settings=Karaniwang setting
+Keyboard shortcuts=Mga shortcut sa keyboard
+Advanced settings=Advanced na setting
+Debug info=Debug info
+Open Log=Buksan ang log
+Close=Isara
+Search:=Hanapin:
+Clear=I-clear
+Expand All=Palawakin lahat
+Collapse All=Itiklop lahat
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Tip: I-click ang pangalan ng plugin para makita ang mga setting nito. I-click ang pangalan ng setting o grupo para mabasa ang paglalarawan nito.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Tip: Maaari mong i-drag ang window na ito para ilipat ito. Mananatili itong bukas habang naglalaro ka.
+r:"^Plugins with no options available: (.+)$"="Mga plugin na walang setting: $1"
+Reset=I-reset
+Cancel=Kanselahin
+Press any key=Pindutin ang anumang key
+Press any key combination=Pindutin ang kombinasyon ng mga key
+Set...=Itakda…
+Set the key by pressing any key on your keyboard.=Pindutin ang anumang key sa keyboard para itakda ito.
+Enabled=Naka-on
+Disabled=Naka-off
+Failed to draw this field, check log for details.=Hindi maipakita ang field na ito, tingnan ang log para sa detalye.

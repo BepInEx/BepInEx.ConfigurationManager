@@ -1,0 +1,26 @@
+// Korean translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=플러그인/모드 설정
+Normal settings=일반 설정
+Keyboard shortcuts=단축키
+Advanced settings=고급 설정
+Debug info=디버그 정보
+Open Log=로그 열기
+Close=닫기
+Search:=검색:
+Clear=지우기
+Expand All=모두 펼치기
+Collapse All=모두 접기
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=팁: 플러그인 이름을 클릭하면 설정이 펼쳐집니다. 설정이나 그룹 이름을 클릭하면 설명을 볼 수 있습니다.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=팁: 이 창은 드래그해서 옮길 수 있습니다. 게임을 하는 동안에도 열려 있습니다.
+r:"^Plugins with no options available: (.+)$"="설정이 없는 플러그인: $1"
+Reset=초기화
+Cancel=취소
+Press any key=아무 키나 누르세요
+Press any key combination=키 조합을 누르세요
+Set...=지정…
+Set the key by pressing any key on your keyboard.=키보드에서 아무 키나 눌러 지정하세요.
+Enabled=켜짐
+Disabled=꺼짐
+Failed to draw this field, check log for details.=이 항목을 표시하지 못했습니다. 자세한 내용은 로그를 확인하세요.

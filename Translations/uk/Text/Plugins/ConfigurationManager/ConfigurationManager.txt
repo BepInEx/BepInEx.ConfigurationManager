@@ -1,0 +1,26 @@
+// Ukrainian translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Налаштування модів
+Normal settings=Звичайні
+Keyboard shortcuts=Клавіші
+Advanced settings=Розширені
+Debug info=Налагодження
+Open Log=Журнал
+Close=Закрити
+Search:=Пошук:
+Clear=Очистити
+Expand All=Розгорнути все
+Collapse All=Згорнути все
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Порада: клацніть назву моду, щоб відкрити його налаштування. Клацніть налаштування або групу, щоб прочитати опис.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Порада: вікно можна перетягнути мишею. Воно залишається відкритим, поки ви граєте.
+r:"^Plugins with no options available: (.+)$"="Моди без налаштувань: $1"
+Reset=Скинути
+Cancel=Скасувати
+Press any key=Натисніть клавішу
+Press any key combination=Натисніть комбінацію клавіш
+Set...=Призначити…
+Set the key by pressing any key on your keyboard.=Натисніть клавішу, щоб призначити її.
+Enabled=Увімк.
+Disabled=Вимк.
+Failed to draw this field, check log for details.=Не вдалося показати поле, подробиці в журналі.

@@ -1,0 +1,26 @@
+// Latvian translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Spraudņu / modu iestatījumi
+Normal settings=Parastie iestatījumi
+Keyboard shortcuts=Īsinājumtaustiņi
+Advanced settings=Papildu iestatījumi
+Debug info=Atkļūdošana
+Open Log=Atvērt žurnālu
+Close=Aizvērt
+Search:=Meklēt:
+Clear=Notīrīt
+Expand All=Izvērst visu
+Collapse All=Sakļaut visu
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Padoms: noklikšķiniet uz spraudņa nosaukuma, lai redzētu tā iestatījumus. Noklikšķiniet uz iestatījuma vai grupas, lai izlasītu aprakstu.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Padoms: šo logu var pārvietot, velkot ar peli. Tas paliek atvērts, kamēr spēlējat.
+r:"^Plugins with no options available: (.+)$"="Spraudņi bez iestatījumiem: $1"
+Reset=Atiestatīt
+Cancel=Atcelt
+Press any key=Nospiediet jebkuru taustiņu
+Press any key combination=Nospiediet taustiņu kombināciju
+Set...=Piešķirt…
+Set the key by pressing any key on your keyboard.=Nospiediet jebkuru tastatūras taustiņu, lai to piešķirtu.
+Enabled=Ieslēgts
+Disabled=Izslēgts
+Failed to draw this field, check log for details.=Neizdevās parādīt šo lauku, sīkāka informācija žurnālā.
