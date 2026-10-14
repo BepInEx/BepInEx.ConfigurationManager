@@ -2,9 +2,9 @@
 // Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
 // Plugin names, setting names and descriptions come from the plugins and are not translated here.
 Plugin / mod settings=Mga setting ng plugin / mod
-Normal settings=Karaniwang setting
-Keyboard shortcuts=Mga shortcut sa keyboard
-Advanced settings=Advanced na setting
+Normal settings=Normal
+Keyboard shortcuts=Mga shortcut
+Advanced settings=Advanced
 Debug info=Debug info
 Open Log=Buksan ang log
 Close=Isara

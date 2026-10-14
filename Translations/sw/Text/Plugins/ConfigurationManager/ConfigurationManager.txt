@@ -2,9 +2,9 @@
 // Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
 // Plugin names, setting names and descriptions come from the plugins and are not translated here.
 Plugin / mod settings=Mipangilio ya plugin / mod
-Normal settings=Mipangilio ya kawaida
-Keyboard shortcuts=Njia za mkato za kibodi
-Advanced settings=Mipangilio ya kina
+Normal settings=Ya kawaida
+Keyboard shortcuts=Njia za mkato
+Advanced settings=Ya kina
 Debug info=Utatuzi
 Open Log=Fungua kumbukumbu
 Close=Funga

@@ -2,9 +2,9 @@
 // Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
 // Plugin names, setting names and descriptions come from the plugins and are not translated here.
 Plugin / mod settings=Spraudņu / modu iestatījumi
-Normal settings=Parastie iestatījumi
+Normal settings=Parastie
 Keyboard shortcuts=Īsinājumtaustiņi
-Advanced settings=Papildu iestatījumi
+Advanced settings=Papildu
 Debug info=Atkļūdošana
 Open Log=Atvērt žurnālu
 Close=Aizvērt
