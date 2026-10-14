@@ -1,0 +1,26 @@
+// Vietnamese translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Cài đặt plugin / mod
+Normal settings=Thường
+Keyboard shortcuts=Phím tắt
+Advanced settings=Nâng cao
+Debug info=Gỡ lỗi
+Open Log=Mở nhật ký
+Close=Đóng
+Search:=Tìm kiếm:
+Clear=Xóa
+Expand All=Mở rộng tất cả
+Collapse All=Thu gọn tất cả
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Mẹo: nhấp vào tên plugin để xem cài đặt của nó. Nhấp vào tên cài đặt hoặc nhóm để đọc mô tả.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Mẹo: bạn có thể kéo cửa sổ này để di chuyển. Cửa sổ vẫn mở trong khi bạn chơi.
+r:"^Plugins with no options available: (.+)$"="Plugin không có tùy chọn: $1"
+Reset=Đặt lại
+Cancel=Hủy
+Press any key=Nhấn một phím bất kỳ
+Press any key combination=Nhấn một tổ hợp phím
+Set...=Gán…
+Set the key by pressing any key on your keyboard.=Nhấn một phím bất kỳ trên bàn phím để gán.
+Enabled=Bật
+Disabled=Tắt
+Failed to draw this field, check log for details.=Không thể hiển thị trường này, hãy xem nhật ký để biết chi tiết.

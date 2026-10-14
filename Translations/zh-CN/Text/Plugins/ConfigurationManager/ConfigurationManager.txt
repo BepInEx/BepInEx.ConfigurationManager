@@ -1,0 +1,26 @@
+// Simplified Chinese translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=插件/模组设置
+Normal settings=常规设置
+Keyboard shortcuts=快捷键
+Advanced settings=高级设置
+Debug info=调试信息
+Open Log=打开日志
+Close=关闭
+Search:=搜索：
+Clear=清除
+Expand All=全部展开
+Collapse All=全部折叠
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=提示：点击插件名称可展开其设置。点击设置项或分组名称可查看说明。
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=提示：可拖动此窗口调整位置。操作游戏时窗口不会关闭。
+r:"^Plugins with no options available: (.+)$"="无设置项的插件：$1"
+Reset=重置
+Cancel=取消
+Press any key=请按任意键
+Press any key combination=请按任意组合键
+Set...=设置…
+Set the key by pressing any key on your keyboard.=按下键盘上的任意键来设置按键。
+Enabled=已启用
+Disabled=已禁用
+Failed to draw this field, check log for details.=无法显示此项，详情请查看日志。

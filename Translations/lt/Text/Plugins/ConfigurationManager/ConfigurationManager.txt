@@ -1,0 +1,26 @@
+// Lithuanian translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Įskiepių / modų nustatymai
+Normal settings=Įprasti nustatymai
+Keyboard shortcuts=Klavišai
+Advanced settings=Išplėstiniai
+Debug info=Derinimas
+Open Log=Atidaryti žurnalą
+Close=Uždaryti
+Search:=Ieškoti:
+Clear=Išvalyti
+Expand All=Išskleisti viską
+Collapse All=Sutraukti viską
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Patarimas: spustelėkite įskiepio pavadinimą, kad pamatytumėte jo nustatymus. Spustelėkite nustatymą ar grupę, kad perskaitytumėte aprašymą.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Patarimas: šį langą galite perkelti tempdami pele. Jis lieka atidarytas, kol žaidžiate.
+r:"^Plugins with no options available: (.+)$"="Įskiepiai be nustatymų: $1"
+Reset=Atkurti
+Cancel=Atšaukti
+Press any key=Paspauskite bet kurį klavišą
+Press any key combination=Paspauskite klavišų derinį
+Set...=Priskirti…
+Set the key by pressing any key on your keyboard.=Paspauskite bet kurį klaviatūros klavišą, kad jį priskirtumėte.
+Enabled=Įjungta
+Disabled=Išjungta
+Failed to draw this field, check log for details.=Nepavyko parodyti šio lauko, išsamiau žr. žurnale.

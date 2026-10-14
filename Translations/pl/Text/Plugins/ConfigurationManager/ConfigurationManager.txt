@@ -1,0 +1,26 @@
+// Polish translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Ustawienia pluginów / modów
+Normal settings=Zwykłe
+Keyboard shortcuts=Skróty
+Advanced settings=Zaawansowane
+Debug info=Debugowanie
+Open Log=Otwórz log
+Close=Zamknij
+Search:=Szukaj:
+Clear=Wyczyść
+Expand All=Rozwiń wszystko
+Collapse All=Zwiń wszystko
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Wskazówka: kliknij nazwę pluginu, aby zobaczyć jego ustawienia. Kliknij ustawienie lub grupę, aby przeczytać opis.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Wskazówka: możesz przeciągnąć to okno myszą. Pozostaje otwarte podczas gry.
+r:"^Plugins with no options available: (.+)$"="Pluginy bez ustawień: $1"
+Reset=Resetuj
+Cancel=Anuluj
+Press any key=Naciśnij dowolny klawisz
+Press any key combination=Naciśnij kombinację klawiszy
+Set...=Ustaw…
+Set the key by pressing any key on your keyboard.=Naciśnij dowolny klawisz, aby go przypisać.
+Enabled=Wł.
+Disabled=Wył.
+Failed to draw this field, check log for details.=Nie udało się wyświetlić tego pola, szczegóły w logu.

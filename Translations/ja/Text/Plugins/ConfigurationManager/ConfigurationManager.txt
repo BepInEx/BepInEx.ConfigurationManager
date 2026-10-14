@@ -1,0 +1,26 @@
+// Japanese translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=プラグイン/MOD設定
+Normal settings=通常設定
+Keyboard shortcuts=キー設定
+Advanced settings=詳細設定
+Debug info=デバッグ情報
+Open Log=ログを開く
+Close=閉じる
+Search:=検索：
+Clear=クリア
+Expand All=すべて展開
+Collapse All=すべて折りたたみ
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=ヒント：プラグイン名をクリックすると設定が開きます。設定名やグループ名をクリックすると説明が表示されます。
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=ヒント：このウィンドウはドラッグで移動できます。ゲームのプレイ中も開いたままです。
+r:"^Plugins with no options available: (.+)$"="設定項目のないプラグイン：$1"
+Reset=リセット
+Cancel=キャンセル
+Press any key=キーを押してください
+Press any key combination=キーの組み合わせを押してください
+Set...=割り当て…
+Set the key by pressing any key on your keyboard.=キーボードの任意のキーを押して割り当てます。
+Enabled=有効
+Disabled=無効
+Failed to draw this field, check log for details.=この項目を表示できませんでした。詳細はログを確認してください。

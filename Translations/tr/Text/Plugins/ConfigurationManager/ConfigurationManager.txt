@@ -1,0 +1,26 @@
+// Turkish translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Eklenti / mod ayarları
+Normal settings=Normal
+Keyboard shortcuts=Kısayollar
+Advanced settings=Gelişmiş
+Debug info=Hata ayıklama
+Open Log=Günlüğü aç
+Close=Kapat
+Search:=Ara:
+Clear=Temizle
+Expand All=Tümünü genişlet
+Collapse All=Tümünü daralt
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=İpucu: Ayarlarını görmek için eklenti adına tıklayın. Açıklamasını okumak için ayar veya grup adına tıklayın.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=İpucu: Bu pencereyi sürükleyerek taşıyabilirsiniz. Siz oynarken açık kalır.
+r:"^Plugins with no options available: (.+)$"="Ayarı olmayan eklentiler: $1"
+Reset=Sıfırla
+Cancel=İptal
+Press any key=Bir tuşa basın
+Press any key combination=Bir tuş kombinasyonuna basın
+Set...=Tuş ata…
+Set the key by pressing any key on your keyboard.=Atamak için klavyede herhangi bir tuşa basın.
+Enabled=Açık
+Disabled=Kapalı
+Failed to draw this field, check log for details.=Bu alan gösterilemedi, ayrıntılar için günlüğe bakın.

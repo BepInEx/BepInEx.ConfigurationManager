@@ -1,0 +1,26 @@
+// Swahili translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Mipangilio ya plugin / mod
+Normal settings=Ya kawaida
+Keyboard shortcuts=Njia za mkato
+Advanced settings=Ya kina
+Debug info=Utatuzi
+Open Log=Fungua kumbukumbu
+Close=Funga
+Search:=Tafuta:
+Clear=Futa
+Expand All=Panua zote
+Collapse All=Kunja zote
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Kidokezo: Bofya jina la plugin ili kuona mipangilio yake. Bofya jina la mpangilio au kikundi ili kusoma maelezo yake.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Kidokezo: Unaweza kuburuta dirisha hili ili kulisogeza. Litabaki wazi wakati unacheza.
+r:"^Plugins with no options available: (.+)$"="Plugin zisizo na mipangilio: $1"
+Reset=Weka upya
+Cancel=Ghairi
+Press any key=Bonyeza kitufe chochote
+Press any key combination=Bonyeza mchanganyiko wa vitufe
+Set...=Weka kitufe…
+Set the key by pressing any key on your keyboard.=Bonyeza kitufe chochote kwenye kibodi ili kukiweka.
+Enabled=Imewashwa
+Disabled=Imezimwa
+Failed to draw this field, check log for details.=Imeshindwa kuonyesha sehemu hii, angalia kumbukumbu kwa maelezo.

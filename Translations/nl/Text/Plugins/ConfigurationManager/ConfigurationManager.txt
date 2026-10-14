@@ -1,0 +1,26 @@
+// Dutch translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Plug-in-/modinstellingen
+Normal settings=Normaal
+Keyboard shortcuts=Sneltoetsen
+Advanced settings=Geavanceerd
+Debug info=Debuginfo
+Open Log=Log openen
+Close=Sluiten
+Search:=Zoeken:
+Clear=Wissen
+Expand All=Alles uitvouwen
+Collapse All=Alles samenvouwen
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Tip: klik op de naam van een plug-in om de instellingen te zien. Klik op een instelling of groep om de beschrijving te lezen.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Tip: je kunt dit venster verslepen. Het blijft open terwijl je speelt.
+r:"^Plugins with no options available: (.+)$"="Plug-ins zonder instellingen: $1"
+Reset=Herstellen
+Cancel=Annuleren
+Press any key=Druk op een toets
+Press any key combination=Druk op een toetscombinatie
+Set...=Toewijzen…
+Set the key by pressing any key on your keyboard.=Druk op een toets om die toe te wijzen.
+Enabled=Aan
+Disabled=Uit
+Failed to draw this field, check log for details.=Kan dit veld niet weergeven, zie de log voor details.

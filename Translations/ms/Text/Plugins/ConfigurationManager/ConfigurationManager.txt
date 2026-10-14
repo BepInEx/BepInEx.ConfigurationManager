@@ -1,0 +1,26 @@
+// Malay translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Tetapan plugin / mod
+Normal settings=Biasa
+Keyboard shortcuts=Pintasan
+Advanced settings=Lanjutan
+Debug info=Nyahpepijat
+Open Log=Buka log
+Close=Tutup
+Search:=Cari:
+Clear=Kosongkan
+Expand All=Kembangkan semua
+Collapse All=Runtuhkan semua
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Petua: klik nama plugin untuk melihat tetapannya. Klik nama tetapan atau kumpulan untuk membaca penerangannya.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Petua: anda boleh seret tetingkap ini untuk mengalihkannya. Ia kekal terbuka semasa anda bermain.
+r:"^Plugins with no options available: (.+)$"="Plugin tanpa tetapan: $1"
+Reset=Tetap semula
+Cancel=Batal
+Press any key=Tekan mana-mana kekunci
+Press any key combination=Tekan gabungan kekunci
+Set...=Tetapkan…
+Set the key by pressing any key on your keyboard.=Tekan mana-mana kekunci pada papan kekunci untuk menetapkannya.
+Enabled=Hidup
+Disabled=Mati
+Failed to draw this field, check log for details.=Gagal memaparkan medan ini, semak log untuk butiran.

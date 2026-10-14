@@ -1,0 +1,26 @@
+// Estonian translation of the Configuration Manager window for XUnity.AutoTranslator.
+// Plugin-specific: applies only to text drawn by ConfigurationManager.dll, never to the game or other plugins.
+// Plugin names, setting names and descriptions come from the plugins and are not translated here.
+Plugin / mod settings=Pistikprogrammide / modide seaded
+Normal settings=Tavaseaded
+Keyboard shortcuts=Kiirklahvid
+Advanced settings=Täpsemad seaded
+Debug info=Silumine
+Open Log=Ava logi
+Close=Sulge
+Search:=Otsi:
+Clear=Tühjenda
+Expand All=Laienda kõik
+Collapse All=Ahenda kõik
+Tip: Click plugin names to expand. Click setting and group names to see their descriptions.=Vihje: klõpsake pistikprogrammi nimel, et näha selle seadeid. Klõpsake seadel või rühmal, et lugeda kirjeldust.
+Tip: You can drag this window to move it. It will stay open while you interact with the game.=Vihje: seda akent saab hiirega lohistades liigutada. See jääb mängimise ajal avatuks.
+r:"^Plugins with no options available: (.+)$"="Pistikprogrammid ilma seadeteta: $1"
+Reset=Lähtesta
+Cancel=Loobu
+Press any key=Vajutage suvalist klahvi
+Press any key combination=Vajutage klahvikombinatsiooni
+Set...=Määra…
+Set the key by pressing any key on your keyboard.=Vajutage klaviatuuril suvalist klahvi, et see määrata.
+Enabled=Sees
+Disabled=Väljas
+Failed to draw this field, check log for details.=Seda välja ei õnnestunud kuvada, üksikasjad on logis.
