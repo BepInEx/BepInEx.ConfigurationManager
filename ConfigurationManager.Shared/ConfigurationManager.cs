@@ -107,7 +107,10 @@ namespace ConfigurationManager
         private bool _previousCursorVisible;
 
         internal int LeftColumnWidth { get; private set; }
-        internal int RightColumnWidth { get; private set; }
+        internal int RightColumnWidth => _rightColumnBaseWidth - _resetButtonExtraWidth;
+        private int _rightColumnBaseWidth;
+        private int _resetButtonExtraWidth;
+        private static readonly GUIContent _resetUntranslated = new GUIContent("Reset");
 
         private readonly ConfigEntry<bool> _showAdvanced;
         private readonly ConfigEntry<bool> _showKeybinds;
@@ -308,7 +311,7 @@ namespace ConfigurationManager
             _screenRect = new Rect(0, 0, Screen.width, Screen.height);
 
             LeftColumnWidth = Mathf.RoundToInt(SettingWindowRect.width / 2.5f);
-            RightColumnWidth = (int)SettingWindowRect.width - LeftColumnWidth - 115;
+            _rightColumnBaseWidth = (int)SettingWindowRect.width - LeftColumnWidth - 115;
 
             _windowWasMoved = false;
         }
@@ -383,6 +386,11 @@ namespace ConfigurationManager
 
         private void SettingsWindow(int id)
         {
+            // The right column leaves room for an untranslated "Reset" button. A translated label is usually longer, and the
+            // fixed-width fields then push the button past the right edge of the window, so grow the room by the difference.
+            var buttonStyle = GUI.skin.button;
+            _resetButtonExtraWidth = Mathf.Max(0, Mathf.CeilToInt(buttonStyle.CalcSize(ImguiUtils.Content("Reset")).x - buttonStyle.CalcSize(_resetUntranslated).x));
+
             DrawWindowHeader();
 
             _settingWindowScrollPos = GUILayout.BeginScrollView(_settingWindowScrollPos, false, true);

@@ -212,7 +212,9 @@ namespace ConfigurationManager
                             if (value.val != 0)
                             {
                                 // Make sure this horizontal group doesn't extend over window width, if it does then start a new horiz group below
-                                var textDimension = (int)GUI.skin.toggle.CalcSize(new GUIContent(value.name)).x;
+                                // Count the spacing GUILayout puts between toggles too, or a line can end up wider than maxWidth
+                                var toggleStyle = GUI.skin.toggle;
+                                var textDimension = (int)toggleStyle.CalcSize(new GUIContent(value.name)).x + Mathf.Max(toggleStyle.margin.left, toggleStyle.margin.right);
                                 currentWidth += textDimension;
                                 if (currentWidth > maxWidth)
                                     break;
@@ -537,7 +539,8 @@ namespace ConfigurationManager
                     GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
 
                     var colorStr = _drawColorHex ? "#" + ColorUtility.ToHtmlStringRGBA(colorValue) : $"{colorValue.r:F2} {colorValue.g:F2} {colorValue.b:F2} {colorValue.a:F2}";
-                    var newColorStr = GUILayout.TextField(colorStr, GUILayout.ExpandWidth(true));
+                    // Let the field shrink below its text width, or a longer (e.g. translated) Reset button is pushed out of the window
+                    var newColorStr = GUILayout.TextField(colorStr, GUILayout.ExpandWidth(true), GUILayout.MinWidth(50));
                     if (GUI.changed && colorStr != newColorStr)
                     {
                         if (_drawColorHex)
