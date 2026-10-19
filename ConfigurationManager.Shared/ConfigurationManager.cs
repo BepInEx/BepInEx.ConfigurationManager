@@ -363,7 +363,7 @@ namespace ConfigurationManager
                 style.wordWrap = true;
                 style.alignment = TextAnchor.MiddleCenter;
 
-                GUIContent content = new GUIContent(tooltip);
+                GUIContent content = ImguiUtils.Content(tooltip);
 
                 const int width = 400;
                 var height = style.CalcHeight(content, 400) + 10;
@@ -380,7 +380,7 @@ namespace ConfigurationManager
 
                 Rect position = new Rect(x, y, width, height);
                 ImguiUtils.DrawContolBackground(position, Color.black);
-                style.Draw(position, content, -1);
+                GUI.Label(position, content, style);
             }
         }
 
