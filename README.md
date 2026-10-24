@@ -13,9 +13,9 @@ There are two versions of this plugin, for BepInEx 5 (version 5.4.20 or newer, m
 - Extract the plugin directly into your game directory, where the BepInEx folder is (the .dll should end up inside your BepInEx\Plugins folder).
 - Start the game and press F1.
 
-Note: If you wish to use one of the included translations you have to install the latest version of XUnity.AutoTranslator and set it to the desired language. IMGUI translation has to be enabled.
+> Note: If you wish to use one of the included translations you have to install the latest version of [XUnity.AutoTranslator](https://github.com/bbepis/XUnity.AutoTranslator) and set it to the desired language. `EnableIMGUI` has to be set to `true` in `AutoTranslatorConfig.ini`.
 
-Note: The .xml file include in the release zip is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
+> Note: The .xml file include in the release zip is useful for plugin developers when referencing ConfigurationManager.dll in your plugin, it will provide descriptions for types and methods to your IDE. Users can ignore it.
 
 ### Known issues
 - If no text is visible anywhere in RUE windows, most likely the `Arial.ttf` font is missing from the system (Unity UI default font, may be different in some games). This can happen when running a game on Linux with [misconfigured wine](https://github.com/ManlyMarco/RuntimeUnityEditor/issues/55).
